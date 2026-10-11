@@ -1,0 +1,421 @@
+@import '@fontsource-variable/outfit';
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* =========================================================================
+   Design tokens. Components use these via Tailwind utilities (bg-surface,
+   text-muted, …) or directly via var(--…). Light is the base; .dark and the
+   high-contrast palette override.
+   ========================================================================= */
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --c-bg: #f6f3ec;
+  --c-bg-accent: #efe9dd;
+  --c-surface: #ffffff;
+  --c-surface-2: #f1ede4;
+  --c-surface-3: #e6e0d3;
+  --c-overlay: rgb(28 25 20 / 0.42);
+
+  /* Text */
+  --c-text: #1c1f26;
+  --c-muted: #626875;
+  --c-subtle: #8a8f99;
+
+  /* Lines and focus */
+  --c-border: #e3ddd1;
+  --c-border-strong: #c9c2b4;
+  --c-focus: #2f6fed;
+
+  /* Brand accent (used sparingly: logo, primary buttons) */
+  --c-accent: #1f9e63;
+  --c-accent-ink: #ffffff;
+
+  /* Feedback */
+  --c-correct: #22a467;
+  --c-correct-ink: #ffffff;
+  --c-present: #eaa92b;
+  --c-present-ink: #2b1c00;
+  --c-absent: #8a8f99;
+  --c-absent-ink: #ffffff;
+  --c-danger: #c8463c;
+
+  /* Tiles & keys */
+  --c-tile-empty-border: #d9d2c4;
+  --c-tile-filled-border: #9b9486;
+  --c-key: #e4ded1;
+  --c-key-ink: #1c1f26;
+
+  /* Shape */
+  --radius-tile: 0.6rem;
+  --radius-key: 0.55rem;
+  --radius-card: 1.25rem;
+  --radius-pill: 999px;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgb(40 32 20 / 0.06);
+  --shadow-md: 0 6px 18px -6px rgb(40 32 20 / 0.18), 0 2px 4px rgb(40 32 20 / 0.05);
+  --shadow-lg: 0 24px 60px -18px rgb(40 32 20 / 0.35);
+
+  /* Motion */
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-flip: 480ms;
+  --dur-shake: 450ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --c-bg: #0c0f15;
+  --c-bg-accent: #121722;
+  --c-surface: #151a24;
+  --c-surface-2: #1c2230;
+  --c-surface-3: #262d3d;
+  --c-overlay: rgb(3 5 10 / 0.66);
+
+  --c-text: #eef1f6;
+  --c-muted: #9aa3b4;
+  --c-subtle: #6c7486;
+
+  --c-border: #232a38;
+  --c-border-strong: #353e51;
+  --c-focus: #7aa7ff;
+
+  --c-accent: #47d69b;
+  --c-accent-ink: #062016;
+
+  --c-correct: #43d197;
+  --c-correct-ink: #04241a;
+  --c-present: #f2b544;
+  --c-present-ink: #2a1a00;
+  --c-absent: #343b4a;
+  --c-absent-ink: #c9d0dc;
+  --c-danger: #ff7b6e;
+
+  --c-tile-empty-border: #283042;
+  --c-tile-filled-border: #56607a;
+  --c-key: #2a3142;
+  --c-key-ink: #eef1f6;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 8px 22px -8px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 30px 70px -20px rgb(0 0 0 / 0.75);
+}
+
+/* Colour-accessible palette (orange / blue), both themes. */
+[data-contrast='high'] {
+  --c-correct: #e8682a;
+  --c-correct-ink: #ffffff;
+  --c-present: #3d8fe0;
+  --c-present-ink: #ffffff;
+}
+.dark[data-contrast='high'] {
+  --c-correct: #f5833f;
+  --c-correct-ink: #1d0b00;
+  --c-present: #7ab8f5;
+  --c-present-ink: #04172b;
+}
+
+@theme inline {
+  --font-sans: 'Outfit Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-surface-3: var(--c-surface-3);
+  --color-text: var(--c-text);
+  --color-muted: var(--c-muted);
+  --color-subtle: var(--c-subtle);
+  --color-border: var(--c-border);
+  --color-border-strong: var(--c-border-strong);
+  --color-focus: var(--c-focus);
+  --color-accent: var(--c-accent);
+  --color-accent-ink: var(--c-accent-ink);
+  --color-correct: var(--c-correct);
+  --color-correct-ink: var(--c-correct-ink);
+  --color-present: var(--c-present);
+  --color-present-ink: var(--c-present-ink);
+  --color-absent: var(--c-absent);
+  --color-absent-ink: var(--c-absent-ink);
+  --color-danger: var(--c-danger);
+  --color-key: var(--c-key);
+  --color-key-ink: var(--c-key-ink);
+
+  --radius-tile: var(--radius-tile);
+  --radius-key: var(--radius-key);
+  --radius-card: var(--radius-card);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+}
+
+/* =========================================================================
+   Base
+   ========================================================================= */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--c-bg);
+  background-image: radial-gradient(120% 60% at 50% -10%, var(--c-bg-accent), transparent 70%);
+  background-attachment: fixed;
+  color: var(--c-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  transition: background-color var(--dur-base) ease, color var(--dur-base) ease;
+}
+
+:focus-visible {
+  outline: 2.5px solid var(--c-focus);
+  outline-offset: 2px;
+}
+
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* =========================================================================
+   Board & tiles
+   ========================================================================= */
+.board-area {
+  container-type: size;
+}
+
+.board {
+  /* Fit inside the available box while keeping a 5:6 tile grid. */
+  --gap: clamp(4px, 1.4cqmin, 7px);
+  width: min(100cqw, calc(100cqh * 5 / 6), 22rem);
+  aspect-ratio: 5 / 6;
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+  gap: var(--gap);
+}
+
+.board-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--gap);
+}
+
+.tile {
+  --tile-bg: transparent;
+  --tile-ink: var(--c-text);
+  --tile-border: var(--c-tile-empty-border);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-tile);
+  border: 2px solid var(--tile-border);
+  background: var(--tile-bg);
+  color: var(--tile-ink);
+  font-weight: 700;
+  font-size: clamp(1.25rem, 7.4cqmin, 2.1rem);
+  line-height: 1;
+  text-transform: uppercase;
+  user-select: none;
+  transition: border-color var(--dur-fast) ease;
+}
+
+.tile[data-state='tbd'] {
+  --tile-border: var(--c-tile-filled-border);
+}
+.tile[data-state='correct'],
+.tile[data-state='present'],
+.tile[data-state='absent'] {
+  --tile-border: transparent;
+}
+.tile[data-state='correct'] {
+  --tile-bg: var(--c-correct);
+  --tile-ink: var(--c-correct-ink);
+}
+.tile[data-state='present'] {
+  --tile-bg: var(--c-present);
+  --tile-ink: var(--c-present-ink);
+}
+.tile[data-state='absent'] {
+  --tile-bg: var(--c-absent);
+  --tile-ink: var(--c-absent-ink);
+}
+
+/* Non-colour cue in the colour-accessible mode. */
+[data-contrast='high'] .tile[data-state='correct']::after,
+[data-contrast='high'] .key[data-state='correct']::after {
+  content: '';
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 12%;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.85;
+}
+[data-contrast='high'] .tile[data-state='present']::after,
+[data-contrast='high'] .key[data-state='present']::after {
+  content: '';
+  position: absolute;
+  top: 12%;
+  right: 12%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.85;
+}
+
+.tile[data-anim='pop'] {
+  animation: tile-pop 120ms var(--ease-out);
+}
+.tile[data-anim='flip'] {
+  /* Colours switch at the half-way point of the flip. */
+  animation: tile-flip var(--dur-flip) ease-in-out both;
+}
+.tile[data-anim='bounce'] {
+  animation: tile-bounce 600ms var(--ease-out) both;
+}
+
+@keyframes tile-pop {
+  0% { transform: scale(0.88); }
+  60% { transform: scale(1.07); }
+  100% { transform: scale(1); }
+}
+@keyframes tile-flip {
+  0% {
+    transform: rotateX(0deg);
+    background: transparent;
+    color: var(--c-text);
+    border-color: var(--c-tile-filled-border);
+  }
+  49.9% {
+    transform: rotateX(90deg);
+    background: transparent;
+    color: var(--c-text);
+    border-color: var(--c-tile-filled-border);
+  }
+  50% {
+    transform: rotateX(90deg);
+    background: var(--tile-bg);
+    color: var(--tile-ink);
+    border-color: transparent;
+  }
+  100% {
+    transform: rotateX(0deg);
+    background: var(--tile-bg);
+    color: var(--tile-ink);
+    border-color: transparent;
+  }
+}
+@keyframes tile-bounce {
+  0%, 100% { transform: translateY(0); }
+  35% { transform: translateY(-28%); }
+  60% { transform: translateY(4%); }
+  80% { transform: translateY(-6%); }
+}
+
+.board-row[data-shake='true'] {
+  animation: row-shake var(--dur-shake) ease-in-out;
+}
+@keyframes row-shake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-7px); }
+  40%, 60% { transform: translateX(7px); }
+}
+
+/* =========================================================================
+   Keyboard
+   ========================================================================= */
+.key {
+  --key-bg: var(--c-key);
+  --key-ink: var(--c-key-ink);
+  position: relative;
+  background: var(--key-bg);
+  color: var(--key-ink);
+  border-radius: var(--radius-key);
+  font-weight: 600;
+  text-transform: uppercase;
+  user-select: none;
+  transition:
+    transform 80ms ease,
+    background-color var(--dur-base) ease,
+    color var(--dur-base) ease,
+    filter var(--dur-fast) ease;
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.08);
+}
+.key:hover {
+  filter: brightness(1.06);
+}
+.dark .key:hover {
+  filter: brightness(1.15);
+}
+.key:active {
+  transform: translateY(1px) scale(0.96);
+}
+.key[data-state='correct'] {
+  --key-bg: var(--c-correct);
+  --key-ink: var(--c-correct-ink);
+}
+.key[data-state='present'] {
+  --key-bg: var(--c-present);
+  --key-ink: var(--c-present-ink);
+}
+.key[data-state='absent'] {
+  --key-bg: var(--c-absent);
+  --key-ink: var(--c-absent-ink);
+}
+
+/* =========================================================================
+   Reduced motion: OS preference or in-app setting.
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+  }
+}
+[data-reduce-motion='true'] *,
+[data-reduce-motion='true'] *::before,
+[data-reduce-motion='true'] *::after {
+  animation-duration: 1ms !important;
+  animation-delay: 0ms !important;
+  transition-duration: 1ms !important;
+}
+
+/* Hide the compact footer when vertical space is scarce. */
+@media (max-height: 740px) {
+  .footer-compact {
+    display: none;
+  }
+}
+
+.safe-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The dialog container receives programmatic focus on open; its controls keep their focus rings. */
+[role='dialog']:focus-visible {
+  outline: none;
+}

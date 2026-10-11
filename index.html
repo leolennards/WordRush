@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>WordRush — A little word challenge every day</title>
+    <meta name="description" content="WordRush is a free five-letter word puzzle. Solve the Daily Challenge in six guesses, or play unlimited Practice games." />
+    <meta name="theme-color" content="#f6f3ec" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta property="og:title" content="WordRush" />
+    <meta property="og:description" content="A little word challenge every day." />
+    <script>
+      // Apply the saved theme before first paint to avoid a flash of the wrong theme.
+      (function () {
+        try {
+          var raw = localStorage.getItem('wordrush:settings');
+          var s = raw ? JSON.parse(raw).data || {} : {};
+          var theme = s.theme === 'light' || s.theme === 'dark' ? s.theme : 'system';
+          var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var root = document.documentElement;
+          if (dark) root.classList.add('dark');
+          root.dataset.contrast = s.highContrast ? 'high' : 'normal';
+          root.dataset.reduceMotion = s.reduceMotion ? 'true' : 'false';
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#0c0f15' : '#f6f3ec');
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>WordRush needs JavaScript enabled to play.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
