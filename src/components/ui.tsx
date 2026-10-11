@@ -4,8 +4,8 @@ import { keepFocus } from '@/lib/accessibility/keepFocus';
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-accent text-accent-ink shadow-sm hover:brightness-105 active:brightness-95',
-  secondary: 'bg-surface-2 text-text border border-border hover:bg-surface-3',
+  primary: 'bg-ink text-ink-text shadow-sm hover:opacity-90',
+  secondary: 'bg-surface-2 text-text hover:bg-surface-3',
   ghost: 'text-text hover:bg-surface-2',
   danger: 'bg-danger text-white hover:brightness-105',
 };
@@ -19,7 +19,7 @@ export function Button({
   return (
     <button
       type="button"
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-[filter,background-color,transform] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-[filter,background-color,opacity,transform] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${className}`}
       {...rest}
     >
       {children}

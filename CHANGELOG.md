@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.2.0 — 2026-10-11 (design refresh)
+
+- **Ink primary actions:** buttons use a neutral ink colour; green/amber are reserved for game feedback.
+- **Home redesigned:** dated headline that reflects today's status, a hero daily card with a spoiler-free
+  mini-board of your progress, a single streak strip (with an inviting first-time state), a practice row,
+  and a two-column desktop layout. Removed the duplicated logo/title and the dashboard-style stat boxes.
+- **Game screen:** header, mode switch and title collapsed into one row on mobile (more room for the
+  board); the redundant guess counter is gone; the board is larger on desktop and aligned with its title;
+  the global footer was removed.
+- **Tiles and keys:** tighter radii, a subtle tactile lower edge on revealed tiles, higher-contrast typed
+  letters, and title-case "Enter".
+- **Results and stats:** visible title, praise plus a mini-board of your game, one stats strip, real
+  distribution tracks instead of "0" pills, an empty state before the first win, and an inline countdown.
+- **End-of-game panel** is more compact (status + Share on one line, then Results / Practice / Home).
+- **Fixed:** visible toasts (e.g. "Not in word list") never appeared after 1.1.0 because they rendered
+  outside the animation provider. A new E2E test checks the toast is actually visible.
+
 ## 1.1.0 — 2026-10-11
 
 - **Renamed to Wordskiis** (storage keys now `wordskiis:*`). Daily puzzle #1 is launch day, 11 Oct 2026.

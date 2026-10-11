@@ -27,7 +27,7 @@ export const Keyboard = memo(function Keyboard({ letterStates, onLetter, onDelet
           {r === 1 && <div className="flex-[0.5]" aria-hidden />}
           {r === 2 && (
             <Key wide onClick={onEnter} label="Enter" disabled={disabled}>
-              <span className="hidden text-xs tracking-wide min-[380px]:inline">Enter</span>
+              <span className="hidden text-[0.8rem] font-semibold min-[380px]:inline">Enter</span>
               <CornerDownLeft className="size-5 min-[380px]:hidden" aria-hidden />
             </Key>
           )}
@@ -41,7 +41,7 @@ export const Keyboard = memo(function Keyboard({ letterStates, onLetter, onDelet
                 label={state ? `${letter.toUpperCase()}, ${STATE_LABEL[state]}` : letter.toUpperCase()}
                 disabled={disabled}
               >
-                {letter}
+                {letter.toUpperCase()}
               </Key>
             );
           })}

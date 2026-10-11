@@ -35,8 +35,8 @@ export function Header({ mode, onHome, onModeChange, onHelp, onStats, onSettings
   const nextTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
 
   return (
-    <header className="safe-top border-b border-border/70">
-      <div className="relative mx-auto flex h-14 max-w-3xl items-center justify-between gap-2 px-3 sm:px-4">
+    <header className="safe-top">
+      <div className="relative mx-auto flex h-14 max-w-[60rem] items-center justify-between gap-2 px-3 sm:px-4">
         <a
           href="#"
           className="flex items-center gap-2 rounded-lg"

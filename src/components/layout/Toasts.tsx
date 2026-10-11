@@ -47,7 +47,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed inset-x-0 top-[4.5rem] z-50 flex flex-col items-center gap-2 px-4">
+      <div className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+7.25rem)] z-50 sm:top-[8.5rem] flex flex-col items-center gap-2 px-4">
         <AnimatePresence initial={false}>
           {toasts.map((t) => (
             <ToastItem key={t.id} toast={t} onDone={dismiss} />
@@ -68,12 +68,7 @@ function ToastItem({ toast, onDone }: { toast: Toast; onDone: (id: number) => vo
     return () => window.clearTimeout(t);
   }, [toast, onDone]);
 
-  const tone =
-    toast.tone === 'error'
-      ? 'bg-text text-bg'
-      : toast.tone === 'success'
-        ? 'bg-accent text-accent-ink'
-        : 'bg-text text-bg';
+  const tone = toast.tone === 'success' ? 'bg-correct text-correct-ink' : 'bg-ink text-ink-text';
 
   return (
     <m.div

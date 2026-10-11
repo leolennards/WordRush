@@ -38,8 +38,8 @@ test('plays the daily challenge to a win with full animations', async ({ page })
   await guess(page, ANSWER);
   const result = page.getByRole('dialog');
   await expect(result).toBeVisible({ timeout: 6000 });
-  await expect(result.getByText(/You solved it in/)).toContainText('2 guesses');
-  await expect(result.getByText('Next challenge in')).toBeVisible();
+  await expect(result.getByText(/You solved it in/)).toContainText('2 of 6 guesses');
+  await expect(result.getByText(/Next puzzle in/)).toBeVisible();
 });
 
 test('survives a refresh and keeps Daily and Practice independent', async ({ page }) => {
@@ -96,7 +96,7 @@ test('with the real ticking clock, finishing shows results, next steps, and the 
   const answer = dailyAnswer(dayIndexFor(new Date(), '2026-10-11'), ANSWERS);
   await page.goto('/');
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('heading', { name: 'Practice' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Play Practice' })).toBeVisible();
   await page.getByRole('button', { name: /^Play — Daily Challenge/ }).click();
   await guess(page, answer);
   const result = page.getByRole('dialog');
@@ -110,4 +110,13 @@ test('with the real ticking clock, finishing shows results, next steps, and the 
   await page.getByRole('button', { name: 'See today’s board' }).click();
   await page.goBack();
   await expect(page.getByRole('button', { name: /^View results — Daily Challenge/ })).toBeVisible();
+});
+
+test('rejection toasts are actually visible, not just announced', async ({ page }) => {
+  await open(page);
+  await guess(page, 'qxzvj');
+  // The visible toast (not the screen-reader live region) must be shown.
+  const toast = page.locator('div.fixed').getByText('Not in word list');
+  await expect(toast).toBeVisible();
+  await expect(toast).toHaveCSS('opacity', '1');
 });

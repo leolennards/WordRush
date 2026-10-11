@@ -1,86 +1,60 @@
-import { CheckCircle2, CircleX, RotateCcw, Trophy } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { RotateCcw, Trophy } from 'lucide-react';
 import type { GameState } from '@/engine';
-import { GAME } from '@/config/game';
 import { keepFocus } from '@/lib/accessibility/keepFocus';
 
 interface InfoBarProps {
   heading: string;
   subheading: string;
   game: GameState;
-  countdown?: string;
+  /** Mode switch, shown here on small screens (it lives in the header on larger ones). */
+  modeSwitch: ReactNode;
   onResults: () => void;
   onNewGame?: () => void;
   staleAction?: { label: string; onClick: () => void };
 }
 
-function StatusChip({ game }: { game: GameState }) {
-  if (game.status === 'won') {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-correct/15 px-2.5 py-1 text-xs font-semibold text-text">
-        <CheckCircle2 className="size-3.5 text-correct" aria-hidden /> Solved in {game.guesses.length}
-      </span>
-    );
-  }
-  if (game.status === 'lost') {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-1 text-xs font-semibold">
-        <CircleX className="size-3.5 text-muted" aria-hidden /> Not solved
-      </span>
-    );
-  }
-  return (
-    <span className="tabular rounded-full bg-surface-2 px-2.5 py-1 text-xs font-semibold text-muted">
-      {game.guesses.length === 0 ? 'Not started' : `Guess ${game.guesses.length + 1} of ${GAME.maxGuesses}`}
-    </span>
-  );
-}
+const chip =
+  'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors hover:bg-surface-3';
 
-export function InfoBar({ heading, subheading, game, countdown, onResults, onNewGame, staleAction }: InfoBarProps) {
+/** One compact row above the board, aligned to the board's width. */
+export function InfoBar({ heading, subheading, game, modeSwitch, onResults, onNewGame, staleAction }: InfoBarProps) {
   const finished = game.status !== 'playing';
   return (
-    <div className="mx-auto flex w-full max-w-[34rem] items-center justify-between gap-3 px-4 py-2">
+    <div className="mx-auto flex w-full max-w-[26rem] items-center justify-between gap-3 px-3 pt-3 pb-1 sm:pt-5">
       <div className="min-w-0">
-        <h2 className="truncate text-[0.95rem] leading-tight font-bold">{heading}</h2>
-        <p className="tabular truncate text-xs text-muted">
-          {subheading}
-          {finished && countdown && <> · Next in {countdown}</>}
-        </p>
+        <h2 className="truncate text-[1.05rem] leading-tight font-bold tracking-tight">{heading}</h2>
+        <p className="tabular truncate text-xs text-muted">{subheading}</p>
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
-        {staleAction ? (
+        {staleAction && (
           <button
             type="button"
             onMouseDown={keepFocus}
             onClick={staleAction.onClick}
-            className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink"
+            className={`${chip} bg-ink text-ink-text hover:bg-ink hover:opacity-90`}
           >
             {staleAction.label}
           </button>
-        ) : (
-          <StatusChip game={game} />
         )}
         {finished && (
           <button
             type="button"
             onMouseDown={keepFocus}
             onClick={onResults}
-            className="grid size-8 place-items-center rounded-full text-muted hover:bg-surface-2 hover:text-text"
+            className={`${chip} bg-surface-2`}
             aria-label="Show results"
-            title="Results"
           >
-            <Trophy className="size-4" aria-hidden />
+            <Trophy className="size-3.5" aria-hidden /> <span className="hidden min-[400px]:inline">Results</span>
           </button>
         )}
-        {onNewGame && (
-          <button
-            type="button"
-            onMouseDown={keepFocus}
-            onClick={onNewGame}
-            className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs font-semibold hover:bg-surface-2"
-          >
-            <RotateCcw className="size-3.5" aria-hidden /> New word
+        {onNewGame && !finished && (
+          <button type="button" onMouseDown={keepFocus} onClick={onNewGame} className={`${chip} bg-surface-2`}>
+            <RotateCcw className="size-3.5" aria-hidden /> <span className="hidden min-[400px]:inline">New word</span>
+            <span className="sr-only min-[400px]:hidden">New word</span>
           </button>
         )}
+        <div className="sm:hidden">{modeSwitch}</div>
       </div>
     </div>
   );

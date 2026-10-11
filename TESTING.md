@@ -17,7 +17,7 @@ npm run check                    # typecheck + lint + unit tests + production bu
 | Lint | `npm run lint` | Pass, 0 errors, 0 warnings |
 | Unit + interface tests | `npm test` | **78 / 78 passed** (7 files) |
 | Production build | `npm run build` | Pass — JS ~450 kB (~157 kB gzip), CSS ~34 kB (~8 kB gzip) |
-| End-to-end | `npm run test:e2e` | **12 / 12 passed** (6 tests × desktop Chrome and Pixel 7 emulation, Chromium only) |
+| End-to-end | `npm run test:e2e` | **14 / 14 passed** (7 tests × desktop Chrome and Pixel 7 emulation, Chromium only) |
 
 ## Coverage by area
 
@@ -82,6 +82,7 @@ npm run check                    # typecheck + lint + unit tests + production bu
 - Loss reveals the answer.
 - A saved dark theme is applied before React renders (no flash).
 - No horizontal scrolling at 320 × 568, and the board doesn't overlap the keyboard.
+- Error toasts are actually visible on screen (opacity 1), not only announced to screen readers.
 - With the real (unfrozen) clock: win → results → close → game-over panel → Home → dashboard, and
   browser Back from the game returns to the dashboard.
 

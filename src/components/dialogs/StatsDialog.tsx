@@ -65,7 +65,7 @@ function StatsContent({ initialMode, todayIndex }: { initialMode: GameMode; toda
         <StatsPanel stats={practice} streakLabel="Win streak" />
       )}
       <p className="text-center text-xs text-subtle">
-        Average guesses counts solved games only. Daily streaks need a win on consecutive UTC days.
+        Average counts solved games only. Streaks need a win on consecutive days (UTC).
       </p>
     </div>
   );

@@ -93,7 +93,8 @@ function DialogPanel({ onClose, title, hideTitle, children, footer }: Omit<Dialo
         exit={{ opacity: 0, y: 16, scale: 0.98 }}
         transition={{ type: 'spring', stiffness: 420, damping: 34, mass: 0.8 }}
       >
-        <div className="flex items-center justify-between gap-4 px-5 pt-4 pb-1 sm:px-6 sm:pt-5">
+        <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-border-strong sm:hidden" aria-hidden />
+        <div className="flex items-center justify-between gap-4 px-5 pt-2 pb-1 sm:px-6 sm:pt-5">
           <h2 id={titleId} className={hideTitle ? 'sr-only' : 'text-lg font-bold tracking-tight'}>
             {title}
           </h2>

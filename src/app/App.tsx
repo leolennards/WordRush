@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { LazyMotion, MotionConfig, domAnimation } from 'motion/react';
 import { BRAND, GAME, TIMING } from '@/config/game';
 import {
@@ -38,23 +38,24 @@ export function App({ services }: { services: Services }) {
   return (
     <ServicesProvider services={services}>
       <SettingsProvider>
-        <StatsProvider>
-          <ToastProvider>
-            <MotionRoot />
-          </ToastProvider>
-        </StatsProvider>
+        <MotionRoot>
+          <StatsProvider>
+            <ToastProvider>
+              <Wordskiis />
+            </ToastProvider>
+          </StatsProvider>
+        </MotionRoot>
       </SettingsProvider>
     </ServicesProvider>
   );
 }
 
-function MotionRoot() {
+/** Every animated component (including toasts and dialogs) must sit inside this. */
+function MotionRoot({ children }: { children: ReactNode }) {
   const { reducedMotion } = useSettings();
   return (
     <LazyMotion features={domAnimation} strict>
-      <MotionConfig reducedMotion={reducedMotion ? 'always' : 'never'}>
-        <Wordskiis />
-      </MotionConfig>
+      <MotionConfig reducedMotion={reducedMotion ? 'always' : 'never'}>{children}</MotionConfig>
     </LazyMotion>
   );
 }
@@ -243,9 +244,9 @@ function Wordskiis() {
           <Home
             challengeNumber={challengeNumber(todayIndex)}
             dateLabel={dateForDayIndex(todayIndex, GAME.dailyEpoch).toLocaleDateString(undefined, {
-              weekday: 'short',
+              weekday: 'long',
               day: 'numeric',
-              month: 'short',
+              month: 'long',
               timeZone: 'UTC',
             })}
             daily={daily.session.game}
@@ -265,14 +266,11 @@ function Wordskiis() {
         </main>
       ) : (
         <main id="game" className="flex min-h-0 flex-1 flex-col">
-          <div className="flex justify-center pt-2 sm:hidden">
-            <ModeTabs mode={mode} onModeChange={changeMode} />
-          </div>
           <InfoBar
             heading={heading}
             subheading={subheading}
             game={game}
-            countdown={mode === 'daily' ? countdown : undefined}
+            modeSwitch={<ModeTabs mode={mode} onModeChange={changeMode} />}
             onResults={() => setDialog('result')}
             onNewGame={mode === 'practice' ? requestNewPractice : undefined}
             staleAction={
@@ -282,7 +280,7 @@ function Wordskiis() {
             }
           />
 
-          <div className="board-area relative min-h-0 flex-1 px-3 py-1 sm:py-3">
+          <div className="board-area relative min-h-0 flex-1 px-3 py-2 sm:py-4">
             <div className="flex h-full items-center justify-center">
               <Board
                 game={game}
@@ -295,7 +293,7 @@ function Wordskiis() {
             {celebrating && !reducedMotion && <Celebration seed={game.guesses.length + todayIndex} />}
           </div>
 
-          <div className="safe-bottom pt-1 sm:pb-3">
+          <div className="safe-bottom pt-1 sm:pb-5">
             {game.status !== 'playing' && revealingRow === null ? (
               <GameOverPanel
                 game={game}
@@ -319,9 +317,6 @@ function Wordskiis() {
         </main>
       )}
 
-      <footer className="footer-compact border-t border-border/60 py-2 text-center text-xs text-subtle">
-        {BRAND.tagline} · New puzzle at 00:00 UTC
-      </footer>
 
       <HelpDialog open={dialog === 'help'} onClose={closeDialog} />
       <StatsDialog open={dialog === 'stats'} onClose={closeDialog} initialMode={mode} todayIndex={todayIndex} />

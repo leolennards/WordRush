@@ -29,22 +29,25 @@
   --c-border-strong: #c9c2b4;
   --c-focus: #2f6fed;
 
-  /* Brand accent (used sparingly: logo, primary buttons) */
+  /* Brand accent (used sparingly: wordmark, small highlights). */
   --c-accent: #1f9e63;
   --c-accent-ink: #ffffff;
+  /* Ink: primary actions. Neutral so green stays reserved for "correct". */
+  --c-ink: #1b1d22;
+  --c-ink-text: #fbf9f4;
 
   /* Feedback */
   --c-correct: #22a467;
   --c-correct-ink: #ffffff;
   --c-present: #eaa92b;
   --c-present-ink: #2b1c00;
-  --c-absent: #8a8f99;
+  --c-absent: #7d828c;
   --c-absent-ink: #ffffff;
   --c-danger: #c8463c;
 
   /* Tiles & keys */
-  --c-tile-empty-border: #d9d2c4;
-  --c-tile-filled-border: #9b9486;
+  --c-tile-empty-border: #ddd6c8;
+  --c-tile-filled-border: #4a4740;
   --c-key: #e4ded1;
   --c-key-ink: #1c1f26;
   /* Letters ruled out: clearly "blacked out" against unused keys. */
@@ -52,8 +55,8 @@
   --c-key-absent-ink: #ffffff;
 
   /* Shape */
-  --radius-tile: 0.6rem;
-  --radius-key: 0.55rem;
+  --radius-tile: 0.5rem;
+  --radius-key: 0.5rem;
   --radius-card: 1.25rem;
   --radius-pill: 999px;
 
@@ -90,6 +93,8 @@
 
   --c-accent: #47d69b;
   --c-accent-ink: #062016;
+  --c-ink: #eef1f6;
+  --c-ink-text: #0c0f15;
 
   --c-correct: #43d197;
   --c-correct-ink: #04241a;
@@ -99,8 +104,8 @@
   --c-absent-ink: #8a93a6;
   --c-danger: #ff7b6e;
 
-  --c-tile-empty-border: #283042;
-  --c-tile-filled-border: #56607a;
+  --c-tile-empty-border: #262d3c;
+  --c-tile-filled-border: #8b94a8;
   --c-key: #3a4256;
   --c-key-ink: #f3f5f9;
   --c-key-absent: #161a22;
@@ -140,6 +145,8 @@
   --color-focus: var(--c-focus);
   --color-accent: var(--c-accent);
   --color-accent-ink: var(--c-accent-ink);
+  --color-ink: var(--c-ink);
+  --color-ink-text: var(--c-ink-text);
   --color-correct: var(--c-correct);
   --color-correct-ink: var(--c-correct-ink);
   --color-present: var(--c-present);
@@ -201,7 +208,7 @@ button {
 .board {
   /* Fit inside the available box while keeping a 5:6 tile grid. */
   --gap: clamp(4px, 1.4cqmin, 7px);
-  width: min(100cqw, calc(100cqh * 5 / 6), 22rem);
+  width: min(100cqw, calc(100cqh * 5 / 6), 26rem);
   aspect-ratio: 5 / 6;
   display: grid;
   grid-template-rows: repeat(6, 1fr);
@@ -241,6 +248,12 @@ button {
 .tile[data-state='present'],
 .tile[data-state='absent'] {
   --tile-border: transparent;
+}
+.tile[data-state='correct'],
+.tile[data-state='present'],
+.tile[data-state='absent'] {
+  /* A subtle lower edge gives revealed tiles a tactile, physical feel. */
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.12);
 }
 .tile[data-state='correct'] {
   --tile-bg: var(--c-correct);
@@ -351,7 +364,6 @@ button {
   color: var(--key-ink);
   border-radius: var(--radius-key);
   font-weight: 600;
-  text-transform: uppercase;
   user-select: none;
   transition:
     transform 80ms ease,
@@ -403,12 +415,6 @@ button {
   transition-duration: 1ms !important;
 }
 
-/* Hide the compact footer when vertical space is scarce. */
-@media (max-height: 740px) {
-  .footer-compact {
-    display: none;
-  }
-}
 
 .safe-bottom {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));

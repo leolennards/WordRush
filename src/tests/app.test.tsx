@@ -72,14 +72,14 @@ describe('Wordskiis app', () => {
     expect(rowText(0)).toBe(WRONG[0]!.slice(0, 4));
     await user.click(within(kb).getByRole('button', { name: WRONG[0]![4]!.toUpperCase() }));
     await user.click(within(kb).getByRole('button', { name: 'Enter' }));
-    expect(screen.getByText(/Guess 2 of 6/)).toBeInTheDocument();
+    expect(rows()[0]).toHaveAttribute('aria-label', expect.stringMatching(/correct|in the word|not in the word/));
   });
 
   it('rejects words that are not in the list without using an attempt', async () => {
     const { user } = setup();
     await guess(user, 'qxzvj');
     expect(await screen.findByText('Not in word list')).toBeInTheDocument();
-    expect(screen.getByText('Not started')).toBeInTheDocument();
+    expect(rows()[0]).toHaveAttribute('aria-label', expect.stringContaining('(typing)'));
     expect(rowText(0)).toBe('qxzvj');
   });
 
@@ -88,7 +88,7 @@ describe('Wordskiis app', () => {
     await guess(user, WRONG[0]!);
     await guess(user, ANSWER);
     const dialog = await screen.findByRole('dialog', {}, { timeout: 3000 });
-    expect(within(dialog).getByText(/You solved it in/)).toHaveTextContent('2 guesses');
+    expect(within(dialog).getByText(/You solved it in/)).toHaveTextContent('2 of 6 guesses');
     expect(within(dialog).getByRole('button', { name: /Share result/ })).toBeInTheDocument();
     const stats = JSON.parse(store.get(KEYS.dailyStats)!).data;
     expect(stats).toMatchObject({ played: 1, wins: 1, currentStreak: 1, distribution: [0, 1, 0, 0, 0, 0] });
@@ -114,7 +114,7 @@ describe('Wordskiis app', () => {
     first.unmount();
     setup(store);
     expect(rowText(0)).toBe(WRONG[0]);
-    expect(screen.getByText(/Guess 2 of 6/)).toBeInTheDocument();
+    expect(rowText(1)).toBe('');
   });
 
   it('restores a completed daily game without counting it twice or allowing a replay', async () => {
@@ -124,7 +124,7 @@ describe('Wordskiis app', () => {
     await screen.findByRole('dialog', {}, { timeout: 3000 });
     first.unmount();
     const second = setup(store);
-    expect(screen.getByText('Solved in 1')).toBeInTheDocument();
+    expect(screen.getByText('Solved in 1! 🎉')).toBeInTheDocument();
     await guess(second.user, WRONG[0]!);
     expect(rowText(1)).toBe('');
     expect(JSON.parse(store.get(KEYS.dailyStats)!).data.played).toBe(1);
@@ -269,7 +269,7 @@ describe('home dashboard and end of game', () => {
   it('lands on the home dashboard and starts the daily challenge from it', async () => {
     window.history.replaceState(null, '', '/');
     const { user } = setup();
-    expect(screen.getByRole('heading', { name: /#1 /})).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Daily Challenge\s*#1/ })).toBeInTheDocument();
     expect(screen.queryByRole('grid')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /^Play — Daily Challenge #1$/ }));
     expect(screen.getByRole('heading', { name: 'Daily Challenge #1' })).toBeInTheDocument();
@@ -293,7 +293,7 @@ describe('home dashboard and end of game', () => {
     expect(within(panel).getByText('Solved in 1! 🎉')).toBeInTheDocument();
     expect(screen.queryByRole('group', { name: 'Keyboard' })).not.toBeInTheDocument();
     await user.click(within(panel).getByRole('button', { name: /Home/ }));
-    expect(screen.getByText('Solved in 1')).toBeInTheDocument();
+    expect(screen.getByText('You found it in 1 guess.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^View results — Daily Challenge/ })).toBeInTheDocument();
   });
 

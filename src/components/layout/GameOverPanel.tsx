@@ -1,5 +1,5 @@
 import { m } from 'motion/react';
-import { Dumbbell, House, RotateCcw, Share2, Trophy } from 'lucide-react';
+import { House, RotateCcw, Share2, Shuffle, Trophy } from 'lucide-react';
 import type { GameState } from '@/engine';
 
 interface GameOverPanelProps {
@@ -14,8 +14,8 @@ interface GameOverPanelProps {
   onNewGame?: () => void;
 }
 
-const btn =
-  'inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition active:scale-[0.98]';
+const secondary =
+  'inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-surface-2 px-2 text-sm font-semibold transition hover:bg-surface-3 active:scale-[0.98]';
 
 /** Shown in place of the keyboard once a game is over, so there is always a clear next step. */
 export function GameOverPanel({ game, countdown, onResults, onShare, onHome, onPractice, onNewGame }: GameOverPanelProps) {
@@ -25,37 +25,51 @@ export function GameOverPanel({ game, countdown, onResults, onShare, onHome, onP
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      className="mx-auto w-full max-w-[34rem] px-3"
+      className="mx-auto w-full max-w-[30rem] px-3"
       aria-label="Game over"
       role="region"
     >
-      <div className="rounded-[var(--radius-card)] border border-border bg-surface p-4 shadow-md">
-        <p className="text-center font-bold">
-          {won ? `Solved in ${game.guesses.length}! 🎉` : `The word was ${game.answer.toUpperCase()}`}
-        </p>
-        {countdown && (
-          <p className="tabular mt-0.5 text-center text-sm text-muted">
-            Next challenge in <strong className="text-text">{countdown}</strong>
-          </p>
-        )}
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <button type="button" onClick={onShare} className={`${btn} bg-accent text-accent-ink hover:brightness-105`}>
+      <div className="rounded-[var(--radius-card)] border border-border bg-surface p-3 shadow-md sm:p-4">
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1 pl-1">
+            <p className="font-bold">
+              {won ? `Solved in ${game.guesses.length}! 🎉` : `The word was ${game.answer.toUpperCase()}`}
+            </p>
+            <p className="tabular text-xs text-muted">
+              {countdown ? (
+                <>
+                  Next puzzle in <span className="font-semibold text-text">{countdown}</span>
+                </>
+              ) : won ? (
+                'Nicely played.'
+              ) : (
+                'Shake it off and try another.'
+              )}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onShare}
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-ink px-5 text-sm font-semibold text-ink-text shadow-sm transition hover:opacity-90 active:scale-[0.98]"
+          >
             <Share2 className="size-4" aria-hidden /> Share
           </button>
-          <button type="button" onClick={onResults} className={`${btn} bg-surface-2 hover:bg-surface-3`}>
+        </div>
+        <div className="mt-3 flex gap-2">
+          <button type="button" onClick={onResults} className={secondary}>
             <Trophy className="size-4" aria-hidden /> Results
           </button>
           {onNewGame && (
-            <button type="button" onClick={onNewGame} className={`${btn} bg-surface-2 hover:bg-surface-3`}>
+            <button type="button" onClick={onNewGame} className={secondary}>
               <RotateCcw className="size-4" aria-hidden /> New word
             </button>
           )}
           {onPractice && (
-            <button type="button" onClick={onPractice} className={`${btn} bg-surface-2 hover:bg-surface-3`}>
-              <Dumbbell className="size-4" aria-hidden /> Practice
+            <button type="button" onClick={onPractice} className={secondary}>
+              <Shuffle className="size-4" aria-hidden /> Practice
             </button>
           )}
-          <button type="button" onClick={onHome} className={`${btn} bg-surface-2 hover:bg-surface-3`}>
+          <button type="button" onClick={onHome} className={secondary}>
             <House className="size-4" aria-hidden /> Home
           </button>
         </div>
