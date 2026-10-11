@@ -18,7 +18,7 @@ import { rejectionMessage } from '@/features/game/sessionReducer';
 import { shareResult } from '@/features/sharing/shareResult';
 import { useCountdown, useTodayIndex } from '@/hooks/useToday';
 import { usePhysicalKeyboard } from '@/hooks/usePhysicalKeyboard';
-import { useHashMode } from '@/hooks/useHashMode';
+import { useView } from '@/hooks/useHashMode';
 import { playCue } from '@/lib/audio/sound';
 import { Board } from '@/components/board/Board';
 import { Keyboard } from '@/components/keyboard/Keyboard';
@@ -26,6 +26,8 @@ import { Header, ModeTabs } from '@/components/layout/Header';
 import { InfoBar } from '@/components/layout/InfoBar';
 import { ToastProvider, useToast } from '@/components/layout/Toasts';
 import { Celebration } from '@/components/layout/Celebration';
+import { GameOverPanel } from '@/components/layout/GameOverPanel';
+import { Home } from '@/components/home/Home';
 import { HelpDialog } from '@/components/dialogs/HelpDialog';
 import { StatsDialog } from '@/components/dialogs/StatsDialog';
 import { SettingsDialog } from '@/components/dialogs/SettingsDialog';
@@ -65,7 +67,10 @@ function WordRush() {
   const stats = useStats();
   const { toast, announce } = useToast();
 
-  const [mode, setMode] = useHashMode();
+  const [view, setView] = useView();
+  // On the home dashboard, "mode" is daily so Results/Stats default to the daily game.
+  const mode: GameMode = view === 'practice' ? 'practice' : 'daily';
+  const onHomeView = view === 'home';
   const todayIndex = useTodayIndex(services.now);
   const countdown = useCountdown(services.now);
   const daily = useDailyGame(todayIndex);
@@ -90,7 +95,7 @@ function WordRush() {
     },
     [active, game.status, revealingRow, input.length, sound],
   );
-  const inputEnabled = dialog === null;
+  const inputEnabled = dialog === null && !onHomeView;
   usePhysicalKeyboard({ onLetter, onDelete: active.remove, onEnter: active.submit }, inputEnabled);
 
   // ----- Rejected guesses: toast + shake -----
@@ -124,20 +129,25 @@ function WordRush() {
   }, [revealingRow, game, announce, sound]);
 
   // ----- Completion: celebrate, then show results -----
+  // Depends only on primitives and stable callbacks: the countdown re-renders
+  // this component every second, and the timer must not restart on each tick.
+  const { ackComplete } = active;
+  const won = game.status === 'won';
+  const answerText = game.answer.toUpperCase();
+  const completionReady = justCompleted && revealingRow === null;
   useEffect(() => {
-    if (!justCompleted || revealingRow !== null) return;
-    const won = game.status === 'won';
+    if (!completionReady) return;
     sound(won ? 'win' : 'lose');
-    toast(won ? 'Solved!' : game.answer.toUpperCase(), { tone: won ? 'success' : 'neutral', duration: 2200 });
+    toast(won ? 'Solved!' : answerText, { tone: won ? 'success' : 'neutral', duration: 2200 });
     const t = window.setTimeout(
       () => {
-        active.ackComplete();
+        ackComplete();
         setDialog((d) => d ?? 'result');
       },
       reducedMotion ? 300 : TIMING.resultDelay + (won ? 500 : 0),
     );
     return () => window.clearTimeout(t);
-  }, [justCompleted, revealingRow, game, active, sound, toast, reducedMotion]);
+  }, [completionReady, won, answerText, ackComplete, sound, toast, reducedMotion]);
 
   // ----- Sharing -----
   const shareLabel = mode === 'daily' && game.dayIndex !== null ? `#${challengeNumber(game.dayIndex)}` : 'Practice';
@@ -170,11 +180,15 @@ function WordRush() {
 
   const changeMode = useCallback(
     (m: GameMode) => {
-      setMode(m);
+      setView(m);
       setDialog(null);
     },
-    [setMode],
+    [setView],
   );
+  const goHome = useCallback(() => {
+    setView('home');
+    setDialog(null);
+  }, [setView]);
 
   const requestNewPractice = () => {
     if (practice.session.game.status === 'playing' && practice.session.game.guesses.length > 0) {
@@ -210,10 +224,11 @@ function WordRush() {
         href="#game"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-surface focus:px-3 focus:py-2"
       >
-        Skip to game
+        Skip to content
       </a>
       <Header
-        mode={mode}
+        mode={onHomeView ? null : mode}
+        onHome={goHome}
         onModeChange={changeMode}
         onHelp={() => setDialog('help')}
         onStats={() => setDialog('stats')}
@@ -223,47 +238,86 @@ function WordRush() {
         {BRAND.name} — {BRAND.tagline}
       </h1>
 
-      <main id="game" className="flex min-h-0 flex-1 flex-col">
-        <div className="flex justify-center pt-2 sm:hidden">
-          <ModeTabs mode={mode} onModeChange={changeMode} />
-        </div>
-        <InfoBar
-          heading={heading}
-          subheading={subheading}
-          game={game}
-          countdown={mode === 'daily' ? countdown : undefined}
-          onResults={() => setDialog('result')}
-          onNewGame={mode === 'practice' ? requestNewPractice : undefined}
-          staleAction={
-            mode === 'daily' && daily.stale
-              ? { label: `Play #${challengeNumber(todayIndex)}`, onClick: daily.startToday }
-              : undefined
-          }
-        />
-
-        <div className="board-area relative min-h-0 flex-1 px-3 py-1 sm:py-3">
-          <div className="flex h-full items-center justify-center">
-            <Board
-              game={game}
-              input={input}
-              revealingRow={revealingRow}
-              shakeKey={shakeKey}
-              celebrate={celebrating}
-            />
-          </div>
-          {celebrating && !reducedMotion && <Celebration seed={game.guesses.length + todayIndex} />}
-        </div>
-
-        <div className="safe-bottom pt-1 sm:pb-3">
-          <Keyboard
-            letterStates={letterStates}
-            onLetter={onLetter}
-            onDelete={active.remove}
-            onEnter={active.submit}
-            disabled={game.status !== 'playing'}
+      {onHomeView ? (
+        <main id="game" className="min-h-0 flex-1 overflow-y-auto">
+          <Home
+            challengeNumber={challengeNumber(todayIndex)}
+            dateLabel={dateForDayIndex(todayIndex, GAME.dailyEpoch).toLocaleDateString(undefined, {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+              timeZone: 'UTC',
+            })}
+            daily={daily.session.game}
+            practice={practice.session.game}
+            practiceNumber={practice.gameNumber}
+            dailyStats={stats.daily}
+            practiceStats={stats.practice}
+            todayIndex={todayIndex}
+            countdown={countdown}
+            onPlayDaily={() => changeMode('daily')}
+            onDailyResults={() => setDialog('result')}
+            onPlayPractice={() => changeMode('practice')}
+            onHelp={() => setDialog('help')}
+            onStats={() => setDialog('stats')}
+            onSettings={() => setDialog('settings')}
           />
-        </div>
-      </main>
+        </main>
+      ) : (
+        <main id="game" className="flex min-h-0 flex-1 flex-col">
+          <div className="flex justify-center pt-2 sm:hidden">
+            <ModeTabs mode={mode} onModeChange={changeMode} />
+          </div>
+          <InfoBar
+            heading={heading}
+            subheading={subheading}
+            game={game}
+            countdown={mode === 'daily' ? countdown : undefined}
+            onResults={() => setDialog('result')}
+            onNewGame={mode === 'practice' ? requestNewPractice : undefined}
+            staleAction={
+              mode === 'daily' && daily.stale
+                ? { label: `Play #${challengeNumber(todayIndex)}`, onClick: daily.startToday }
+                : undefined
+            }
+          />
+
+          <div className="board-area relative min-h-0 flex-1 px-3 py-1 sm:py-3">
+            <div className="flex h-full items-center justify-center">
+              <Board
+                game={game}
+                input={input}
+                revealingRow={revealingRow}
+                shakeKey={shakeKey}
+                celebrate={celebrating}
+              />
+            </div>
+            {celebrating && !reducedMotion && <Celebration seed={game.guesses.length + todayIndex} />}
+          </div>
+
+          <div className="safe-bottom pt-1 sm:pb-3">
+            {game.status !== 'playing' && revealingRow === null ? (
+              <GameOverPanel
+                game={game}
+                countdown={mode === 'daily' ? countdown : undefined}
+                onResults={() => setDialog('result')}
+                onShare={onShare}
+                onHome={goHome}
+                onPractice={mode === 'daily' ? () => changeMode('practice') : undefined}
+                onNewGame={mode === 'practice' ? requestNewPractice : undefined}
+              />
+            ) : (
+              <Keyboard
+                letterStates={letterStates}
+                onLetter={onLetter}
+                onDelete={active.remove}
+                onEnter={active.submit}
+                disabled={game.status !== 'playing'}
+              />
+            )}
+          </div>
+        </main>
+      )}
 
       <footer className="footer-compact border-t border-border/60 py-2 text-center text-xs text-subtle">
         {BRAND.tagline} · New puzzle at 00:00 UTC
@@ -289,6 +343,7 @@ function WordRush() {
         onShare={onShare}
         onPractice={mode === 'daily' ? () => changeMode('practice') : undefined}
         onNewGame={mode === 'practice' ? requestNewPractice : undefined}
+        onHome={onHomeView ? undefined : goHome}
       />
       <ConfirmDialog
         open={dialog === 'confirm-new'}

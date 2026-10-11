@@ -1,4 +1,4 @@
-import { Dumbbell, RotateCcw, Share2 } from 'lucide-react';
+import { Dumbbell, House, RotateCcw, Share2 } from 'lucide-react';
 import { m } from 'motion/react';
 import type { GameState, Stats } from '@/engine';
 import { GAME } from '@/config/game';
@@ -21,10 +21,11 @@ interface ResultDialogProps {
   onShare: () => void;
   onPractice?: () => void;
   onNewGame?: () => void;
+  onHome?: () => void;
 }
 
 export function ResultDialog(props: ResultDialogProps) {
-  const { open, onClose, game, stats, currentKey, title, countdown, onShare, onPractice, onNewGame } = props;
+  const { open, onClose, game, stats, currentKey, title, countdown, onShare, onPractice, onNewGame, onHome } = props;
   const { reducedMotion } = useSettings();
   const won = game.status === 'won';
   const heading = won ? (PRAISE[game.guesses.length - 1] ?? 'Solved!') : 'So close!';
@@ -92,6 +93,11 @@ export function ResultDialog(props: ResultDialogProps) {
           {onPractice && (
             <Button onClick={onPractice} className="col-span-2 sm:col-span-1">
               <Dumbbell className="size-4" aria-hidden /> Play Practice
+            </Button>
+          )}
+          {onHome && (
+            <Button variant="ghost" onClick={onHome} className="col-span-2">
+              <House className="size-4" aria-hidden /> Back to home
             </Button>
           )}
         </div>

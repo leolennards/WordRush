@@ -6,14 +6,16 @@ import { useSettings } from '@/features/settings/SettingsContext';
 import { Logo } from './Logo';
 
 interface HeaderProps {
-  mode: GameMode;
+  /** Null on the home dashboard (mode tabs hidden). */
+  mode: GameMode | null;
+  onHome: () => void;
   onModeChange: (mode: GameMode) => void;
   onHelp: () => void;
   onStats: () => void;
   onSettings: () => void;
 }
 
-export function ModeTabs({ mode, onModeChange }: Pick<HeaderProps, 'mode' | 'onModeChange'>) {
+export function ModeTabs({ mode, onModeChange }: { mode: GameMode; onModeChange: (mode: GameMode) => void }) {
   return (
     <Segmented<GameMode>
       label="Game mode"
@@ -28,23 +30,34 @@ export function ModeTabs({ mode, onModeChange }: Pick<HeaderProps, 'mode' | 'onM
   );
 }
 
-export function Header({ mode, onModeChange, onHelp, onStats, onSettings }: HeaderProps) {
+export function Header({ mode, onHome, onModeChange, onHelp, onStats, onSettings }: HeaderProps) {
   const { resolvedTheme, update } = useSettings();
   const nextTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
 
   return (
     <header className="safe-top border-b border-border/70">
       <div className="relative mx-auto flex h-14 max-w-3xl items-center justify-between gap-2 px-3 sm:px-4">
-        <a href="#" className="flex items-center gap-2 rounded-lg" aria-label={`${BRAND.name} home`} onClick={(e) => { e.preventDefault(); onModeChange('daily'); }}>
+        <a
+          href="#"
+          className="flex items-center gap-2 rounded-lg"
+          aria-label={`${BRAND.name} home`}
+          onClick={(e) => {
+            e.preventDefault();
+            onHome();
+          }}
+        >
           <Logo />
           <span className="text-[1.3rem] font-extrabold tracking-tight">
-            Word<span className="text-accent">Rush</span>
+            {BRAND.wordmark[0]}
+            <span className="text-accent">{BRAND.wordmark[1]}</span>
           </span>
         </a>
 
-        <nav className="absolute left-1/2 hidden -translate-x-1/2 sm:block" aria-label="Game modes">
-          <ModeTabs mode={mode} onModeChange={onModeChange} />
-        </nav>
+        {mode && (
+          <nav className="absolute left-1/2 hidden -translate-x-1/2 sm:block" aria-label="Game modes">
+            <ModeTabs mode={mode} onModeChange={onModeChange} />
+          </nav>
+        )}
 
         <div className="flex items-center">
           <IconButton label="How to play" onClick={onHelp}>

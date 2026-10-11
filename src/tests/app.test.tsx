@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from '@/app/App';
@@ -41,6 +41,9 @@ async function guess(user: ReturnType<typeof userEvent.setup>, word: string) {
   await user.keyboard(word);
   await user.keyboard('{Enter}');
 }
+
+// Most tests start on the Daily game screen; the home dashboard has its own tests.
+beforeEach(() => window.history.replaceState(null, '', '/#daily'));
 
 describe('WordRush app', () => {
   it('shows the Daily Challenge heading and challenge number', () => {
@@ -242,5 +245,67 @@ describe('day rollover', () => {
     expect(screen.getByRole('heading', { name: 'Daily Challenge #12' })).toBeInTheDocument();
     expect(rowText(0)).toBe('');
     expect(JSON.parse(store.get(KEYS.dailyStats)!).data.lastRecordedKey).toBe(10);
+  });
+});
+
+describe('completion with a live clock', () => {
+  // Regression: the countdown re-renders every second, which used to restart
+  // the "show results" timer forever, so results never appeared.
+  it('opens the results after a win while the countdown is ticking, with animations on', async () => {
+    const start = Date.now();
+    const now = () => new Date(NOW.getTime() + (Date.now() - start));
+    const store = seededStore({ reduceMotion: false });
+    const services: Services = { store, dictionary, now, random: () => 0.5 };
+    const user = userEvent.setup();
+    render(<App services={services} />);
+    await guess(user, ANSWER);
+    const dialog = await screen.findByRole('dialog', {}, { timeout: 6000 });
+    expect(within(dialog).getByText(/You solved it in/)).toBeInTheDocument();
+    expect(screen.getAllByText('Solved!').length).toBeLessThanOrEqual(2); // one toast (+ live region)
+  }, 10000);
+});
+
+describe('home dashboard and end of game', () => {
+  it('lands on the home dashboard and starts the daily challenge from it', async () => {
+    window.history.replaceState(null, '', '/');
+    const { user } = setup();
+    expect(screen.getByRole('heading', { name: /#11/ })).toBeInTheDocument();
+    expect(screen.queryByRole('grid')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^Play — Daily Challenge #11/ }));
+    expect(screen.getByRole('heading', { name: 'Daily Challenge #11' })).toBeInTheDocument();
+    await guess(user, WRONG[0]!);
+    expect(rowText(0)).toBe(WRONG[0]);
+  });
+
+  it('ignores typing while on the home dashboard', async () => {
+    window.history.replaceState(null, '', '/');
+    const { user, store } = setup();
+    await guess(user, WRONG[0]!);
+    expect(store.get(KEYS.daily) && JSON.parse(store.get(KEYS.daily)!).data.game.guesses).toEqual([]);
+  });
+
+  it('replaces the keyboard with next steps when the game ends, and Home goes back to the dashboard', async () => {
+    const { user } = setup();
+    await guess(user, ANSWER);
+    await screen.findByRole('dialog', {}, { timeout: 3000 });
+    await user.keyboard('{Escape}');
+    const panel = screen.getByRole('region', { name: 'Game over' });
+    expect(within(panel).getByText('Solved in 1! 🎉')).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Keyboard' })).not.toBeInTheDocument();
+    await user.click(within(panel).getByRole('button', { name: /Home/ }));
+    expect(screen.getByText('Solved in 1')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^View results — Daily Challenge/ })).toBeInTheDocument();
+  });
+
+  it('offers a new word after a practice game ends', async () => {
+    window.history.replaceState(null, '', '/#practice');
+    const { user, store } = setup();
+    const answer = JSON.parse(store.get(KEYS.practice)!).data.game.answer as string;
+    await guess(user, answer);
+    await screen.findByRole('dialog', {}, { timeout: 3000 });
+    await user.keyboard('{Escape}');
+    await user.click(within(screen.getByRole('region', { name: 'Game over' })).getByRole('button', { name: /New word/ }));
+    expect(screen.getByRole('group', { name: 'Keyboard' })).toBeInTheDocument();
+    expect(rowText(0)).toBe('');
   });
 });

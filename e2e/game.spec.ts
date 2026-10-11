@@ -13,6 +13,8 @@ async function open(page: Page) {
   await expect(page.getByRole('dialog', { name: 'How to play' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  // The app opens on the home dashboard.
+  await page.getByRole('button', { name: /^Play — Daily Challenge/ }).click();
 }
 
 async function guess(page: Page, word: string) {
@@ -87,4 +89,25 @@ test('has no horizontal scrolling on a narrow phone', async ({ page }) => {
   const kb = await page.getByRole('group', { name: 'Keyboard' }).boundingBox();
   const board = await page.getByRole('grid').boundingBox();
   expect(kb && board && board.y + board.height <= kb.y).toBeTruthy();
+});
+
+test('with the real ticking clock, finishing shows results, next steps, and the way home', async ({ page }) => {
+  // No fixed time: the countdown re-renders every second, as for real players.
+  const answer = dailyAnswer(dayIndexFor(new Date(), '2026-10-01'), ANSWERS);
+  await page.goto('/');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Practice' })).toBeVisible();
+  await page.getByRole('button', { name: /^Play — Daily Challenge/ }).click();
+  await guess(page, answer);
+  const result = page.getByRole('dialog');
+  await expect(result.getByText(/You solved it in/)).toBeVisible({ timeout: 6000 });
+  await result.getByRole('button', { name: 'Close' }).click();
+  const panel = page.getByRole('region', { name: 'Game over' });
+  await expect(panel).toBeVisible();
+  await panel.getByRole('button', { name: /Home/ }).click();
+  await expect(page.getByRole('button', { name: /^View results — Daily Challenge/ })).toBeVisible();
+  // Browser Back from the game returns to the dashboard too.
+  await page.getByRole('button', { name: 'See today’s board' }).click();
+  await page.goBack();
+  await expect(page.getByRole('button', { name: /^View results — Daily Challenge/ })).toBeVisible();
 });

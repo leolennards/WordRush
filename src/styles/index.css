@@ -47,6 +47,9 @@
   --c-tile-filled-border: #9b9486;
   --c-key: #e4ded1;
   --c-key-ink: #1c1f26;
+  /* Letters ruled out: clearly "blacked out" against unused keys. */
+  --c-key-absent: #7c818c;
+  --c-key-absent-ink: #ffffff;
 
   /* Shape */
   --radius-tile: 0.6rem;
@@ -92,14 +95,16 @@
   --c-correct-ink: #04241a;
   --c-present: #f2b544;
   --c-present-ink: #2a1a00;
-  --c-absent: #343b4a;
-  --c-absent-ink: #c9d0dc;
+  --c-absent: #232835;
+  --c-absent-ink: #8a93a6;
   --c-danger: #ff7b6e;
 
   --c-tile-empty-border: #283042;
   --c-tile-filled-border: #56607a;
-  --c-key: #2a3142;
-  --c-key-ink: #eef1f6;
+  --c-key: #3a4256;
+  --c-key-ink: #f3f5f9;
+  --c-key-absent: #161a22;
+  --c-key-absent-ink: #4f586b;
 
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
   --shadow-md: 0 8px 22px -8px rgb(0 0 0 / 0.6);
@@ -373,8 +378,9 @@ button {
   --key-ink: var(--c-present-ink);
 }
 .key[data-state='absent'] {
-  --key-bg: var(--c-absent);
-  --key-ink: var(--c-absent-ink);
+  --key-bg: var(--c-key-absent);
+  --key-ink: var(--c-key-absent-ink);
+  box-shadow: none;
 }
 
 /* =========================================================================

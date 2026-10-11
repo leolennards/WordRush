@@ -4,6 +4,8 @@
  */
 export const BRAND = {
   name: 'WordRush',
+  /** The name split for the two-tone wordmark. */
+  wordmark: ['Word', 'Rush'] as const,
   tagline: 'A little word challenge every day.',
   /**
    * Public URL used in shared results. Set VITE_SITE_URL at build time for
