@@ -77,6 +77,15 @@ describe('codes and profiles', () => {
     await assertFails(updateDoc(doc(db('bob'), 'players', 'alice'), { name: 'Hacked' }));
   });
 
+  it('lets owners delete their own profile and code, but nobody else’s', async () => {
+    await makePlayer('alice', 'AAAAAA');
+    await makePlayer('bob', 'BBBBBB');
+    await assertFails(deleteDoc(doc(db('bob'), 'players', 'alice')));
+    await assertFails(deleteDoc(doc(db('bob'), 'codes', 'AAAAAA')));
+    await assertSucceeds(deleteDoc(doc(db('alice'), 'codes', 'AAAAAA')));
+    await assertSucceeds(deleteDoc(doc(db('alice'), 'players', 'alice')));
+  });
+
   it('never allows listing all players or codes', async () => {
     await makePlayer('alice', 'AAAAAA');
     await assertFails(getDocs(collection(db('bob'), 'players')));

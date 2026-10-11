@@ -10,10 +10,12 @@ import {
   GoogleAuthProvider,
   connectAuthEmulator,
   getAuth,
+  linkWithCredential,
   linkWithPopup,
   onAuthStateChanged,
   signInAnonymously,
   signInWithCredential,
+  deleteUser,
   signOut,
   type Auth,
   type User,
@@ -21,6 +23,7 @@ import {
 import {
   collection,
   connectFirestoreEmulator,
+  getDocs,
   doc,
   getDoc,
   initializeFirestore,
@@ -37,6 +40,7 @@ import {
 import { generateFriendCode, resolveRace, type RacerProgress } from '@/engine';
 import type { Account, ChallengeDoc, DailySummary, FriendLink, PlayerDoc, RaceDoc, RaceProgress } from './types';
 import { firebaseConfig } from './config';
+import { isNativeApp } from '@/lib/native/platform';
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
@@ -105,6 +109,24 @@ export async function signInWithGoogle(): Promise<GoogleResult> {
   const user = auth.currentUser;
   if (!user) throw new Error('Not signed in');
   try {
+    if (isNativeApp()) {
+      // In the app: native account picker → ID token → link to this profile.
+      const { nativeGoogleIdToken } = await import('@/lib/native/googleNative');
+      const idToken = await nativeGoogleIdToken();
+      if (!idToken) return 'cancelled';
+      const credential = GoogleAuthProvider.credential(idToken);
+      try {
+        await linkWithCredential(user, credential);
+      } catch (err) {
+        const code = (err as { code?: string }).code;
+        if (code === 'auth/credential-already-in-use' || code === 'auth/email-already-in-use') {
+          await signInWithCredential(auth, GoogleAuthProvider.credentialFromError(err as never) ?? credential);
+          return 'switched';
+        }
+        throw err;
+      }
+      return 'linked';
+    }
     await linkWithPopup(user, provider);
     return 'linked';
   } catch (err) {
@@ -126,7 +148,45 @@ export async function signInWithGoogle(): Promise<GoogleResult> {
 /** Signs out and continues as a brand-new guest on this device. */
 export async function signOutToGuest() {
   const { auth } = handles();
+  if (isNativeApp()) {
+    const { nativeGoogleSignOut } = await import('@/lib/native/googleNative');
+    await nativeGoogleSignOut();
+  }
   await signOut(auth);
+  await signInAnonymously(auth);
+}
+
+/**
+ * Deletes everything this player owns: friendships (both sides), friend code,
+ * profile and sign-in account, then continues as a fresh guest.
+ * Past challenge/race records keep only the anonymous user id (no name).
+ */
+export async function deleteProfile(me: string, code: string | null) {
+  const { auth, db } = handles();
+  const friends = await getDocs(collection(db, 'players', me, 'friends'));
+  const batch = writeBatch(db);
+  for (const f of friends.docs) {
+    batch.delete(doc(db, 'players', me, 'friends', f.id));
+    batch.delete(doc(db, 'players', f.id, 'friends', me));
+  }
+  if (code) batch.delete(doc(db, 'codes', code));
+  batch.delete(doc(db, 'players', me));
+  await batch.commit();
+
+  const user = auth.currentUser;
+  if (user) {
+    if (isNativeApp() && !user.isAnonymous) {
+      const { nativeGoogleSignOut } = await import('@/lib/native/googleNative');
+      await nativeGoogleSignOut();
+    }
+    try {
+      await deleteUser(user);
+    } catch {
+      // e.g. "requires recent login" for Google accounts: the profile data is
+      // already gone, so just sign out.
+      await signOut(auth);
+    }
+  }
   await signInAnonymously(auth);
 }
 

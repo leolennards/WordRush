@@ -19,6 +19,14 @@ paid API or database — and keeps preferences, progress and statistics in `loca
   synthesised sound effects, hard mode.
 - Installable PWA with an offline service worker (production builds only).
 
+## Apps (Android, iPhone)
+
+The same game is packaged with **Capacitor** as native apps (`android/`, `ios/`), using the same
+Firebase project, so friends play together across web and apps. Android is distributed free from the
+website (**Get the app**); iPhone users can install the web app with *Add to Home Screen*. Store
+publishing is optional and costs money (Google Play $25 once, Apple $99/year) — see
+[STORE_PUBLISHING.md](STORE_PUBLISHING.md), which also explains the signing key that must be backed up.
+
 ## Playing with friends
 
 Players create a profile (just a display name — no email or password) and get a 6-character
@@ -96,6 +104,7 @@ Cloudflare Pages, GitHub Pages, S3 + CloudFront):
 - [GAME_RULES.md](GAME_RULES.md) — rules, evaluation algorithm, hard mode, daily schedule
 - [TESTING.md](TESTING.md) — test coverage and latest results
 - [src/data/words/SOURCES.md](src/data/words/SOURCES.md) — dictionary sources and licences
+- [STORE_PUBLISHING.md](STORE_PUBLISHING.md) — app builds, signing key, Google Play / App Store steps
 - [CHANGELOG.md](CHANGELOG.md), [TODO.md](TODO.md)
 
 ## Known limitations

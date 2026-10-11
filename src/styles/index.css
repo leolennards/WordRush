@@ -416,11 +416,13 @@ button {
 }
 
 
+/* Safe areas: browsers expose env(); the Android app also provides
+   --safe-area-inset-* for older WebViews that lack env() values. */
 .safe-bottom {
-  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom), var(--safe-area-inset-bottom, 0px));
 }
 .safe-top {
-  padding-top: env(safe-area-inset-top);
+  padding-top: max(env(safe-area-inset-top), var(--safe-area-inset-top, 0px));
 }
 
 .tabular {

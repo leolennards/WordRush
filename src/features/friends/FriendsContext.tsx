@@ -38,6 +38,8 @@ interface FriendsContextValue {
   signInWithGoogle: () => Promise<'linked' | 'switched' | 'cancelled'>;
   /** Sign out of Google and continue as a new guest on this device. */
   signOut: () => Promise<void>;
+  /** Permanently delete my profile, code, friendships and account. */
+  deleteProfile: () => Promise<void>;
   nameOf: (uid: string) => string;
 }
 
@@ -251,6 +253,11 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       async signOut() {
         await need().a.signOutToGuest();
       },
+      async deleteProfile() {
+        const { a, me } = need();
+        await a.deleteProfile(me, profile?.code ?? null);
+        store.remove(JOINED_KEY);
+      },
       publishDaily(daily) {
         if (!api.current || !uid || status !== 'ready') return;
         api.current.publishDaily(uid, daily).catch(() => {
@@ -258,7 +265,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         });
       },
     };
-  }, [status, error, uid, account, profile, links, profiles, challenges, races, connect, need, pickAnswer, fail]);
+  }, [status, error, uid, account, profile, links, profiles, challenges, races, connect, need, pickAnswer, fail, store]);
 
   return <FriendsContext.Provider value={value}>{children}</FriendsContext.Provider>;
 }

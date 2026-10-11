@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.0 — 2026-10-11 (apps)
+
+- **Android app** (Capacitor) with native Google sign-in, native share sheet, Wordskiis icon and launch
+  screen; signed release APK offered free on the website via **Get the app**.
+- **iPhone project** generated and configured (icons, launch screen, Google sign-in URL scheme) ready
+  for a Mac with Xcode; iPhone players can install the web app via Add to Home Screen meanwhile.
+- **Delete my profile** (Friends): removes name, code, friendships and sign-in account (store requirement).
+- **Privacy policy** page at `/privacy.html`.
+- Safe-area handling also supports older Android WebViews.
+- STORE_PUBLISHING.md: free distribution, signing-key backup, and optional Google Play / App Store steps.
+
 ## 1.3.0 — 2026-10-11 (play with friends)
 
 - **Friends tab:** profile with display name and 6-character friend code (copy / share invite), add

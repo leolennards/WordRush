@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Wordskiis</string>
+    <string name="title_activity_main">Wordskiis</string>
+    <string name="package_name">com.wordskiis.app</string>
+    <string name="custom_url_scheme">com.wordskiis.app</string>
+</resources>

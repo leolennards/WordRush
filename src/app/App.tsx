@@ -26,6 +26,8 @@ import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog';
 import { FriendsView } from '@/components/friends/FriendsView';
 import { ChallengeScreen } from '@/components/friends/ChallengeScreen';
 import { RaceScreen } from '@/components/friends/RaceScreen';
+import { GetAppDialog } from '@/components/dialogs/GetAppDialog';
+import { isNativeApp } from '@/lib/native/platform';
 
 export function App({ services }: { services: Services }) {
   return (
@@ -55,7 +57,11 @@ function MotionRoot({ children }: { children: ReactNode }) {
   );
 }
 
-type DialogName = 'help' | 'stats' | 'settings' | 'result' | 'confirm-new' | null;
+type DialogName = 'help' | 'stats' | 'settings' | 'result' | 'confirm-new' | 'get-app' | null;
+
+/** Already running as an installed app (Android app, or added to a home screen)? */
+const runningAsApp = () =>
+  isNativeApp() || (typeof window !== 'undefined' && window.matchMedia?.('(display-mode: standalone)').matches);
 
 function Wordskiis() {
   const services = useServices();
@@ -188,6 +194,7 @@ function Wordskiis() {
           onDailyResults={() => setDialog('result')}
           onPlayPractice={() => changeMode('practice')}
           onFriends={goFriends}
+          onGetApp={runningAsApp() ? undefined : () => setDialog('get-app')}
           onHelp={() => setDialog('help')}
           onStats={() => setDialog('stats')}
           onSettings={() => setDialog('settings')}
@@ -267,6 +274,7 @@ function Wordskiis() {
       {content}
 
       <HelpDialog open={dialog === 'help'} onClose={closeDialog} />
+      <GetAppDialog open={dialog === 'get-app'} onClose={closeDialog} />
       <StatsDialog open={dialog === 'stats'} onClose={closeDialog} initialMode={mode} todayIndex={todayIndex} />
       <SettingsDialog
         open={dialog === 'settings'}

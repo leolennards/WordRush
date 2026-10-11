@@ -34,7 +34,9 @@ service cloud.firestore {
       allow create: if signedIn() && validCode(code)
         && request.resource.data.keys().hasOnly(['uid'])
         && request.resource.data.uid == me();
-      allow update, delete: if false;
+      allow update: if false;
+      // Owners may release their code when deleting their profile.
+      allow delete: if signedIn() && resource.data.uid == me();
     }
 
     // ---- Public player profiles (name, code, today's spoiler-free result). ----
@@ -52,7 +54,8 @@ service cloud.firestore {
         && onlyChanged(['name', 'daily'])
         && validName(request.resource.data.name)
         && validDaily(request.resource.data.get('daily', null));
-      allow delete: if false;
+      // "Delete my profile" (required by the app stores).
+      allow delete: if signedIn() && me() == uid;
 
       // Friend list. Adding by code writes both sides: my list, and theirs.
       match /friends/{friendUid} {

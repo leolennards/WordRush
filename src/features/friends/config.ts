@@ -8,7 +8,8 @@ import type { FirebaseOptions } from 'firebase/app';
 export function firebaseConfig(): { options: FirebaseOptions; emulator: boolean } | null {
   const env = import.meta.env;
   if (env.VITE_FIREBASE_EMULATOR === 'true') {
-    const projectId = env.VITE_FIREBASE_PROJECT_ID || 'demo-wordskiis';
+    // Always the demo project in emulator mode (ignores any real config present in .env files).
+    const projectId = 'demo-wordskiis';
     return {
       // authDomain is required for the (emulated) Google sign-in pop-up.
       options: { apiKey: 'demo-key', projectId, appId: 'demo', authDomain: `${projectId}.firebaseapp.com` },

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CalendarDays, Dumbbell, Share2 } from 'lucide-react';
+import { CalendarDays, Share2, Shuffle } from 'lucide-react';
 import type { LetterState } from '@/engine';
 import { BRAND, GAME } from '@/config/game';
 import { Dialog } from './Dialog';
@@ -67,7 +67,7 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
             </span>
           </li>
           <li className="flex gap-3">
-            <Dumbbell className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <Shuffle className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
             <span>
               <strong>Practice</strong> — unlimited words with separate statistics. It never affects your daily streak.
             </span>

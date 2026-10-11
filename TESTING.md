@@ -24,8 +24,8 @@ npm run check                    # typecheck + lint + unit tests + production bu
 | Check | Command | Result |
 | --- | --- | --- |
 | Friends engine (codes, rows, race/challenge outcomes) | `npm test` | included in the unit tests above |
-| Firestore security rules (emulator) | `npm run test:rules` | **15 / 15 passed** |
-| Two-player + Google sign-in browser tests (emulators) | `npm run test:e2e:friends` | **3 / 3 passed** |
+| Firestore security rules (emulator) | `npm run test:rules` | **16 / 16 passed** |
+| Two-player, Google sign-in and delete-profile browser tests (emulators) | `npm run test:e2e:friends` | **4 / 4 passed** |
 
 The two-player test: Alice and Bob create profiles; Bob's own code and an unknown code are rejected;
 Bob adds Alice by code and both see each other live; Alice challenges Bob, both play, results compare
@@ -35,6 +35,14 @@ Bob's progress live, solves first, and both screens show the correct winner with
 Google sign-in tests (Auth emulator's fake Google pop-up): a guest saves their profile with Google and
 keeps the same code; a second device signs in with that Google account and gets the same profile;
 signing out continues as a new guest; a brand-new Google account gets its first name suggested.
+
+## Android app (manual, emulator)
+
+The signed release APK installed and launched on an Android 15 emulator (Pixel 9 Pro image). Driving
+the app's WebView over Chrome DevTools confirmed: the home screen renders with correct status-bar
+spacing; Friends signs in anonymously and reaches the real Firestore database from inside the app.
+**Not verified:** native Google sign-in inside the app (the emulator had no Google account signed in),
+real Android phones, and the iOS app (no Xcode on this machine).
 
 ## Coverage by area
 

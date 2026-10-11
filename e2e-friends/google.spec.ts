@@ -58,3 +58,29 @@ test('a brand-new Google account gets its first name suggested', async ({ browse
   await page.getByRole('button', { name: 'Create my profile' }).click();
   await expect(page.getByText(account.email)).toBeVisible();
 });
+
+test('a player can delete their profile, which removes them from their friend’s list', async ({ browser }) => {
+  const mk = async (name: string) => {
+    const page = await (await browser.newContext()).newPage();
+    await openFriends(page);
+    await page.getByLabel('Display name').fill(name);
+    await page.getByRole('button', { name: 'Create my profile' }).click();
+    const code = (await page.getByText(/^[346789A-Z]{3}-[346789A-Z]{3}$/).textContent())!;
+    return { page, code };
+  };
+  const erin = await mk('Erin');
+  const finn = await mk('Finn');
+  await finn.page.getByLabel('Friend code', { exact: true }).fill(erin.code);
+  await finn.page.getByRole('button', { name: 'Add', exact: true }).click();
+  await expect(finn.page.getByRole('list').getByText('Erin', { exact: true })).toBeVisible();
+
+  await erin.page.getByRole('button', { name: 'Delete my profile' }).click();
+  await erin.page.getByRole('button', { name: 'Delete forever' }).click();
+  // Erin is back to a fresh start; Finn no longer has her as a friend.
+  await expect(erin.page.getByRole('button', { name: 'Create my profile' })).toBeVisible({ timeout: 15_000 });
+  await expect(finn.page.getByRole('list').getByText('Erin', { exact: true })).toHaveCount(0, { timeout: 15_000 });
+  // Her old code no longer works.
+  await finn.page.getByLabel('Friend code', { exact: true }).fill(erin.code);
+  await finn.page.getByRole('button', { name: 'Add', exact: true }).click();
+  await expect(finn.page.getByRole('alert')).toHaveText('No player has that code');
+});

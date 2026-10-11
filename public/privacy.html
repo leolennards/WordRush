@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy — Wordskiis</title>
+    <meta name="color-scheme" content="light dark" />
+    <style>
+      :root { --bg: #f6f3ec; --surface: #fff; --text: #1c1f26; --muted: #626875; --border: #e3ddd1; --accent: #1f9e63; }
+      @media (prefers-color-scheme: dark) {
+        :root { --bg: #0c0f15; --surface: #151a24; --text: #eef1f6; --muted: #9aa3b4; --border: #232a38; --accent: #47d69b; }
+      }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+      main { max-width: 42rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+      h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 0.25rem; letter-spacing: -0.02em; }
+      h2 { font-size: 1.1rem; margin: 2rem 0 0.5rem; }
+      p, li { color: var(--text); }
+      .muted { color: var(--muted); }
+      ul { padding-left: 1.2rem; }
+      a { color: var(--accent); }
+      .card { background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem 1.25rem; margin-top: 1.5rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p><a href="/">← Back to Wordskiis</a></p>
+      <h1>Privacy Policy</h1>
+      <p class="muted">Last updated 11 October 2026 · Applies to the Wordskiis website and the Wordskiis apps.</p>
+
+      <div class="card">
+        <strong>In short:</strong> the solo game stores everything on your own device. If you use Friends, we store a
+        display name you choose, a friend code, and your game results as coloured squares — never your guesses. We
+        don’t show ads, sell data, or use tracking cookies.
+      </div>
+
+      <h2>Playing on your own</h2>
+      <p>
+        Daily Challenge, Practice, statistics and settings are saved only in your browser or app on your device
+        (local storage). They are not sent to us. Clearing your browser or app data deletes them.
+      </p>
+
+      <h2>Friends (optional)</h2>
+      <p>If you open Friends, Wordskiis uses Google Firebase (Authentication and Cloud Firestore) to store:</p>
+      <ul>
+        <li>An anonymous account identifier created for your device (no email or password needed).</li>
+        <li>The display name you choose and your 6-character friend code.</li>
+        <li>Your friends list (the players you added, or who added you).</li>
+        <li>
+          Today’s Daily result and streak, and your challenge and race results, stored as colour patterns
+          (for example green / yellow / grey) — not the letters you guessed.
+        </li>
+        <li>The words used in challenges and races you play with friends.</li>
+      </ul>
+      <p>
+        Your display name, friend code, Daily colour pattern and streak are visible to people who have your friend
+        code or are on your friends list. Challenges and races are visible only to the two players involved.
+      </p>
+
+      <h2>Signing in with Google (optional)</h2>
+      <p>
+        If you choose “Save with Google” or “Sign in with Google”, Firebase Authentication receives your Google
+        account’s email address, name and a unique identifier, so your profile can be restored on other devices. We
+        use these only to sign you in. Your email is not shown to other players.
+      </p>
+
+      <h2>Deleting your data</h2>
+      <p>
+        In <strong>Friends → Delete my profile</strong> you can permanently delete your profile, friend code,
+        friendships and sign-in account at any time. Past challenge and race records then contain only an anonymous
+        identifier, with no name. Solo data can be removed by clearing the site or app data on your device.
+      </p>
+
+      <h2>Where data is stored</h2>
+      <p>
+        Friends data is stored by Google Cloud (Firebase) in South Africa (Johannesburg). The website is hosted by
+        Vercel. These providers process data on our behalf under their own security and privacy terms.
+      </p>
+
+      <h2>Children</h2>
+      <p>
+        Wordskiis is a general-audience word game. It doesn’t knowingly collect personal information from children
+        beyond the optional display name described above, and it has no chat or messaging between players.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions or requests about your data: open an issue at
+        <a href="https://github.com/leolennards/Wordskiis/issues">github.com/leolennards/Wordskiis/issues</a>.
+      </p>
+    </main>
+  </body>
+</html>

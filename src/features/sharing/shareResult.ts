@@ -1,3 +1,5 @@
+import { isNativeApp } from '@/lib/native/platform';
+
 export type ShareOutcome = 'shared' | 'copied' | 'cancelled' | 'failed';
 
 /**
@@ -6,6 +8,17 @@ export type ShareOutcome = 'shared' | 'copied' | 'cancelled' | 'failed';
  * legacy fallback for browsers without the async Clipboard API.
  */
 export async function shareResult(text: string, nav: Navigator = navigator): Promise<ShareOutcome> {
+  if (isNativeApp()) {
+    // The app's WebView has no Web Share API; use the phone's share sheet.
+    try {
+      const { Share } = await import('@capacitor/share');
+      await Share.share({ text });
+      return 'shared';
+    } catch (err) {
+      if (String((err as { message?: string }).message ?? '').toLowerCase().includes('cancel')) return 'cancelled';
+      // Fall through to the clipboard.
+    }
+  }
   const coarse = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
   if (coarse && typeof nav.share === 'function' && (!nav.canShare || nav.canShare({ text }))) {
     try {

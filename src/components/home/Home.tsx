@@ -1,5 +1,5 @@
 import { m } from 'motion/react';
-import { ArrowRight, BarChart3, ChevronRight, CircleHelp, Clock3, Flame, Settings, Shuffle, Trophy, Users } from 'lucide-react';
+import { ArrowRight, BarChart3, ChevronRight, CircleHelp, Clock3, Flame, Settings, Shuffle, Smartphone, Trophy, Users } from 'lucide-react';
 import { BRAND, GAME } from '@/config/game';
 import { effectiveStreak, winPercentage, type GameState, type Stats } from '@/engine';
 import { MiniBoard } from './MiniBoard';
@@ -18,6 +18,8 @@ interface HomeProps {
   onDailyResults: () => void;
   onPlayPractice: () => void;
   onFriends: () => void;
+  /** Omitted when already running as an app. */
+  onGetApp?: () => void;
   friendsPending: number;
   friendsAvailable: boolean;
   onHelp: () => void;
@@ -209,6 +211,7 @@ export function Home(props: HomeProps) {
 
           <m.nav {...rise(5)} aria-label="More" className="flex flex-wrap justify-center gap-1 pt-1 lg:justify-start">
             {[
+              ...(props.onGetApp ? [{ label: 'Get the app', icon: Smartphone, onClick: props.onGetApp }] : []),
               { label: 'How to play', icon: CircleHelp, onClick: props.onHelp },
               { label: 'Statistics', icon: BarChart3, onClick: props.onStats },
               { label: 'Settings', icon: Settings, onClick: props.onSettings },

@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { m } from 'motion/react';
-import { Check, Cloud, Copy, Flame, Loader2, LogOut, Pencil, Share2, Smartphone, Swords, Timer, UserPlus, Users, X, Zap } from 'lucide-react';
+import { Check, Cloud, Copy, Flame, Loader2, LogOut, Pencil, Share2, Smartphone, Swords, Timer, Trash2, UserPlus, Users, X, Zap } from 'lucide-react';
 import { BRAND, GAME } from '@/config/game';
 import { compareChallenge, decodeRows, formatFriendCode, type GameState } from '@/engine';
 import { useFriends } from '@/features/friends/FriendsContext';
@@ -316,6 +316,7 @@ function ProfileCard() {
           </Button>
         </div>
       </div>
+      <DeleteProfile />
     </section>
   );
 }
@@ -377,6 +378,62 @@ function AccountRow() {
               Sign out
             </Button>
             <Button variant="ghost" className="min-h-10" onClick={() => setConfirming(false)} autoFocus>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DeleteProfile() {
+  const f = useFriends();
+  const { toast } = useToast();
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <div className="mt-4 border-t border-border pt-3">
+      {!confirming ? (
+        <div className="flex items-center justify-between gap-3 text-xs text-muted">
+          <a href={`${BRAND.siteUrl}/privacy.html`} target="_blank" rel="noreferrer" className="underline-offset-2 hover:text-text hover:underline">
+            Privacy policy
+          </a>
+          <button
+            type="button"
+            onClick={() => setConfirming(true)}
+            className="inline-flex items-center gap-1 rounded-md px-1 py-1 hover:text-danger"
+          >
+            <Trash2 className="size-3.5" aria-hidden /> Delete my profile
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-3 rounded-xl border border-danger/40 bg-danger/5 p-3" role="alert">
+          <p className="text-sm">
+            <strong>Delete your profile for good?</strong> Your name, friend code, friends list and sign-in are
+            removed for everyone. Your solo games and stats on this device stay. This can’t be undone.
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="danger"
+              className="min-h-10"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await f.deleteProfile();
+                  toast('Profile deleted');
+                } catch (err) {
+                  toast(err instanceof Error ? err.message : 'Couldn’t delete your profile');
+                  setBusy(false);
+                }
+              }}
+            >
+              {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Trash2 className="size-4" aria-hidden />}
+              Delete forever
+            </Button>
+            <Button variant="ghost" className="min-h-10" onClick={() => setConfirming(false)} autoFocus disabled={busy}>
               Cancel
             </Button>
           </div>
