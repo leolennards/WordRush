@@ -75,7 +75,9 @@ function Key(props: {
       aria-label={props.label}
       aria-disabled={props.disabled || undefined}
       onMouseDown={keepFocus}
-      onClick={props.onClick}
+      onClick={() => {
+        if (!props.disabled) props.onClick();
+      }}
     >
       {props.children}
     </button>

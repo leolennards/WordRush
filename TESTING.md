@@ -15,9 +15,22 @@ npm run check                    # typecheck + lint + unit tests + production bu
 | --- | --- | --- |
 | Type check (strict) | `npm run typecheck` | Pass, 0 errors |
 | Lint | `npm run lint` | Pass, 0 errors, 0 warnings |
-| Unit + interface tests | `npm test` | **78 / 78 passed** (7 files) |
+| Unit + interface tests | `npm test` | **89 / 89 passed** (8 files) |
 | Production build | `npm run build` | Pass — JS ~450 kB (~157 kB gzip), CSS ~34 kB (~8 kB gzip) |
 | End-to-end | `npm run test:e2e` | **14 / 14 passed** (7 tests × desktop Chrome and Pixel 7 emulation, Chromium only) |
+
+## Friends tests
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Friends engine (codes, rows, race/challenge outcomes) | `npm test` | included in the unit tests above |
+| Firestore security rules (emulator) | `npm run test:rules` | **15 / 15 passed** |
+| Two-player browser test (emulators, two separate browser contexts) | `npm run test:e2e:friends` | **1 / 1 passed** |
+
+The two-player test: Alice and Bob create profiles; Bob's own code and an unknown code are rejected;
+Bob adds Alice by code and both see each other live; Alice challenges Bob, both play, results compare
+live on both screens; Bob invites Alice to a race, typing is blocked during the countdown, Alice sees
+Bob's progress live, solves first, and both screens show the correct winner with Bob locked out.
 
 ## Coverage by area
 

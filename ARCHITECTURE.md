@@ -99,6 +99,31 @@ half-written session is rejected rather than played.
 - **Bundle:** ~156 kB gzipped JS (React DOM ~60 kB, dictionary ~30 kB, Motion ~35 kB) plus a
   self-hosted Outfit variable font (OFL). No runtime network requests.
 
+## Friends (Firebase, free Spark plan)
+
+- **Identity:** Firebase anonymous auth (no personal data). `players/{uid}` holds the public
+  profile: `name`, `code`, `createdAt`, and `daily` (`{dayIndex, status, rows, streak}`, where rows are
+  colour strings like `"capaa"` — never letters).
+- **Codes:** `codes/{CODE}` → `{uid}`, claimed in the same transaction that creates the profile, so
+  codes are unique. Codes use an unambiguous alphabet (no 0/O, 1/I/L, 2/Z, 5/S).
+- **Friends:** `players/{uid}/friends/{friendUid}` → `{since}`. Adding by code writes both sides in
+  one batch; either friend can remove the pair.
+- **Challenges:** `challenges/{id}` → `{from, to, players, answer, createdAt, results}`. Each player
+  plays locally (saved under `wordskiis:challenge:<id>`) and writes only their own result.
+- **Races:** `races/{id}` → `{host, guest, players, answer, state, startAt, progress, winner}`.
+  States: `invited → countdown → playing → finished` (or `declined`/`cancelled`). The guest sets
+  `startAt` ≈ now + 3.5 s; typing unlocks at that shared time. Each guess writes the player's colour
+  rows inside a transaction that also settles the winner with the pure `resolveRace`, so two
+  simultaneous finishes can't both win.
+- **Rules** (`firestore.rules`, tested in `firebase-tests/`): sign-in required; profiles readable one
+  at a time but never listable; you can only edit your own profile/result/progress; challenges and
+  races are visible only to their two players and can only be created between friends.
+- **Code layout:** pure logic in `src/engine/friends.ts`; Firebase calls in
+  `src/features/friends/api.ts` (dynamically imported); React state in `FriendsContext`; screens in
+  `src/components/friends/`. All game screens share `useGameScreen` + `PlayArea`.
+- **Limits:** free Spark quotas (50k reads / 20k writes per day) comfortably cover a hobby game. Without
+  a billing account, exceeding them pauses Friends until the next day rather than charging.
+
 ## Offline / PWA
 
 `public/sw.js` (registered only in production builds) caches the app shell and same-origin assets

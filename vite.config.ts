@@ -6,6 +6,10 @@ import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    // The Firebase chunk (~170 kB gzip) only loads when a player opens Friends.
+    chunkSizeWarningLimit: 600,
+  },
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },

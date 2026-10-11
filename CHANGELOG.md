@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.0 — 2026-10-11 (play with friends)
+
+- **Friends tab:** profile with display name and 6-character friend code (copy / share invite), add
+  friends by code, friend list with each friend's Daily result (colours only) and streak, remove friend.
+- **Challenges:** play the same random word separately; results are hidden until you finish, then
+  compared side by side with a winner. Rematch in one tap.
+- **Live races:** invite, accept/decline, synced 3-2-1 countdown, opponent's progress live, first to
+  solve wins (ties settled fairly in a transaction). Rematch in one tap.
+- Friends badge in the header and a "Play with friends" card on Home.
+- Firebase (free Spark plan) with tested security rules; SDK loads only when Friends is used.
+- Refactor: every game screen now shares `useGameScreen` and `PlayArea`.
+
 ## 1.2.0 — 2026-10-11 (design refresh)
 
 - **Ink primary actions:** buttons use a neutral ink colour; green/amber are reserved for game feedback.

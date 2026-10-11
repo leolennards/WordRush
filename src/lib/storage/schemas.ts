@@ -61,7 +61,7 @@ const WORD = new RegExp(`^[a-z]{${GAME.wordLength}}$`);
 export function validateGameState(d: unknown): GameState | null {
   if (!isRecord(d)) return null;
   const { mode, id, answer, guesses, evaluations, status, hardMode, dayIndex } = d;
-  if (mode !== 'daily' && mode !== 'practice') return null;
+  if (mode !== 'daily' && mode !== 'practice' && mode !== 'challenge' && mode !== 'race') return null;
   if (typeof id !== 'string' || typeof answer !== 'string' || !WORD.test(answer)) return null;
   if (!Array.isArray(guesses) || !Array.isArray(evaluations)) return null;
   if (guesses.length > GAME.maxGuesses || guesses.length !== evaluations.length) return null;
@@ -160,3 +160,16 @@ export const statsSchema: Schema<Stats> = {
     };
   },
 };
+
+/** A saved challenge or race game on this device, keyed by its id. */
+export const friendGameSchema: Schema<{ game: GameState }> = {
+  version: 1,
+  validate(d) {
+    if (!isRecord(d)) return null;
+    const game = validateGameState(d.game);
+    if (!game || (game.mode !== 'challenge' && game.mode !== 'race')) return null;
+    return { game };
+  },
+};
+
+export const friendGameKey = (mode: 'challenge' | 'race', id: string) => `${STORAGE_PREFIX}:${mode}:${id}`;

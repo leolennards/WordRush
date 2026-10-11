@@ -1,14 +1,14 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { useServices } from '@/app/services';
 import { GAME } from '@/config/game';
-import { emptyStats, recordResult, type GameMode, type GameResult, type Stats } from '@/engine';
+import { emptyStats, recordResult, type SoloMode, type GameResult, type Stats } from '@/engine';
 import { KEYS, statsSchema } from '@/lib/storage/schemas';
 import { readVersioned, writeVersioned } from '@/lib/storage/versioned';
 
 interface StatsContextValue {
   daily: Stats;
   practice: Stats;
-  record: (mode: GameMode, result: GameResult) => void;
+  record: (mode: SoloMode, result: GameResult) => void;
   /**
    * Clears all statistics. `dailyRecordedKey` marks an already-finished daily
    * challenge as recorded so restoring it later doesn't count it again.
@@ -17,19 +17,19 @@ interface StatsContextValue {
 }
 
 const StatsContext = createContext<StatsContextValue | null>(null);
-const keyFor = (mode: GameMode) => (mode === 'daily' ? KEYS.dailyStats : KEYS.practiceStats);
+const keyFor = (mode: SoloMode) => (mode === 'daily' ? KEYS.dailyStats : KEYS.practiceStats);
 
 export function StatsProvider({ children }: { children: ReactNode }) {
   const { store } = useServices();
   const load = useCallback(
-    (mode: GameMode) => readVersioned(store, keyFor(mode), statsSchema) ?? emptyStats(GAME.maxGuesses),
+    (mode: SoloMode) => readVersioned(store, keyFor(mode), statsSchema) ?? emptyStats(GAME.maxGuesses),
     [store],
   );
   const [daily, setDaily] = useState(() => load('daily'));
   const [practice, setPractice] = useState(() => load('practice'));
 
   const record = useCallback(
-    (mode: GameMode, result: GameResult) => {
+    (mode: SoloMode, result: GameResult) => {
       // Read-modify-write from storage so another tab's results are respected
       // and the same result is never counted twice.
       const current = load(mode);

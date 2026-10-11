@@ -1,31 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { LazyMotion, MotionConfig, domAnimation } from 'motion/react';
-import { BRAND, GAME, TIMING } from '@/config/game';
-import {
-  buildShareText,
-  challengeNumber,
-  dailyAnswer,
-  dateForDayIndex,
-  letterStatesFor,
-  type GameMode,
-} from '@/engine';
+import { BRAND, GAME } from '@/config/game';
+import { buildShareText, challengeNumber, dateForDayIndex, effectiveStreak, encodeRows, type SoloMode } from '@/engine';
 import { ServicesProvider, useServices, type Services } from './services';
 import { SettingsProvider, useSettings } from '@/features/settings/SettingsContext';
 import { StatsProvider, useStats } from '@/features/stats/StatsContext';
 import { useDailyGame } from '@/features/daily/useDailyGame';
 import { usePracticeGame } from '@/features/practice/usePracticeGame';
-import { rejectionMessage } from '@/features/game/sessionReducer';
+import { useGameScreen } from '@/features/game/useGameScreen';
+import { FriendsProvider, useFriends } from '@/features/friends/FriendsContext';
 import { shareResult } from '@/features/sharing/shareResult';
 import { useCountdown, useTodayIndex } from '@/hooks/useToday';
-import { usePhysicalKeyboard } from '@/hooks/usePhysicalKeyboard';
 import { useView } from '@/hooks/useHashMode';
-import { playCue } from '@/lib/audio/sound';
-import { Board } from '@/components/board/Board';
-import { Keyboard } from '@/components/keyboard/Keyboard';
+import { PlayArea } from '@/components/board/PlayArea';
 import { Header, ModeTabs } from '@/components/layout/Header';
 import { InfoBar } from '@/components/layout/InfoBar';
 import { ToastProvider, useToast } from '@/components/layout/Toasts';
-import { Celebration } from '@/components/layout/Celebration';
 import { GameOverPanel } from '@/components/layout/GameOverPanel';
 import { Home } from '@/components/home/Home';
 import { HelpDialog } from '@/components/dialogs/HelpDialog';
@@ -33,6 +23,9 @@ import { StatsDialog } from '@/components/dialogs/StatsDialog';
 import { SettingsDialog } from '@/components/dialogs/SettingsDialog';
 import { ResultDialog } from '@/components/dialogs/ResultDialog';
 import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog';
+import { FriendsView } from '@/components/friends/FriendsView';
+import { ChallengeScreen } from '@/components/friends/ChallengeScreen';
+import { RaceScreen } from '@/components/friends/RaceScreen';
 
 export function App({ services }: { services: Services }) {
   return (
@@ -41,7 +34,9 @@ export function App({ services }: { services: Services }) {
         <MotionRoot>
           <StatsProvider>
             <ToastProvider>
-              <Wordskiis />
+              <FriendsProvider>
+                <Wordskiis />
+              </FriendsProvider>
             </ToastProvider>
           </StatsProvider>
         </MotionRoot>
@@ -64,91 +59,42 @@ type DialogName = 'help' | 'stats' | 'settings' | 'result' | 'confirm-new' | nul
 
 function Wordskiis() {
   const services = useServices();
-  const { settings, update, resolvedTheme, reducedMotion } = useSettings();
+  const { settings, update, resolvedTheme } = useSettings();
   const stats = useStats();
-  const { toast, announce } = useToast();
+  const friends = useFriends();
+  const { toast } = useToast();
 
-  const [view, setView] = useView();
-  // On the home dashboard, "mode" is daily so Results/Stats default to the daily game.
-  const mode: GameMode = view === 'practice' ? 'practice' : 'daily';
-  const onHomeView = view === 'home';
+  const [route, navigate] = useView();
+  const { view } = route;
+  const isSolo = view === 'daily' || view === 'practice';
+  // Outside the solo screens, "mode" is daily so Results/Stats default to the daily game.
+  const mode: SoloMode = view === 'practice' ? 'practice' : 'daily';
   const todayIndex = useTodayIndex(services.now);
   const countdown = useCountdown(services.now);
   const daily = useDailyGame(todayIndex);
-  const todaysAnswer = dailyAnswer(todayIndex, services.dictionary.answers);
-  const practice = usePracticeGame(todaysAnswer);
+  const practice = usePracticeGame(daily.session.game.answer);
   const active = mode === 'daily' ? daily : practice;
-  const { game, input, revealingRow, rejection, justCompleted } = active.session;
+  const { game } = active.session;
 
   const [dialog, setDialog] = useState<DialogName>(() => (settings.seenHelp ? null : 'help'));
-  // Derived presentation state (no extra React state needed).
-  const shakeKey =
-    rejection && rejection.error.kind !== 'game-over' && rejection.row === game.guesses.length ? rejection.nonce : 0;
-  const celebrating = justCompleted && revealingRow === null && game.status === 'won';
+  const screen = useGameScreen(active, {
+    inputEnabled: dialog === null && isSolo,
+    onCompleted: () => setDialog((d) => d ?? 'result'),
+  });
 
-  const sound = useCallback((cue: Parameters<typeof playCue>[0]) => settings.sound && playCue(cue), [settings.sound]);
-
-  // ----- Input -----
-  const onLetter = useCallback(
-    (l: string) => {
-      if (game.status === 'playing' && revealingRow === null && input.length < GAME.wordLength) sound('key');
-      active.type(l);
-    },
-    [active, game.status, revealingRow, input.length, sound],
-  );
-  const inputEnabled = dialog === null && !onHomeView;
-  usePhysicalKeyboard({ onLetter, onDelete: active.remove, onEnter: active.submit }, inputEnabled);
-
-  // ----- Rejected guesses: toast + shake -----
-  const lastRejection = useRef(rejection?.nonce ?? 0);
+  // ----- Share today's daily result with friends (colours only, never letters) -----
+  const dailyGame = daily.session.game;
+  const { publishDaily, status: friendsStatus } = friends;
+  const dailyStreak = effectiveStreak(stats.daily, todayIndex);
   useEffect(() => {
-    if (!rejection || rejection.nonce === lastRejection.current) return;
-    lastRejection.current = rejection.nonce;
-    if (rejection.error.kind === 'game-over') return;
-    toast(rejectionMessage(rejection.error));
-    sound('invalid');
-  }, [rejection, toast, sound]);
-
-  // ----- Announce each revealed row for screen readers -----
-  const announcedRows = useRef<string>('');
-  useEffect(() => {
-    if (revealingRow !== null) {
-      sound('reveal');
-      return;
-    }
-    const row = game.guesses.length - 1;
-    const tag = `${game.id}:${row}`;
-    if (row < 0 || announcedRows.current === tag) return;
-    const first = announcedRows.current === '';
-    announcedRows.current = tag;
-    if (first) return; // don't announce restored rows on load
-    const evaluation = game.evaluations[row]!;
-    const words = { correct: 'correct', present: 'in the word', absent: 'not in the word' } as const;
-    announce(
-      `Guess ${row + 1}: ${[...game.guesses[row]!].map((l, i) => `${l.toUpperCase()} ${words[evaluation[i]!]}`).join(', ')}`,
-    );
-  }, [revealingRow, game, announce, sound]);
-
-  // ----- Completion: celebrate, then show results -----
-  // Depends only on primitives and stable callbacks: the countdown re-renders
-  // this component every second, and the timer must not restart on each tick.
-  const { ackComplete } = active;
-  const won = game.status === 'won';
-  const answerText = game.answer.toUpperCase();
-  const completionReady = justCompleted && revealingRow === null;
-  useEffect(() => {
-    if (!completionReady) return;
-    sound(won ? 'win' : 'lose');
-    toast(won ? 'Solved!' : answerText, { tone: won ? 'success' : 'neutral', duration: 2200 });
-    const t = window.setTimeout(
-      () => {
-        ackComplete();
-        setDialog((d) => d ?? 'result');
-      },
-      reducedMotion ? 300 : TIMING.resultDelay + (won ? 500 : 0),
-    );
-    return () => window.clearTimeout(t);
-  }, [completionReady, won, answerText, ackComplete, sound, toast, reducedMotion]);
+    if (friendsStatus !== 'ready' || dailyGame.dayIndex === null) return;
+    publishDaily({
+      dayIndex: dailyGame.dayIndex,
+      status: dailyGame.status,
+      rows: encodeRows(dailyGame.evaluations),
+      streak: dailyStreak,
+    });
+  }, [friendsStatus, publishDaily, dailyGame.dayIndex, dailyGame.status, dailyGame.evaluations, dailyStreak]);
 
   // ----- Sharing -----
   const shareLabel = mode === 'daily' && game.dayIndex !== null ? `#${challengeNumber(game.dayIndex)}` : 'Practice';
@@ -179,17 +125,18 @@ function Wordskiis() {
     });
   }, [settings.seenHelp, update]);
 
-  const changeMode = useCallback(
-    (m: GameMode) => {
-      setView(m);
+  const go = useCallback(
+    (v: Parameters<typeof navigate>[0], id: string | null = null) => {
+      navigate(v, id);
       setDialog(null);
     },
-    [setView],
+    [navigate],
   );
-  const goHome = useCallback(() => {
-    setView('home');
-    setDialog(null);
-  }, [setView]);
+  const changeMode = useCallback((m: SoloMode) => go(m), [go]);
+  const goHome = useCallback(() => go('home'), [go]);
+  const goFriends = useCallback(() => go('friends'), [go]);
+  const openChallenge = useCallback((id: string) => go('challenge', id), [go]);
+  const openRace = useCallback((id: string) => go('race', id), [go]);
 
   const requestNewPractice = () => {
     if (practice.session.game.status === 'playing' && practice.session.game.guesses.length > 0) {
@@ -199,8 +146,6 @@ function Wordskiis() {
       setDialog(null);
     }
   };
-
-  const letterStates = useMemo(() => letterStatesFor(game.guesses, game.evaluations), [game.guesses, game.evaluations]);
 
   const dailyDate = dateForDayIndex(game.dayIndex ?? todayIndex, GAME.dailyEpoch).toLocaleDateString(undefined, {
     weekday: 'short',
@@ -212,12 +157,90 @@ function Wordskiis() {
   const subheading = mode === 'daily' ? dailyDate : `Word ${practice.gameNumber} · unlimited play`;
 
   const onReset = () => {
-    const dailyGame = daily.session.game;
     stats.reset(dailyGame.status !== 'playing' ? dailyGame.dayIndex : null);
     practice.reset();
     setDialog(null);
     toast('Statistics reset');
   };
+
+  let content: ReactNode;
+  if (view === 'home') {
+    content = (
+      <main id="game" className="min-h-0 flex-1 overflow-y-auto">
+        <Home
+          challengeNumber={challengeNumber(todayIndex)}
+          dateLabel={dateForDayIndex(todayIndex, GAME.dailyEpoch).toLocaleDateString(undefined, {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            timeZone: 'UTC',
+          })}
+          daily={dailyGame}
+          practice={practice.session.game}
+          practiceNumber={practice.gameNumber}
+          dailyStats={stats.daily}
+          practiceStats={stats.practice}
+          todayIndex={todayIndex}
+          countdown={countdown}
+          friendsPending={friends.pendingCount}
+          friendsAvailable={friends.status !== 'unavailable'}
+          onPlayDaily={() => changeMode('daily')}
+          onDailyResults={() => setDialog('result')}
+          onPlayPractice={() => changeMode('practice')}
+          onFriends={goFriends}
+          onHelp={() => setDialog('help')}
+          onStats={() => setDialog('stats')}
+          onSettings={() => setDialog('settings')}
+        />
+      </main>
+    );
+  } else if (view === 'friends') {
+    content = (
+      <main id="game" className="min-h-0 flex-1 overflow-y-auto">
+        <FriendsView todayIndex={todayIndex} onOpenChallenge={openChallenge} onOpenRace={openRace} />
+      </main>
+    );
+  } else if (view === 'challenge' && route.id) {
+    content = (
+      <ChallengeScreen id={route.id} inputEnabled={dialog === null} onBack={goFriends} onOpenChallenge={openChallenge} />
+    );
+  } else if (view === 'race' && route.id) {
+    content = <RaceScreen id={route.id} inputEnabled={dialog === null} onBack={goFriends} onOpenRace={openRace} />;
+  } else {
+    content = (
+      <main id="game" className="flex min-h-0 flex-1 flex-col">
+        <InfoBar
+          heading={heading}
+          subheading={subheading}
+          game={game}
+          modeSwitch={<ModeTabs mode={mode} onModeChange={changeMode} />}
+          onResults={() => setDialog('result')}
+          onNewGame={mode === 'practice' ? requestNewPractice : undefined}
+          staleAction={
+            mode === 'daily' && daily.stale
+              ? { label: `Play #${challengeNumber(todayIndex)}`, onClick: daily.startToday }
+              : undefined
+          }
+        />
+        <PlayArea
+          active={active}
+          screen={screen}
+          celebrationSeed={game.guesses.length + todayIndex}
+          endPanel={
+            <GameOverPanel
+              game={game}
+              countdown={mode === 'daily' ? countdown : undefined}
+              onResults={() => setDialog('result')}
+              onShare={onShare}
+              onHome={goHome}
+              onPractice={mode === 'daily' ? () => changeMode('practice') : undefined}
+              onNewGame={mode === 'practice' ? requestNewPractice : undefined}
+            />
+          }
+        />
+      </main>
+    );
+  }
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
@@ -228,9 +251,11 @@ function Wordskiis() {
         Skip to content
       </a>
       <Header
-        mode={onHomeView ? null : mode}
+        mode={isSolo ? mode : null}
         onHome={goHome}
         onModeChange={changeMode}
+        onFriends={friends.status === 'unavailable' ? undefined : goFriends}
+        friendsBadge={friends.pendingCount}
         onHelp={() => setDialog('help')}
         onStats={() => setDialog('stats')}
         onSettings={() => setDialog('settings')}
@@ -239,84 +264,7 @@ function Wordskiis() {
         {BRAND.name} — {BRAND.tagline}
       </h1>
 
-      {onHomeView ? (
-        <main id="game" className="min-h-0 flex-1 overflow-y-auto">
-          <Home
-            challengeNumber={challengeNumber(todayIndex)}
-            dateLabel={dateForDayIndex(todayIndex, GAME.dailyEpoch).toLocaleDateString(undefined, {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-              timeZone: 'UTC',
-            })}
-            daily={daily.session.game}
-            practice={practice.session.game}
-            practiceNumber={practice.gameNumber}
-            dailyStats={stats.daily}
-            practiceStats={stats.practice}
-            todayIndex={todayIndex}
-            countdown={countdown}
-            onPlayDaily={() => changeMode('daily')}
-            onDailyResults={() => setDialog('result')}
-            onPlayPractice={() => changeMode('practice')}
-            onHelp={() => setDialog('help')}
-            onStats={() => setDialog('stats')}
-            onSettings={() => setDialog('settings')}
-          />
-        </main>
-      ) : (
-        <main id="game" className="flex min-h-0 flex-1 flex-col">
-          <InfoBar
-            heading={heading}
-            subheading={subheading}
-            game={game}
-            modeSwitch={<ModeTabs mode={mode} onModeChange={changeMode} />}
-            onResults={() => setDialog('result')}
-            onNewGame={mode === 'practice' ? requestNewPractice : undefined}
-            staleAction={
-              mode === 'daily' && daily.stale
-                ? { label: `Play #${challengeNumber(todayIndex)}`, onClick: daily.startToday }
-                : undefined
-            }
-          />
-
-          <div className="board-area relative min-h-0 flex-1 px-3 py-2 sm:py-4">
-            <div className="flex h-full items-center justify-center">
-              <Board
-                game={game}
-                input={input}
-                revealingRow={revealingRow}
-                shakeKey={shakeKey}
-                celebrate={celebrating}
-              />
-            </div>
-            {celebrating && !reducedMotion && <Celebration seed={game.guesses.length + todayIndex} />}
-          </div>
-
-          <div className="safe-bottom pt-1 sm:pb-5">
-            {game.status !== 'playing' && revealingRow === null ? (
-              <GameOverPanel
-                game={game}
-                countdown={mode === 'daily' ? countdown : undefined}
-                onResults={() => setDialog('result')}
-                onShare={onShare}
-                onHome={goHome}
-                onPractice={mode === 'daily' ? () => changeMode('practice') : undefined}
-                onNewGame={mode === 'practice' ? requestNewPractice : undefined}
-              />
-            ) : (
-              <Keyboard
-                letterStates={letterStates}
-                onLetter={onLetter}
-                onDelete={active.remove}
-                onEnter={active.submit}
-                disabled={game.status !== 'playing'}
-              />
-            )}
-          </div>
-        </main>
-      )}
-
+      {content}
 
       <HelpDialog open={dialog === 'help'} onClose={closeDialog} />
       <StatsDialog open={dialog === 'stats'} onClose={closeDialog} initialMode={mode} todayIndex={todayIndex} />
@@ -338,7 +286,7 @@ function Wordskiis() {
         onShare={onShare}
         onPractice={mode === 'daily' ? () => changeMode('practice') : undefined}
         onNewGame={mode === 'practice' ? requestNewPractice : undefined}
-        onHome={onHomeView ? undefined : goHome}
+        onHome={view === 'home' ? undefined : goHome}
       />
       <ConfirmDialog
         open={dialog === 'confirm-new'}

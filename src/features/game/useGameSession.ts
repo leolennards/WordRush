@@ -29,6 +29,8 @@ export function useGameSession(params: {
   initialGame: () => GameState;
   persist: (game: GameState) => void;
   onFinished: (game: GameState) => void;
+  /** Follow the Hard mode setting (solo games). Friend games stay on normal rules for fairness. */
+  followHardMode?: boolean;
 }): GameSession {
   const { dictionary } = useServices();
   const { settings, reducedMotion } = useSettings();
@@ -49,9 +51,10 @@ export function useGameSession(params: {
   }, [revealingRow, reducedMotion]);
 
   // Keep the current game's hard mode in sync with the setting while allowed.
+  const followHardMode = params.followHardMode ?? true;
   useEffect(() => {
-    dispatch({ type: 'set-hard-mode', enabled: settings.hardMode });
-  }, [settings.hardMode, game.id]);
+    if (followHardMode) dispatch({ type: 'set-hard-mode', enabled: settings.hardMode });
+  }, [settings.hardMode, game.id, followHardMode]);
 
   const type = useCallback((letter: string) => dispatch({ type: 'type', letter, wordLength: GAME.wordLength }), []);
   const remove = useCallback(() => dispatch({ type: 'delete' }), []);

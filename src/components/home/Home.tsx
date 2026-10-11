@@ -1,5 +1,5 @@
 import { m } from 'motion/react';
-import { ArrowRight, BarChart3, ChevronRight, CircleHelp, Clock3, Flame, Settings, Shuffle, Trophy } from 'lucide-react';
+import { ArrowRight, BarChart3, ChevronRight, CircleHelp, Clock3, Flame, Settings, Shuffle, Trophy, Users } from 'lucide-react';
 import { BRAND, GAME } from '@/config/game';
 import { effectiveStreak, winPercentage, type GameState, type Stats } from '@/engine';
 import { MiniBoard } from './MiniBoard';
@@ -17,6 +17,9 @@ interface HomeProps {
   onPlayDaily: () => void;
   onDailyResults: () => void;
   onPlayPractice: () => void;
+  onFriends: () => void;
+  friendsPending: number;
+  friendsAvailable: boolean;
   onHelp: () => void;
   onStats: () => void;
   onSettings: () => void;
@@ -178,7 +181,33 @@ export function Home(props: HomeProps) {
             <ChevronRight className="size-5 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
           </m.button>
 
-          <m.nav {...rise(4)} aria-label="More" className="flex flex-wrap justify-center gap-1 pt-1 lg:justify-start">
+          {props.friendsAvailable && (
+            <m.button
+              {...rise(4)}
+              type="button"
+              onClick={props.onFriends}
+              aria-label={props.friendsPending > 0 ? `Friends — ${props.friendsPending} waiting for you` : 'Play with friends'}
+              className="group flex w-full items-center gap-4 rounded-[var(--radius-card)] border border-border bg-surface p-5 text-left transition hover:border-border-strong"
+            >
+              <span className="relative grid size-11 shrink-0 place-items-center rounded-xl bg-surface-2">
+                <Users className="size-5" aria-hidden />
+                {props.friendsPending > 0 && (
+                  <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-present px-1 text-[0.7rem] font-bold text-present-ink">
+                    {props.friendsPending}
+                  </span>
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-bold">Play with friends</span>
+                <span className="block text-sm text-muted">
+                  {props.friendsPending > 0 ? `${props.friendsPending} waiting for you` : 'Challenges and live races.'}
+                </span>
+              </span>
+              <ChevronRight className="size-5 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
+            </m.button>
+          )}
+
+          <m.nav {...rise(5)} aria-label="More" className="flex flex-wrap justify-center gap-1 pt-1 lg:justify-start">
             {[
               { label: 'How to play', icon: CircleHelp, onClick: props.onHelp },
               { label: 'Statistics', icon: BarChart3, onClick: props.onStats },

@@ -1,0 +1,28 @@
+import type { FirebaseOptions } from 'firebase/app';
+
+/**
+ * Firebase web config comes from build-time env vars (these values are public
+ * identifiers, not secrets — access is controlled by firestore.rules).
+ * Returns null when Friends isn't configured, so the solo game still works.
+ */
+export function firebaseConfig(): { options: FirebaseOptions; emulator: boolean } | null {
+  const env = import.meta.env;
+  if (env.VITE_FIREBASE_EMULATOR === 'true') {
+    return { options: { apiKey: 'demo-key', projectId: env.VITE_FIREBASE_PROJECT_ID || 'demo-wordskiis', appId: 'demo' }, emulator: true };
+  }
+  const apiKey = env.VITE_FIREBASE_API_KEY as string | undefined;
+  const projectId = env.VITE_FIREBASE_PROJECT_ID as string | undefined;
+  const appId = env.VITE_FIREBASE_APP_ID as string | undefined;
+  if (!apiKey || !projectId || !appId) return null;
+  return {
+    options: {
+      apiKey,
+      projectId,
+      appId,
+      authDomain: (env.VITE_FIREBASE_AUTH_DOMAIN as string | undefined) || `${projectId}.firebaseapp.com`,
+    },
+    emulator: false,
+  };
+}
+
+export const friendsConfigured = () => firebaseConfig() !== null;

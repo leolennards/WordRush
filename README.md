@@ -19,6 +19,30 @@ paid API or database — and keeps preferences, progress and statistics in `loca
   synthesised sound effects, hard mode.
 - Installable PWA with an offline service worker (production builds only).
 
+## Playing with friends
+
+Players create a profile (just a display name — no email or password) and get a 6-character
+friend code. Adding someone's code puts you in each other's Friends tab, where you can:
+
+- see each friend's Daily result (colours only, never letters) and streak;
+- **Challenge** them: you both play the same random word whenever you like, then compare;
+- **Race** them live: same word, synced 3-2-1 start, watch their progress, first to solve wins.
+
+This uses **Firebase on the free Spark plan** (anonymous sign-in + Cloud Firestore). No credit card
+is attached, so it cannot incur charges; if free limits were ever exceeded, Friends would pause until
+the next day. Friends data is protected by `firestore.rules`. The Firebase SDK is code-split and only
+downloads when someone opens Friends. If the `VITE_FIREBASE_*` variables are not set, the Friends tab
+is hidden and the solo game works exactly as before.
+
+| Variable | Purpose |
+| --- | --- |
+| `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID` | Firebase web app config (public identifiers, not secrets) |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Optional, defaults to `<project>.firebaseapp.com` |
+
+Local development without any Firebase account: `npm run dev:friends` runs the app against the
+free local Firebase emulators (needs Java). `firebase deploy --only firestore` publishes rules and
+indexes to the real project.
+
 ## Requirements
 
 Node.js 20+ (developed with Node 24.20 and npm 11.19).
@@ -36,6 +60,9 @@ npm run preview        # serve the production build at http://localhost:4173
 npx playwright install chromium   # one-time browser download for E2E tests
 npm run test:e2e       # Playwright E2E (builds and serves automatically)
 npm run check          # typecheck + lint + test + build
+npm run test:rules     # Firestore security-rules tests (local emulator, needs Java)
+npm run test:e2e:friends  # two-player browser test against the local emulators
+npm run dev:friends    # dev server wired to local Firebase emulators
 npm run words:build    # regenerate word lists (changes the daily schedule — read SOURCES.md first)
 ```
 
@@ -72,6 +99,10 @@ Cloudflare Pages, GitHub Pages, S3 + CloudFront):
 
 ## Known limitations
 
+- Friend games store their word in the shared game record, so a determined player could find it
+  with developer tools. Friends play on trust.
+- Friends profiles live on one device (anonymous sign-in). Clearing site data or switching devices
+  creates a new profile and friend code.
 - Client-only: anyone can read the answer list in the shipped JavaScript, or edit/clear
   `localStorage` to replay a daily challenge or alter statistics. There is no server-side
   verification, so streaks are honour-based.

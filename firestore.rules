@@ -1,0 +1,110 @@
+rules_version = '2';
+
+// Wordskiis — Firestore security rules.
+// Players sign in anonymously. Every rule below limits what a signed-in
+// player may read or write; nothing is readable or writable without auth.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function onlyChanged(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+    function validName(n) { return n is string && n.size() >= 1 && n.size() <= 20; }
+    function validCode(c) { return c is string && c.matches('^[346789ABCDEFGHJKMNPQRTUVWXY]{6}$'); }
+    function areFriends(a, b) {
+      return exists(/databases/$(database)/documents/players/$(a)/friends/$(b));
+    }
+    function validDaily(d) {
+      return d == null || (
+        d is map
+        && d.keys().hasOnly(['dayIndex', 'status', 'rows', 'streak'])
+        && d.dayIndex is int
+        && d.status in ['playing', 'won', 'lost']
+        && d.rows is list && d.rows.size() <= 6
+        && d.streak is int && d.streak >= 0
+      );
+    }
+
+    // ---- Friend codes: one document per code, pointing at its owner. ----
+    match /codes/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && validCode(code)
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == me();
+      allow update, delete: if false;
+    }
+
+    // ---- Public player profiles (name, code, today's spoiler-free result). ----
+    match /players/{uid} {
+      // Readable one at a time by id; nobody can list or search all players.
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && me() == uid
+        && request.resource.data.keys().hasOnly(['name', 'code', 'createdAt', 'daily'])
+        && validName(request.resource.data.name)
+        && validCode(request.resource.data.code)
+        && getAfter(/databases/$(database)/documents/codes/$(request.resource.data.code)).data.uid == uid
+        && validDaily(request.resource.data.get('daily', null));
+      allow update: if signedIn() && me() == uid
+        && onlyChanged(['name', 'daily'])
+        && validName(request.resource.data.name)
+        && validDaily(request.resource.data.get('daily', null));
+      allow delete: if false;
+
+      // Friend list. Adding by code writes both sides: my list, and theirs.
+      match /friends/{friendUid} {
+        allow read: if signedIn() && me() == uid;
+        allow create: if signedIn() && uid != friendUid
+          && (me() == uid || me() == friendUid)
+          && request.resource.data.keys().hasOnly(['since'])
+          && exists(/databases/$(database)/documents/players/$(uid))
+          && exists(/databases/$(database)/documents/players/$(friendUid));
+        // Either friend can end the friendship (both sides are removed).
+        allow delete: if signedIn() && (me() == uid || me() == friendUid);
+        allow update: if false;
+      }
+    }
+
+    // ---- Challenges: one word, played separately by two friends. ----
+    match /challenges/{id} {
+      allow get, list: if signedIn() && me() in resource.data.players;
+      allow create: if signedIn()
+        && request.resource.data.from == me()
+        && request.resource.data.players == [me(), request.resource.data.to]
+        && request.resource.data.to != me()
+        && areFriends(me(), request.resource.data.to)
+        && request.resource.data.answer is string && request.resource.data.answer.size() == 5
+        && request.resource.data.keys().hasOnly(['from', 'to', 'players', 'answer', 'createdAt', 'results'])
+        && request.resource.data.results.keys().size() == 0;
+      // Each player may only add or change their own result.
+      allow update: if signedIn() && me() in resource.data.players
+        && onlyChanged(['results'])
+        && request.resource.data.results.diff(resource.data.results).affectedKeys().hasOnly([me()]);
+      allow delete: if false;
+    }
+
+    // ---- Live races. ----
+    match /races/{id} {
+      allow get, list: if signedIn() && me() in resource.data.players;
+      allow create: if signedIn()
+        && request.resource.data.host == me()
+        && request.resource.data.players == [me(), request.resource.data.guest]
+        && request.resource.data.guest != me()
+        && areFriends(me(), request.resource.data.guest)
+        && request.resource.data.state == 'invited'
+        && request.resource.data.answer is string && request.resource.data.answer.size() == 5
+        && request.resource.data.keys().hasOnly(['host', 'guest', 'players', 'answer', 'state', 'createdAt', 'startAt', 'progress', 'winner'])
+        && request.resource.data.progress.keys().size() == 0
+        && request.resource.data.winner == null;
+      // Participants can move the race along and update their own progress only.
+      allow update: if signedIn() && me() in resource.data.players
+        && onlyChanged(['state', 'startAt', 'progress', 'winner'])
+        && request.resource.data.state in ['invited', 'countdown', 'playing', 'finished', 'declined', 'cancelled']
+        && request.resource.data.progress.diff(resource.data.progress).affectedKeys().hasOnly([me()]);
+      allow delete: if false;
+    }
+  }
+}

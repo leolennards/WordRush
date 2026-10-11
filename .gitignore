@@ -17,3 +17,10 @@ node_modules/.tmp
 .idea
 .vercel
 .env*
+
+# Firebase emulator / debug output
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+.firebase
+dist-e2e-friends

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { GAME } from '@/config/game';
-import { challengeNumber, dateForDayIndex, type GameMode } from '@/engine';
+import { challengeNumber, dateForDayIndex, type SoloMode } from '@/engine';
 import { useStats } from '@/features/stats/StatsContext';
 import { StatsPanel } from '@/components/statistics/StatsPanel';
 import { Segmented } from '@/components/ui';
@@ -9,7 +9,7 @@ import { Dialog } from './Dialog';
 interface StatsDialogProps {
   open: boolean;
   onClose: () => void;
-  initialMode: GameMode;
+  initialMode: SoloMode;
   todayIndex: number;
 }
 
@@ -22,15 +22,15 @@ export function StatsDialog({ open, onClose, initialMode, todayIndex }: StatsDia
   );
 }
 
-function StatsContent({ initialMode, todayIndex }: { initialMode: GameMode; todayIndex: number }) {
-  const [mode, setMode] = useState<GameMode>(initialMode);
+function StatsContent({ initialMode, todayIndex }: { initialMode: SoloMode; todayIndex: number }) {
+  const [mode, setMode] = useState<SoloMode>(initialMode);
   const { daily, practice } = useStats();
   const last = daily.lastResult;
 
   return (
     <div className="space-y-5 pt-2">
       <div className="flex justify-center">
-        <Segmented<GameMode>
+        <Segmented<SoloMode>
           label="Statistics for"
           size="sm"
           value={mode}
