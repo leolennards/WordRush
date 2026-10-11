@@ -48,6 +48,9 @@ npm run words:build    # regenerate word lists (changes the daily schedule — r
 
 ## Deployment
 
+Live at **https://wordskiis.vercel.app** (Vercel project `wordskiis`, connected to
+`leolennards/WordRush`: every push to `main` deploys to production, other branches get preview URLs).
+
 `npm run build` produces a static site in `dist/`. Host it on any static host (Netlify, Vercel,
 Cloudflare Pages, GitHub Pages, S3 + CloudFront):
 
