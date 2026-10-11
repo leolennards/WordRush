@@ -285,7 +285,7 @@ function ProfileCard() {
 
       <div className="mt-5 rounded-2xl bg-surface-2 p-4 text-center">
         <p className="text-xs font-semibold tracking-wide text-muted uppercase">Your friend code</p>
-        <p className="tabular mt-1 font-mono text-[2rem] leading-none font-extrabold tracking-[0.12em]" aria-label={`Your friend code is ${[...me.profile.code].join(' ')}`}>
+        <p className="tabular mt-1 text-[2.1rem] leading-none font-extrabold tracking-[0.14em]" aria-label={`Your friend code is ${[...me.profile.code].join(' ')}`}>
           {code}
         </p>
         <div className="mt-4 flex gap-2">
@@ -331,7 +331,7 @@ function AddFriend() {
       <p className="mt-0.5 text-sm text-muted">Enter the 6-character code from their Friends tab.</p>
       <div className="mt-3 flex gap-2">
         <input
-          className={`${input} tabular font-mono tracking-[0.15em] uppercase`}
+          className={`${input} tabular font-semibold tracking-[0.18em] uppercase`}
           value={code}
           onChange={(e) => {
             setCode(e.target.value);
@@ -361,7 +361,9 @@ function AddFriend() {
 
 function dailyLine(friend: Friend, todayIndex: number): string {
   const d = friend.profile?.daily;
-  if (!d || d.dayIndex !== todayIndex) return 'Hasn’t played today’s puzzle';
+  if (!d || d.dayIndex !== todayIndex || (d.status === 'playing' && d.rows.length === 0)) {
+    return 'Hasn’t played today’s puzzle';
+  }
   if (d.status === 'won') return `Solved today’s puzzle in ${d.rows.length}`;
   if (d.status === 'lost') return 'Missed today’s puzzle';
   return `Playing today · ${d.rows.length}/${GAME.maxGuesses}`;
