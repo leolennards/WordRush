@@ -1,4 +1,4 @@
-# WordRush game rules
+# Wordskiis game rules
 
 ## Objective
 
@@ -61,7 +61,7 @@ the next game. Hard-mode results are marked with `*` when shared.
 ## Daily Challenge
 
 - One puzzle per UTC day. The day boundary is **00:00 UTC** for everyone.
-- `dayIndex` = whole UTC days since the epoch `2026-10-01`; challenge number = `dayIndex + 1`.
+- `dayIndex` = whole UTC days since the epoch `2026-10-11` (launch day = #1); challenge number = `dayIndex + 1`.
 - Answer = `answers[dayIndex mod answers.length]`, where `answers` is the fixed, pre-shuffled list in
   `src/data/words/answers.ts`. All players with the same `dictionaryVersion` get the same answer.
 - Progress is saved after every guess and restored on refresh. A finished challenge stays finished;

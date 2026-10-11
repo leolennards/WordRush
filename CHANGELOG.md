@@ -1,8 +1,20 @@
 # Changelog
 
+## 1.1.0 — 2026-10-11
+
+- **Renamed to Wordskiis** (storage keys now `wordskiis:*`). Daily puzzle #1 is launch day, 11 Oct 2026.
+- **Fixed:** the results dialog never opened after finishing a game in normal use — the per-second
+  countdown re-render kept restarting its timer (and repeated the "Solved!" toast). Regression tests
+  now use a live clock.
+- **New home dashboard** as the landing view: today's challenge (status, mini result grid,
+  Play/Continue/View results, countdown), streak summary, practice card and quick links.
+  Views live in the URL (`#daily`, `#practice`) and the browser Back button returns home.
+- **New end-of-game panel** replaces the keyboard with Share, Results, Practice/New word and Home.
+- **Dark mode:** ruled-out letters on the keyboard are now clearly blacked out.
+
 ## 1.0.0 — 2026-10-11
 
-Initial release.
+Initial build (as WordRush).
 
 - Project setup: React 19, TypeScript 6 (strict), Vite 8, Tailwind CSS 4, Motion, Lucide, Vitest,
   React Testing Library, Playwright, ESLint.

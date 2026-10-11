@@ -28,7 +28,7 @@ export function createBrowserStore(): KeyValueStore {
   let storage: Storage;
   try {
     storage = window.localStorage;
-    const probe = '__wordrush_probe__';
+    const probe = '__wordskiis_probe__';
     storage.setItem(probe, '1');
     storage.removeItem(probe);
   } catch {

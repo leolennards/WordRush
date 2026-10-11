@@ -10,8 +10,8 @@ import { createMemoryStore, type KeyValueStore } from '@/lib/storage/store';
 import { DEFAULT_SETTINGS, KEYS } from '@/lib/storage/schemas';
 import { HELP_EXAMPLES } from '@/components/dialogs/helpExamples';
 
-const NOW = new Date('2026-10-11T12:00:00Z'); // challenge #11, dayIndex 10
-const ANSWER = dailyAnswer(10, ANSWERS);
+const NOW = new Date('2026-10-11T12:00:00Z'); // launch day: challenge #1, dayIndex 0
+const ANSWER = dailyAnswer(0, ANSWERS);
 const WRONG = ANSWERS.filter((w) => w !== ANSWER && !w.includes(ANSWER[0]!)).slice(0, 6);
 
 function seededStore(settings: Partial<typeof DEFAULT_SETTINGS> = {}): KeyValueStore {
@@ -45,10 +45,10 @@ async function guess(user: ReturnType<typeof userEvent.setup>, word: string) {
 // Most tests start on the Daily game screen; the home dashboard has its own tests.
 beforeEach(() => window.history.replaceState(null, '', '/#daily'));
 
-describe('WordRush app', () => {
+describe('Wordskiis app', () => {
   it('shows the Daily Challenge heading and challenge number', () => {
     setup();
-    expect(screen.getByRole('heading', { name: 'Daily Challenge #11' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Daily Challenge #1' })).toBeInTheDocument();
   });
 
   it('accepts physical keyboard input, Backspace and Enter', async () => {
@@ -156,7 +156,7 @@ describe('WordRush app', () => {
     await user.click(within(dialog).getByRole('button', { name: /Share result/ }));
     expect((await screen.findAllByText('Result copied to clipboard')).length).toBeGreaterThan(0);
     const text = await navigator.clipboard.readText();
-    expect(text.startsWith('WordRush #11 2/6')).toBe(true);
+    expect(text.startsWith('Wordskiis #1 2/6')).toBe(true);
     expect(text.toLowerCase()).not.toContain(ANSWER);
     expect(text).toContain('🟩🟩🟩🟩🟩');
     expect(text.split('\n').filter((l) => /^[🟩🟨⬛⬜]+$/u.test(l))).toHaveLength(2);
@@ -242,9 +242,9 @@ describe('day rollover', () => {
     unmount();
     now = new Date('2026-10-12T00:00:01Z');
     render(<App services={services} />);
-    expect(screen.getByRole('heading', { name: 'Daily Challenge #12' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Daily Challenge #2' })).toBeInTheDocument();
     expect(rowText(0)).toBe('');
-    expect(JSON.parse(store.get(KEYS.dailyStats)!).data.lastRecordedKey).toBe(10);
+    expect(JSON.parse(store.get(KEYS.dailyStats)!).data.lastRecordedKey).toBe(0);
   });
 });
 
@@ -269,10 +269,10 @@ describe('home dashboard and end of game', () => {
   it('lands on the home dashboard and starts the daily challenge from it', async () => {
     window.history.replaceState(null, '', '/');
     const { user } = setup();
-    expect(screen.getByRole('heading', { name: /#11/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /#1 /})).toBeInTheDocument();
     expect(screen.queryByRole('grid')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /^Play — Daily Challenge #11/ }));
-    expect(screen.getByRole('heading', { name: 'Daily Challenge #11' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^Play — Daily Challenge #1$/ }));
+    expect(screen.getByRole('heading', { name: 'Daily Challenge #1' })).toBeInTheDocument();
     await guess(user, WRONG[0]!);
     expect(rowText(0)).toBe(WRONG[0]);
   });

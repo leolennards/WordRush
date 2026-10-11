@@ -87,7 +87,7 @@ describe('share text', () => {
 
   it('formats a win without the answer', () => {
     const text = buildShareText({
-      brand: 'WordRush',
+      brand: 'Wordskiis',
       label: '#11',
       evaluations: evals.map((r) => [...r]),
       won: true,
@@ -97,13 +97,13 @@ describe('share text', () => {
       darkSquares: true,
       url: 'https://example.com',
     });
-    expect(text).toBe('WordRush #11 2/6\n\n⬛🟨⬛⬛🟩\n🟩🟩🟩🟩🟩\n\nhttps://example.com');
+    expect(text).toBe('Wordskiis #11 2/6\n\n⬛🟨⬛⬛🟩\n🟩🟩🟩🟩🟩\n\nhttps://example.com');
   });
 
   it('formats a loss as X/6 with hard mode and high contrast markers', () => {
     const rows = Array.from({ length: 6 }, () => ['absent', 'absent', 'present', 'absent', 'correct'] as const);
     const text = buildShareText({
-      brand: 'WordRush',
+      brand: 'Wordskiis',
       label: 'Practice',
       evaluations: rows.map((r) => [...r]),
       won: false,
@@ -113,7 +113,7 @@ describe('share text', () => {
       darkSquares: false,
     });
     const lines = text.split('\n');
-    expect(lines[0]).toBe('WordRush Practice X/6*');
+    expect(lines[0]).toBe('Wordskiis Practice X/6*');
     expect(lines).toHaveLength(8);
     expect(lines[2]).toBe('⬜⬜🟦⬜🟧');
   });

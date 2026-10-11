@@ -1,4 +1,4 @@
-/** WordRush mark: a tilted tile stack with a "W". Uses theme tokens. */
+/** Wordskiis mark: a tilted tile stack with a "W". Uses theme tokens. */
 export function Logo({ size = 30 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden className="shrink-0">

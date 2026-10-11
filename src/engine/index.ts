@@ -1,5 +1,5 @@
 /**
- * WordRush game engine — pure TypeScript with no React or browser
+ * Wordskiis game engine — pure TypeScript with no React or browser
  * dependencies, so it can be reused by a future mobile client.
  */
 export * from './types';

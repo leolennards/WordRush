@@ -62,10 +62,10 @@ Every value is stored as `{ "v": <schemaVersion>, "data": … }` and validated o
 
 | Key | Schema v1 payload |
 | --- | --- |
-| `wordrush:settings` | `{ theme: 'system'\|'light'\|'dark', sound, highContrast, reduceMotion, hardMode, seenHelp }` (booleans; missing/invalid fields fall back to defaults individually) |
-| `wordrush:daily` | `{ game: GameState }` with `mode: 'daily'` and integer `dayIndex` |
-| `wordrush:practice` | `{ game: GameState \| null, gameNumber, recent: string[] }` |
-| `wordrush:stats:daily`, `wordrush:stats:practice` | `{ played, wins, currentStreak, maxStreak, distribution[6], lastRecordedKey, lastWonKey, lastResult }` |
+| `wordskiis:settings` | `{ theme: 'system'\|'light'\|'dark', sound, highContrast, reduceMotion, hardMode, seenHelp }` (booleans; missing/invalid fields fall back to defaults individually) |
+| `wordskiis:daily` | `{ game: GameState }` with `mode: 'daily'` and integer `dayIndex` |
+| `wordskiis:practice` | `{ game: GameState \| null, gameNumber, recent: string[] }` |
+| `wordskiis:stats:daily`, `wordskiis:stats:practice` | `{ played, wins, currentStreak, maxStreak, distribution[6], lastRecordedKey, lastWonKey, lastResult }` |
 
 `GameState` = `{ mode, id, answer, guesses[], evaluations[][], status, hardMode, dayIndex }`.
 Validation also checks consistency (e.g. `status` must match the guesses), so a tampered or

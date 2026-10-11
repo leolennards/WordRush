@@ -15,9 +15,9 @@ npm run check                    # typecheck + lint + unit tests + production bu
 | --- | --- | --- |
 | Type check (strict) | `npm run typecheck` | Pass, 0 errors |
 | Lint | `npm run lint` | Pass, 0 errors, 0 warnings |
-| Unit + interface tests | `npm test` | **73 / 73 passed** (7 files) |
-| Production build | `npm run build` | Pass — JS 445 kB (155.7 kB gzip), CSS 33 kB (7.7 kB gzip) |
-| End-to-end | `npm run test:e2e` | **10 / 10 passed** (5 tests × desktop Chrome and Pixel 7 emulation, Chromium only) |
+| Unit + interface tests | `npm test` | **78 / 78 passed** (7 files) |
+| Production build | `npm run build` | Pass — JS ~450 kB (~157 kB gzip), CSS ~34 kB (~8 kB gzip) |
+| End-to-end | `npm run test:e2e` | **12 / 12 passed** (6 tests × desktop Chrome and Pixel 7 emulation, Chromium only) |
 
 ## Coverage by area
 
@@ -65,6 +65,14 @@ npm run check                    # typecheck + lint + unit tests + production bu
 - Day rollover: the next load after UTC midnight shows the next challenge, and the previous result
   stays recorded.
 
+### Home dashboard and end of game (`src/tests/app.test.tsx`)
+
+- Lands on the dashboard; Play opens the daily game; typing on the dashboard is ignored.
+- After a win the keyboard is replaced by the game-over panel; Home returns to the dashboard showing
+  "Solved" and View results; Practice offers New word.
+- **Live-clock regression:** with animations on and a ticking countdown, the results dialog opens and
+  the "Solved!" toast fires once. (This bug shipped in 1.0.0 because earlier tests froze the clock.)
+
 ### End-to-end (`e2e/game.spec.ts`, real production build, full animations)
 
 - Win through the real UI with invalid word, Backspace, and input ignored during the reveal.
@@ -74,6 +82,8 @@ npm run check                    # typecheck + lint + unit tests + production bu
 - Loss reveals the answer.
 - A saved dark theme is applied before React renders (no flash).
 - No horizontal scrolling at 320 × 568, and the board doesn't overlap the keyboard.
+- With the real (unfrozen) clock: win → results → close → game-over panel → Home → dashboard, and
+  browser Back from the game returns to the dashboard.
 
 ## Manual review performed
 

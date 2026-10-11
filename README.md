@@ -1,14 +1,14 @@
-# WordRush
+# Wordskiis
 
 **A little word challenge every day.**
 
-WordRush is a five-letter word puzzle for the web. Solve the shared **Daily Challenge** in six
+Wordskiis is a five-letter word puzzle for the web. Solve the shared **Daily Challenge** in six
 guesses, or play unlimited **Practice** words. It runs entirely in the browser — no account, backend,
 paid API or database — and keeps preferences, progress and statistics in `localStorage`.
 
 ## Features
 
-- Daily Challenge: the same answer for every player on the same UTC date, numbered (#1 = 1 Oct 2026),
+- Daily Challenge: the same answer for every player on the same UTC date, numbered (#1 = 11 Oct 2026, launch day),
   with a countdown to the next one. Progress and results survive refresh; there is no in-game reset.
 - Practice: unlimited words with separate statistics; never touches the daily game or streak.
 - Correct duplicate-letter feedback, local dictionary (12,675 accepted guesses, 1,922 curated answers).

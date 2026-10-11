@@ -3,7 +3,7 @@ import { dailyAnswer, dayIndexFor } from '../src/engine/daily';
 import { ANSWERS } from '../src/data/words/answers';
 
 const NOW = new Date('2026-10-11T12:00:00Z');
-const ANSWER = dailyAnswer(dayIndexFor(NOW, '2026-10-01'), ANSWERS);
+const ANSWER = dailyAnswer(dayIndexFor(NOW, '2026-10-11'), ANSWERS);
 const WRONG = ANSWERS.filter((w) => w !== ANSWER).slice(0, 6);
 
 async function open(page: Page) {
@@ -26,7 +26,7 @@ const row = (page: Page, i: number) => page.getByRole('row').nth(i);
 
 test('plays the daily challenge to a win with full animations', async ({ page }) => {
   await open(page);
-  await expect(page.getByRole('heading', { name: 'Daily Challenge #11' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Daily Challenge #1' })).toBeVisible();
   await guess(page, 'qxzvj');
   await expect(page.getByText('Not in word list').first()).toBeVisible();
   for (let i = 0; i < 5; i++) await page.keyboard.press('Backspace');
@@ -70,7 +70,7 @@ test('loses after six guesses and reveals the answer', async ({ page }) => {
 
 test('applies a saved dark theme before React renders (no flash)', async ({ page }) => {
   await page.addInitScript(() =>
-    localStorage.setItem('wordrush:settings', JSON.stringify({ v: 1, data: { theme: 'dark', seenHelp: true } })),
+    localStorage.setItem('wordskiis:settings', JSON.stringify({ v: 1, data: { theme: 'dark', seenHelp: true } })),
   );
   let darkAtParse = false;
   page.on('domcontentloaded', async () => {
@@ -93,7 +93,7 @@ test('has no horizontal scrolling on a narrow phone', async ({ page }) => {
 
 test('with the real ticking clock, finishing shows results, next steps, and the way home', async ({ page }) => {
   // No fixed time: the countdown re-renders every second, as for real players.
-  const answer = dailyAnswer(dayIndexFor(new Date(), '2026-10-01'), ANSWERS);
+  const answer = dailyAnswer(dayIndexFor(new Date(), '2026-10-11'), ANSWERS);
   await page.goto('/');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { name: 'Practice' })).toBeVisible();

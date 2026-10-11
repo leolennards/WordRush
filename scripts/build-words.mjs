@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regenerates the WordRush dictionary files in src/data/words/.
+ * Regenerates the Wordskiis dictionary files in src/data/words/.
  *
  * Sources (both MIT-compatible, see src/data/words/SOURCES.md):
  *   - wordlist-english (SCOWL by Kevin Atkinson) — frequency tiers used to pick

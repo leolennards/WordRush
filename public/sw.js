@@ -1,8 +1,8 @@
-/* WordRush offline service worker.
+/* Wordskiis offline service worker.
  * - Navigations: network first, falling back to the cached app shell.
  * - Same-origin static assets: cache first (Vite fingerprints file names).
  * Bump CACHE to invalidate everything. */
-const CACHE = 'wordrush-v1';
+const CACHE = 'wordskiis-v1';
 const SHELL = ['/', '/index.html', '/icon.svg', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {

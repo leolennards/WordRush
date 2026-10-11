@@ -53,7 +53,7 @@ function MotionRoot() {
   return (
     <LazyMotion features={domAnimation} strict>
       <MotionConfig reducedMotion={reducedMotion ? 'always' : 'never'}>
-        <WordRush />
+        <Wordskiis />
       </MotionConfig>
     </LazyMotion>
   );
@@ -61,7 +61,7 @@ function MotionRoot() {
 
 type DialogName = 'help' | 'stats' | 'settings' | 'result' | 'confirm-new' | null;
 
-function WordRush() {
+function Wordskiis() {
   const services = useServices();
   const { settings, update, resolvedTheme, reducedMotion } = useSettings();
   const stats = useStats();

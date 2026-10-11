@@ -45,7 +45,7 @@ export function readVersioned<T>(store: KeyValueStore, key: string, schema: Sche
 export function writeVersioned<T>(store: KeyValueStore, key: string, schema: Schema<T>, value: T): void {
   if (schema.validate(value) === null) {
     // Defensive: never persist state that would fail our own validation.
-    if (import.meta.env.DEV) console.warn(`[wordrush] refused to save invalid data for ${key}`);
+    if (import.meta.env.DEV) console.warn(`[wordskiis] refused to save invalid data for ${key}`);
     return;
   }
   store.set(key, JSON.stringify({ v: schema.version, data: value }));
