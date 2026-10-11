@@ -25,12 +25,16 @@ npm run check                    # typecheck + lint + unit tests + production bu
 | --- | --- | --- |
 | Friends engine (codes, rows, race/challenge outcomes) | `npm test` | included in the unit tests above |
 | Firestore security rules (emulator) | `npm run test:rules` | **15 / 15 passed** |
-| Two-player browser test (emulators, two separate browser contexts) | `npm run test:e2e:friends` | **1 / 1 passed** |
+| Two-player + Google sign-in browser tests (emulators) | `npm run test:e2e:friends` | **3 / 3 passed** |
 
 The two-player test: Alice and Bob create profiles; Bob's own code and an unknown code are rejected;
 Bob adds Alice by code and both see each other live; Alice challenges Bob, both play, results compare
 live on both screens; Bob invites Alice to a race, typing is blocked during the countdown, Alice sees
 Bob's progress live, solves first, and both screens show the correct winner with Bob locked out.
+
+Google sign-in tests (Auth emulator's fake Google pop-up): a guest saves their profile with Google and
+keeps the same code; a second device signs in with that Google account and gets the same profile;
+signing out continues as a new guest; a brand-new Google account gets its first name suggested.
 
 ## Coverage by area
 

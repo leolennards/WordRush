@@ -6,7 +6,18 @@
  * player actually uses the Friends features.
  */
 import { initializeApp, type FirebaseApp } from 'firebase/app';
-import { connectAuthEmulator, getAuth, signInAnonymously, type Auth } from 'firebase/auth';
+import {
+  GoogleAuthProvider,
+  connectAuthEmulator,
+  getAuth,
+  linkWithPopup,
+  onAuthStateChanged,
+  signInAnonymously,
+  signInWithCredential,
+  signOut,
+  type Auth,
+  type User,
+} from 'firebase/auth';
 import {
   collection,
   connectFirestoreEmulator,
@@ -24,7 +35,7 @@ import {
   type Firestore,
 } from 'firebase/firestore';
 import { generateFriendCode, resolveRace, type RacerProgress } from '@/engine';
-import type { ChallengeDoc, DailySummary, FriendLink, PlayerDoc, RaceDoc, RaceProgress } from './types';
+import type { Account, ChallengeDoc, DailySummary, FriendLink, PlayerDoc, RaceDoc, RaceProgress } from './types';
 import { firebaseConfig } from './config';
 
 let app: FirebaseApp | null = null;
@@ -54,6 +65,69 @@ export async function connect(): Promise<string> {
   await a.authStateReady();
   if (!a.currentUser) await signInAnonymously(a);
   return a.currentUser!.uid;
+}
+
+// ---------- Accounts ----------
+
+const toAccount = (u: User): Account => {
+  // After linking, Google's name/email live on the provider entry, not always on the user.
+  const google = u.providerData.find((p) => p.providerId === 'google.com');
+  return {
+    uid: u.uid,
+    isAnonymous: u.isAnonymous,
+    email: u.email ?? google?.email ?? null,
+    displayName: u.displayName ?? google?.displayName ?? null,
+  };
+};
+
+/** The current account. Needed after linking, which doesn't fire an auth-state change. */
+export function currentAccount(): Account | null {
+  const u = handles().auth.currentUser;
+  return u ? toAccount(u) : null;
+}
+
+/** Fires with the signed-in account whenever the user changes (sign-in, sign-out). */
+export function onAccountChange(cb: (account: Account | null) => void) {
+  return onAuthStateChanged(handles().auth, (u) => cb(u ? toAccount(u) : null));
+}
+
+export type GoogleResult = 'linked' | 'switched' | 'cancelled';
+
+/**
+ * Saves the current guest profile to a Google account by linking them, so the
+ * same profile, code and friends are kept. If that Google account already has
+ * a Wordskiis profile (e.g. from another device), signs into it instead.
+ */
+export async function signInWithGoogle(): Promise<GoogleResult> {
+  const { auth } = handles();
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not signed in');
+  try {
+    await linkWithPopup(user, provider);
+    return 'linked';
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return 'cancelled';
+    if (code === 'auth/credential-already-in-use' || code === 'auth/email-already-in-use') {
+      const credential = GoogleAuthProvider.credentialFromError(err as never);
+      if (!credential) throw err;
+      await signInWithCredential(auth, credential);
+      return 'switched';
+    }
+    if (code === 'auth/popup-blocked') throw new Error('Your browser blocked the sign-in window. Allow pop-ups and try again.', { cause: err });
+    if (code === 'auth/unauthorized-domain') throw new Error('Google sign-in isn’t enabled for this web address yet.', { cause: err });
+    if (code === 'auth/operation-not-allowed') throw new Error('Google sign-in isn’t switched on yet.', { cause: err });
+    throw err;
+  }
+}
+
+/** Signs out and continues as a brand-new guest on this device. */
+export async function signOutToGuest() {
+  const { auth } = handles();
+  await signOut(auth);
+  await signInAnonymously(auth);
 }
 
 // ---------- Profiles ----------

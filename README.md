@@ -22,7 +22,8 @@ paid API or database — and keeps preferences, progress and statistics in `loca
 ## Playing with friends
 
 Players create a profile (just a display name — no email or password) and get a 6-character
-friend code. Adding someone's code puts you in each other's Friends tab, where you can:
+friend code. Optionally, **Save with Google** links the profile to a Google account so it works on
+other devices too (signing in on a new device loads the same profile and friends). Adding someone's code puts you in each other's Friends tab, where you can:
 
 - see each friend's Daily result (colours only, never letters) and streak;
 - **Challenge** them: you both play the same random word whenever you like, then compare;
@@ -101,8 +102,9 @@ Cloudflare Pages, GitHub Pages, S3 + CloudFront):
 
 - Friend games store their word in the shared game record, so a determined player could find it
   with developer tools. Friends play on trust.
-- Friends profiles live on one device (anonymous sign-in). Clearing site data or switching devices
-  creates a new profile and friend code.
+- Guest Friends profiles live on one device (anonymous sign-in); clearing site data creates a new
+  profile unless it was saved with Google. Google sign-in needs the site's domain listed under
+  Firebase Authentication → Settings → Authorized domains.
 - Client-only: anyone can read the answer list in the shipped JavaScript, or edit/clear
   `localStorage` to replay a daily challenge or alter statistics. There is no server-side
   verification, so streaks are honour-based.

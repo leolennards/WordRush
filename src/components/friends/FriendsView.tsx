@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { m } from 'motion/react';
-import { Check, Copy, Flame, Loader2, Pencil, Share2, Swords, Timer, UserPlus, Users, X, Zap } from 'lucide-react';
+import { Check, Cloud, Copy, Flame, Loader2, LogOut, Pencil, Share2, Smartphone, Swords, Timer, UserPlus, Users, X, Zap } from 'lucide-react';
 import { BRAND, GAME } from '@/config/game';
 import { compareChallenge, decodeRows, formatFriendCode, type GameState } from '@/engine';
 import { useFriends } from '@/features/friends/FriendsContext';
@@ -10,6 +10,7 @@ import { useToast } from '@/components/layout/Toasts';
 import { MiniBoard } from '@/components/home/MiniBoard';
 import { Button } from '@/components/ui';
 import { Avatar } from './Avatar';
+import { GoogleButton } from './GoogleButton';
 
 interface FriendsViewProps {
   todayIndex: number;
@@ -91,8 +92,15 @@ function Notice({ icon, title, children }: { icon: ReactNode; title: string; chi
 }
 
 function CreateProfile() {
-  const { createProfile } = useFriends();
+  const { createProfile, account } = useFriends();
   const [name, setName] = useState('');
+  // After linking a brand-new Google account, suggest its first name.
+  const suggested = account && !account.isAnonymous ? (account.displayName ?? '').split(' ')[0] ?? '' : '';
+  const [usedSuggestion, setUsedSuggestion] = useState(false);
+  if (suggested && !usedSuggestion && name === '') {
+    setUsedSuggestion(true);
+    setName(suggested.slice(0, 20));
+  }
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -143,6 +151,15 @@ function CreateProfile() {
         {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <UserPlus className="size-4" aria-hidden />}
         Create my profile
       </Button>
+      {account?.isAnonymous !== false && (
+        <>
+          <div className="my-4 flex items-center gap-3 text-xs text-subtle" aria-hidden>
+            <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+          </div>
+          <GoogleButton label="Sign in with Google" className="w-full" />
+          <p className="mt-2 text-center text-xs text-muted">Already have a profile on another device? This brings it here.</p>
+        </>
+      )}
     </m.form>
   );
 }
@@ -283,7 +300,9 @@ function ProfileCard() {
         )}
       </div>
 
-      <div className="mt-5 rounded-2xl bg-surface-2 p-4 text-center">
+      <AccountRow />
+
+      <div className="mt-4 rounded-2xl bg-surface-2 p-4 text-center">
         <p className="text-xs font-semibold tracking-wide text-muted uppercase">Your friend code</p>
         <p className="tabular mt-1 text-[2.1rem] leading-none font-extrabold tracking-[0.14em]" aria-label={`Your friend code is ${[...me.profile.code].join(' ')}`}>
           {code}
@@ -298,6 +317,72 @@ function ProfileCard() {
         </div>
       </div>
     </section>
+  );
+}
+
+function AccountRow() {
+  const f = useFriends();
+  const { toast } = useToast();
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const account = f.account;
+  if (!account) return null;
+
+  if (account.isAnonymous) {
+    return (
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-dashed border-border-strong/70 p-3">
+        <Smartphone className="size-4 shrink-0 text-muted" aria-hidden />
+        <p className="min-w-0 flex-1 text-sm text-muted">
+          <strong className="text-text">Guest profile</strong> — saved on this device only.
+        </p>
+        <GoogleButton label="Save with Google" className="min-h-10" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 rounded-2xl border border-border p-3">
+      <div className="flex items-center gap-3">
+        <Cloud className="size-4 shrink-0 text-correct" aria-hidden />
+        <p className="min-w-0 flex-1 truncate text-sm text-muted">
+          Saved to Google{account.email ? <> · <span className="text-text">{account.email}</span></> : null}
+        </p>
+        {!confirming && (
+          <Button variant="ghost" className="min-h-9 px-3" onClick={() => setConfirming(true)}>
+            <LogOut className="size-4" aria-hidden /> Sign out
+          </Button>
+        )}
+      </div>
+      {confirming && (
+        <div className="mt-3 space-y-2" role="alert">
+          <p className="text-sm text-muted">
+            You’ll continue as a new guest on this device. Sign in with Google again any time to get this profile back.
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="danger"
+              className="min-h-10"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await f.signOut();
+                  toast('Signed out');
+                } finally {
+                  setBusy(false);
+                  setConfirming(false);
+                }
+              }}
+            >
+              Sign out
+            </Button>
+            <Button variant="ghost" className="min-h-10" onClick={() => setConfirming(false)} autoFocus>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

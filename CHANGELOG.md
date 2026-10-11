@@ -8,6 +8,8 @@
   compared side by side with a winner. Rematch in one tap.
 - **Live races:** invite, accept/decline, synced 3-2-1 countdown, opponent's progress live, first to
   solve wins (ties settled fairly in a transaction). Rematch in one tap.
+- **Google sign-in (optional):** "Save with Google" links your guest profile so it follows you to other
+  devices; signing in on a new device loads your existing profile; sign out returns to a fresh guest.
 - Friends badge in the header and a "Play with friends" card on Home.
 - Firebase (free Spark plan) with tested security rules; SDK loads only when Friends is used.
 - Refactor: every game screen now shares `useGameScreen` and `PlayArea`.

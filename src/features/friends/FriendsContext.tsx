@@ -3,7 +3,7 @@ import { useServices } from '@/app/services';
 import { GAME, STORAGE_PREFIX } from '@/config/game';
 import { cleanDisplayName, dailyAnswer, dayIndexFor, parseFriendCode, pickPracticeAnswer } from '@/engine';
 import { friendsConfigured } from './config';
-import type { Challenge, DailySummary, Friend, FinishedResult, FriendLink, PlayerDoc, Race, RaceProgress } from './types';
+import type { Account, Challenge, DailySummary, Friend, FinishedResult, FriendLink, PlayerDoc, Race, RaceProgress } from './types';
 
 type Api = typeof import('./api');
 
@@ -13,6 +13,8 @@ interface FriendsContextValue {
   status: FriendsStatus;
   error: string | null;
   me: { uid: string; profile: PlayerDoc } | null;
+  /** The signed-in account (guest or Google). */
+  account: Account | null;
   friends: Friend[];
   challenges: Challenge[];
   races: Race[];
@@ -32,6 +34,10 @@ interface FriendsContextValue {
   pushRaceProgress: (id: string, progress: RaceProgress) => Promise<void>;
   watchRace: (id: string, cb: (race: Race | null) => void) => () => void;
   publishDaily: (daily: DailySummary) => void;
+  /** Link this profile to Google, or load the Google account's existing profile. */
+  signInWithGoogle: () => Promise<'linked' | 'switched' | 'cancelled'>;
+  /** Sign out of Google and continue as a new guest on this device. */
+  signOut: () => Promise<void>;
   nameOf: (uid: string) => string;
 }
 
@@ -48,6 +54,9 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
   );
   const [error, setError] = useState<string | null>(null);
   const [uid, setUid] = useState<string | null>(null);
+  const [account, setAccount] = useState<Account | null>(null);
+  const accountUnsub = useRef<(() => void) | null>(null);
+  const uidRef = useRef<string | null>(null);
   const [profile, setProfile] = useState<PlayerDoc | null>(null);
   const [links, setLinks] = useState<FriendLink[]>([]);
   const [profiles, setProfiles] = useState<Record<string, PlayerDoc | null>>({});
@@ -65,11 +74,28 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
     import('./api')
       .then(async (mod) => {
         api.current = mod;
-        const id = await mod.connect();
-        setUid(id);
+        await mod.connect();
+        // Follow the account live: linking, switching or signing out changes it.
+        accountUnsub.current?.();
+        accountUnsub.current = mod.onAccountChange((acct) => {
+          if (!acct) return; // momentarily signed out while switching
+          setAccount(acct);
+          if (uidRef.current !== acct.uid) {
+            // A different player: clear everything that belonged to the previous one.
+            uidRef.current = acct.uid;
+            setStatus('connecting');
+            setProfile(null);
+            setLinks([]);
+            setChallenges([]);
+            setRaces([]);
+            setUid(acct.uid);
+          }
+        });
       })
       .catch(fail);
   }, [fail]);
+
+  useEffect(() => () => accountUnsub.current?.(), []);
 
   const connect = useCallback(() => {
     if (!configured) return;
@@ -147,6 +173,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       status,
       error,
       me: uid && profile ? { uid, profile } : null,
+      account,
       friends,
       challenges,
       races,
@@ -214,6 +241,16 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         if (!api.current) return () => {};
         return api.current.watchRace(id, cb, fail);
       },
+      async signInWithGoogle() {
+        const { a } = need();
+        const result = await a.signInWithGoogle();
+        // Linking keeps the same user, so refresh the account details by hand.
+        if (result === 'linked') setAccount(a.currentAccount());
+        return result;
+      },
+      async signOut() {
+        await need().a.signOutToGuest();
+      },
       publishDaily(daily) {
         if (!api.current || !uid || status !== 'ready') return;
         api.current.publishDaily(uid, daily).catch(() => {
@@ -221,7 +258,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         });
       },
     };
-  }, [status, error, uid, profile, links, profiles, challenges, races, connect, need, pickAnswer, fail]);
+  }, [status, error, uid, account, profile, links, profiles, challenges, races, connect, need, pickAnswer, fail]);
 
   return <FriendsContext.Provider value={value}>{children}</FriendsContext.Provider>;
 }

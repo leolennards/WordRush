@@ -60,3 +60,11 @@ export interface RaceDoc {
 export type Challenge = ChallengeDoc & { id: string };
 export type Race = RaceDoc & { id: string };
 export type Friend = { uid: string; since: number; profile: PlayerDoc | null };
+
+export interface Account {
+  uid: string;
+  /** True for guest profiles that exist only on this device. */
+  isAnonymous: boolean;
+  email: string | null;
+  displayName: string | null;
+}

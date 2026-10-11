@@ -8,7 +8,12 @@ import type { FirebaseOptions } from 'firebase/app';
 export function firebaseConfig(): { options: FirebaseOptions; emulator: boolean } | null {
   const env = import.meta.env;
   if (env.VITE_FIREBASE_EMULATOR === 'true') {
-    return { options: { apiKey: 'demo-key', projectId: env.VITE_FIREBASE_PROJECT_ID || 'demo-wordskiis', appId: 'demo' }, emulator: true };
+    const projectId = env.VITE_FIREBASE_PROJECT_ID || 'demo-wordskiis';
+    return {
+      // authDomain is required for the (emulated) Google sign-in pop-up.
+      options: { apiKey: 'demo-key', projectId, appId: 'demo', authDomain: `${projectId}.firebaseapp.com` },
+      emulator: true,
+    };
   }
   const apiKey = env.VITE_FIREBASE_API_KEY as string | undefined;
   const projectId = env.VITE_FIREBASE_PROJECT_ID as string | undefined;
