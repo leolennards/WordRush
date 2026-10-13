@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.10.1 — 2026-10-13 (sign-in fix, account in Settings, App Check)
+
+- **Fixed:** Google sign-in in the Android app failed with "You CANNOT use scopes without modifying the main
+  activity". The app no longer requests custom scopes (email and profile are the defaults).
+- **Account in Settings:** sign in with Google or sign out from Settings, without opening Friends first.
+- **App Check:** Firestore now only accepts requests from the real website and app (reCAPTCHA Enterprise,
+  invisible), so the free Firebase quota can't be drained by scripts. Noted in the privacy policy.
+- **Security headers** on the website, and a patched `@grpc/grpc-js`.
+- **Android app 1.10.1** (versionCode 8). Older app versions need this update to use Friends.
+
 ## 1.10.0 — 2026-10-13 (free themes and records)
 
 - **Three free tile themes:** Mint, Candy and Lavender, available from level 1 alongside Classic.

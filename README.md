@@ -73,6 +73,7 @@ is hidden and the solo game works exactly as before.
 | --- | --- |
 | `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID` | Firebase web app config (public identifiers, not secrets) |
 | `VITE_FIREBASE_AUTH_DOMAIN` | Optional, defaults to `<project>.firebaseapp.com` |
+| `VITE_APPCHECK_SITE_KEY` | reCAPTCHA Enterprise site key for Firebase App Check (public; Firestore is enforced, so Friends needs it) |
 
 Local development without any Firebase account: `npm run dev:friends` runs the app against the
 free local Firebase emulators (needs Java). `firebase deploy --only firestore` publishes rules and

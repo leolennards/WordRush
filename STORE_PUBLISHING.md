@@ -30,6 +30,9 @@ Release builds are signed with an upload key that lives **outside the repository
   only installs an update if it is signed with the same key as the installed app. If the key is lost,
   people who installed the APK would have to uninstall and reinstall (Google Play's *App Signing* can
   reset a lost upload key, but only for Play-distributed apps).
+- App Check (Firestore is enforced): the app uses the web reCAPTCHA Enterprise provider inside its WebView, so
+  the key allows the domain `localhost` as well as `wordskiis.vercel.app`. Play Integrity would only work for
+  Play Store installs. If you publish to Google Play later you can add Play Integrity as a second provider.
 - Fingerprints (already registered with Firebase for Google sign-in):
   - SHA-1 `5D:37:B5:71:66:1E:2F:B3:CF:9F:9E:B1:76:3E:59:A2:70:07:58:97`
   - SHA-256 `B2:1E:38:98:67:8D:A3:B6:9F:0F:E6:A2:3D:1F:47:DA:31:52:49:EB:09:D3:E0:32:7C:0A:75:08:2B:6A:B9:92`
