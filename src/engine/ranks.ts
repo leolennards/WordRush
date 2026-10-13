@@ -19,7 +19,7 @@ export interface Rank {
   unlocks?: SkinId;
 }
 
-export type SkinId = 'classic' | 'ocean' | 'sunset' | 'forest' | 'neon' | 'royal' | 'ember' | 'aurora' | 'prism';
+export type SkinId = 'classic' | 'mint' | 'candy' | 'lavender' | 'ocean' | 'sunset' | 'forest' | 'neon' | 'royal' | 'ember' | 'aurora' | 'prism';
 
 export const RANKS: readonly Rank[] = [
   { id: 'rookie', name: 'Rookie', minLevel: 1, from: '#9aa1ad', to: '#6b7280', ink: '#ffffff', effects: 0 },
@@ -48,12 +48,18 @@ export interface Skin {
   /** Swatch colours for previews: [correct, present]. */
   swatch: [string, string];
   animated?: boolean;
+  /** Available to everyone from the start. */
+  free?: boolean;
 }
 
 export const SKINS: readonly Skin[] = [
-  { id: 'classic', name: 'Classic', minLevel: 1, swatch: ['#22a467', '#eaa92b'] },
+  { id: 'classic', name: 'Classic', minLevel: 1, swatch: ['#22a467', '#eaa92b'], free: true },
+  { id: 'mint', name: 'Mint', minLevel: 1, swatch: ['#14b8a6', '#fb923c'], free: true },
+  { id: 'candy', name: 'Candy', minLevel: 1, swatch: ['#ec4899', '#38bdf8'], free: true },
+  { id: 'lavender', name: 'Lavender', minLevel: 1, swatch: ['#7c6cf2', '#f5b945'], free: true },
   ...RANKS.filter((r) => r.unlocks).map((r): Skin => {
-    const meta: Record<Exclude<SkinId, 'classic'>, { name: string; swatch: [string, string]; animated?: boolean }> = {
+    type RankSkin = Exclude<SkinId, 'classic' | 'mint' | 'candy' | 'lavender'>;
+    const meta: Record<RankSkin, { name: string; swatch: [string, string]; animated?: boolean }> = {
       ocean: { name: 'Ocean', swatch: ['#0e8fb8', '#f2b65a'] },
       sunset: { name: 'Sunset', swatch: ['#e0533f', '#f7c548'] },
       forest: { name: 'Forest', swatch: ['#2f7d4a', '#c9963a'] },
@@ -63,7 +69,7 @@ export const SKINS: readonly Skin[] = [
       aurora: { name: 'Aurora', swatch: ['#10b981', '#8b5cf6'], animated: true },
       prism: { name: 'Prism', swatch: ['#ec4899', '#facc15'], animated: true },
     };
-    const id = r.unlocks as Exclude<SkinId, 'classic'>;
+    const id = r.unlocks as RankSkin;
     return { id, minLevel: r.minLevel, ...meta[id] };
   }),
 ];

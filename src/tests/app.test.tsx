@@ -674,3 +674,34 @@ describe('bot duel, tower, reverse and fibber', () => {
     expect(within(rows()[0]!).getByLabelText(/this tile lied/)).toBeInTheDocument();
   });
 });
+
+describe('free themes and records', () => {
+  it('offers free tile themes from level 1 in Settings, with a preview', async () => {
+    window.history.replaceState(null, '', '/');
+    const { user, store } = setup();
+    await user.click(screen.getAllByRole('button', { name: 'Settings' })[0]!);
+    const dialog = await screen.findByRole('dialog', { name: 'Settings' });
+    await user.click(within(dialog).getByRole('button', { name: /Change/ }));
+    expect(within(dialog).getByRole('img', { name: 'Preview of the current tile theme' })).toBeInTheDocument();
+    for (const name of ['Mint', 'Candy', 'Lavender']) {
+      expect(within(dialog).getByRole('radio', { name: `${name} tiles` })).toBeEnabled();
+    }
+    expect(within(dialog).getByRole('radio', { name: /Ocean tiles, unlocks at level 5/ })).toBeDisabled();
+    await user.click(within(dialog).getByRole('radio', { name: 'Candy tiles' }));
+    expect(document.documentElement.dataset.skin).toBe('candy');
+    expect(JSON.parse(store.get(KEYS.settings)!).data.skin).toBe('candy');
+  });
+
+  it('shows personal records across modes', async () => {
+    window.history.replaceState(null, '', '/');
+    const store = seededStore();
+    store.set(KEYS.progress, JSON.stringify({ v: 1, data: { ...emptyProgress(), bestBlitz: 7, bestTower: 4, duelWins: 2 } }));
+    const { user } = setup(store);
+    await user.click(screen.getAllByRole('button', { name: 'Statistics' })[0]!);
+    const dialog = await screen.findByRole('dialog', { name: 'Statistics' });
+    await user.click(within(dialog).getByRole('radio', { name: 'Records' }));
+    expect(within(dialog).getByText('Best Blitz').nextSibling).toHaveTextContent('7');
+    expect(within(dialog).getByText('Highest floor').nextSibling).toHaveTextContent('4');
+    expect(within(dialog).getByText('Bots beaten').nextSibling).toHaveTextContent('2');
+  });
+});

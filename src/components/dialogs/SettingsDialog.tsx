@@ -4,7 +4,9 @@ import { useSettings } from '@/features/settings/SettingsContext';
 import type { ThemePreference } from '@/lib/storage/schemas';
 import { BRAND, GAME } from '@/config/game';
 import { Button, Segmented, Switch } from '@/components/ui';
-import { SKINS } from '@/engine';
+import { SKINS, levelFor } from '@/engine';
+import { useProgress } from '@/features/progress/ProgressContext';
+import { ThemePicker } from '@/components/progress/ThemePicker';
 import { Dialog } from './Dialog';
 import { hapticsSupported } from '@/lib/haptics';
 
@@ -22,9 +24,12 @@ interface SettingsDialogProps {
 export function SettingsDialog({ open, onClose, hardModeLocked, onReset, storagePersistent, onThemes }: SettingsDialogProps) {
   const { settings, update } = useSettings();
   const [confirming, setConfirming] = useState(false);
+  const [themesOpen, setThemesOpen] = useState(false);
+  const { progress } = useProgress();
 
   const close = () => {
     setConfirming(false);
+    setThemesOpen(false);
     onClose();
   };
 
@@ -48,20 +53,30 @@ export function SettingsDialog({ open, onClose, hardModeLocked, onReset, storage
           />
         </div>
 
-        <div className="flex items-center justify-between gap-3 py-3">
-          <span>
-            <span className="block font-semibold">Tile theme</span>
-            <span className="mt-0.5 block text-sm text-muted">
-              {SKINS.find((s) => s.id === settings.skin)?.name ?? 'Classic'} · more unlock as you rank up
+        <div className="py-3">
+          <div className="flex items-center justify-between gap-3">
+            <span>
+              <span className="block font-semibold">Tile theme</span>
+              <span className="mt-0.5 block text-sm text-muted">
+                {SKINS.find((s) => s.id === settings.skin)?.name ?? 'Classic'} · 4 free, more unlock as you rank up
+              </span>
             </span>
-          </span>
-          <Button variant="secondary" onClick={onThemes}>
-            <span className="flex gap-0.5" aria-hidden>
-              <span className="size-3 rounded-[3px] bg-correct" />
-              <span className="size-3 rounded-[3px] bg-present" />
-            </span>
-            Change
-          </Button>
+            <Button variant="secondary" onClick={() => setThemesOpen((o) => !o)} aria-expanded={themesOpen}>
+              <span className="flex gap-0.5" aria-hidden>
+                <span className="size-3 rounded-[3px] bg-correct" />
+                <span className="size-3 rounded-[3px] bg-present" />
+              </span>
+              {themesOpen ? 'Done' : 'Change'}
+            </Button>
+          </div>
+          {themesOpen && (
+            <div className="mt-3">
+              <ThemePicker level={levelFor(progress.xp).level} />
+              <button type="button" onClick={onThemes} className="mt-3 text-sm font-semibold text-accent hover:underline">
+                See all ranks
+              </button>
+            </div>
+          )}
         </div>
 
         <Switch

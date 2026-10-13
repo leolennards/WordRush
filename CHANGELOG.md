@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.10.0 — 2026-10-13 (free themes and records)
+
+- **Three free tile themes:** Mint, Candy and Lavender, available from level 1 alongside Classic.
+- **Theme picker in Settings** with a live preview row; themes are grouped into Free and Unlocked by rank
+  (also in Ranks and themes).
+- **Records** tab in Statistics: rank, total XP and personal bests across every mode.
+- **Android app 1.10.0** (versionCode 7).
+
 ## 1.9.0 — 2026-10-13 (Tower, Bot Duel, Reverse, Fibber)
 
 - **The Tower:** a roguelike climb — each floor is a word with stacking twists, perks between floors, and

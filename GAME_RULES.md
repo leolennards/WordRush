@@ -171,6 +171,7 @@ the next game. Hard-mode results are marked with `*` when shared.
 
 - Ranks by level: Rookie (1), Apprentice (5), Wordsmith (10), Lexicon (20), Scholar (30), Sage (40),
   Virtuoso (50), Grandmaster (65), Mythic (80), Wordskiis Legend (100+).
+- Four themes are free from the start: Classic, Mint, Candy and Lavender.
 - Reaching a rank can unlock a tile theme (Ocean, Sunset, Forest, Neon, Royal, Ember, Aurora, Prism).
   The colour-accessible palette always takes priority over themes.
 

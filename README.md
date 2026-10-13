@@ -32,11 +32,13 @@ paid API or database — and keeps preferences, progress and statistics in `loca
 - Ranks: ten tiers from Rookie to Wordskiis Legend (level 100), each with its own emblem; higher ranks add a
   sheen, glowing aura, rotating ring, orbiting sparks and finally a prismatic, animated Legend emblem.
   A full-screen moment celebrates each new rank.
+- Tile themes: Classic plus three free ones (Mint, Candy, Lavender), chosen with a live preview in Settings.
 - Tile themes unlocked by rank: Ocean, Sunset, Forest, Neon, Royal, Ember and the animated Aurora and Prism.
 - Levels, XP and 40 achievements; XP rewards fewer guesses, hard mode and the Daily Challenge.
 - Decorative tile backdrop in both themes; optional vibration on supported phones.
 - Correct duplicate-letter feedback, local dictionary (12,675 accepted guesses, 1,922 curated answers).
 - Physical and on-screen keyboards, invalid-word shake, flip reveals, win celebration.
+- Records: personal bests across every mode (Blitz, Survival, Tower, Reverse, bots beaten, Duo/Quad wins…).
 - Statistics: played, win %, current/best streak, guess distribution, average guesses, last daily result.
 - Spoiler-free sharing via the Web Share API (touch devices) or clipboard.
 - Dark, light and system themes (no flash on load), colour-accessible palette, reduced motion, optional

@@ -1,14 +1,13 @@
-import { Check, Lock } from 'lucide-react';
-import { RANKS, SKINS, levelFor, rankFor, xpForLevel, type SkinId } from '@/engine';
+import { Lock } from 'lucide-react';
+import { RANKS, SKINS, levelFor, rankFor, xpForLevel } from '@/engine';
 import { useProgress } from '@/features/progress/ProgressContext';
-import { useSettings } from '@/features/settings/SettingsContext';
 import { Dialog } from '@/components/dialogs/Dialog';
 import { RankBadge } from './RankBadge';
+import { ThemePicker } from './ThemePicker';
 
 /** Every rank with its emblem, and the tile themes they unlock. */
 export function RanksDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { progress } = useProgress();
-  const { settings, update } = useSettings();
   const { level, into, span } = levelFor(progress.xp);
   const { rank, next } = rankFor(level);
   const toNext = next ? xpForLevel(next.minLevel) - progress.xp : 0;
@@ -76,48 +75,7 @@ export function RanksDialog({ open, onClose }: { open: boolean; onClose: () => v
           <h3 id="skins-list" className="mb-2 text-sm font-bold">
             Tile themes
           </h3>
-          <div role="radiogroup" aria-labelledby="skins-list" className="grid grid-cols-3 gap-2">
-            {SKINS.map((s) => {
-              const unlocked = level >= s.minLevel;
-              const on = settings.skin === s.id;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={on}
-                  aria-label={unlocked ? `${s.name} tiles` : `${s.name} tiles, unlocks at level ${s.minLevel}`}
-                  disabled={!unlocked}
-                  onClick={() => update({ skin: s.id as SkinId })}
-                  className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition ${
-                    on ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
-                  } disabled:cursor-not-allowed`}
-                >
-                  <span className={`flex gap-1 ${unlocked ? '' : 'opacity-35 grayscale'}`} aria-hidden>
-                    {s.swatch.map((c, i) => (
-                      <span
-                        key={i}
-                        className={`grid size-7 place-items-center rounded-md text-xs font-black text-white ${s.animated ? 'swatch-flow' : ''}`}
-                        style={{ background: s.animated ? `linear-gradient(135deg, ${s.swatch[0]}, ${s.swatch[1]}, ${s.swatch[0]})` : c }}
-                      >
-                        {'WS'[i]}
-                      </span>
-                    ))}
-                  </span>
-                  <span className={`text-xs font-semibold ${unlocked ? '' : 'text-muted'}`}>{s.name}</span>
-                  {on && (
-                    <span className="absolute top-1 right-1 grid size-4 place-items-center rounded-full bg-accent text-accent-ink">
-                      <Check className="size-3" aria-hidden />
-                    </span>
-                  )}
-                  {!unlocked && <span className="tabular text-[0.65rem] text-subtle">Level {s.minLevel}</span>}
-                </button>
-              );
-            })}
-          </div>
-          {settings.highContrast && (
-            <p className="mt-2 text-xs text-muted">The colour-accessible palette is on, so tiles use orange and blue.</p>
-          )}
+          <ThemePicker level={level} />
         </section>
       </div>
     </Dialog>

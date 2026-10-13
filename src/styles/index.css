@@ -139,8 +139,24 @@
 
 /* Tile themes, unlocked by rank (see engine/ranks.ts). Defined before the
    colour-accessible palette so that palette always wins. */
+/* Free themes. */
+[data-skin='mint'] { --c-correct: #0f9e8e; --c-correct-ink: #fff; --c-present: #f28a3c; --c-present-ink: #2a1200; }
+.dark[data-skin='mint'] { --c-correct: #2dd4bf; --c-correct-ink: #042f2b; --c-present: #fb9a5b; --c-present-ink: #2a1200; }
+[data-skin='candy'] { --c-correct: #db2777; --c-correct-ink: #fff; --c-present: #0284c7; --c-present-ink: #fff; }
+.dark[data-skin='candy'] { --c-correct: #f472b6; --c-correct-ink: #3b0720; --c-present: #38bdf8; --c-present-ink: #04202e; }
+[data-skin='lavender'] { --c-correct: #6d5ce8; --c-correct-ink: #fff; --c-present: #eaa92b; --c-present-ink: #2b1c00; }
+.dark[data-skin='lavender'] { --c-correct: #a5a0ff; --c-correct-ink: #1b1554; --c-present: #f5c15a; --c-present-ink: #2a1a00; }
+
 [data-skin='ocean'] { --c-correct: #0e8fb8; --c-correct-ink: #fff; --c-present: #f2b65a; --c-present-ink: #2b1c00; }
-.dark[data-skin='ocean'] { --c-correct: #38bdf8; --c-correct-ink: #04202e; --c-present: #f6c56f; --c-present-ink: #2a1a00; }
+.dark/* Free themes. */
+[data-skin='mint'] { --c-correct: #0f9e8e; --c-correct-ink: #fff; --c-present: #f28a3c; --c-present-ink: #2a1200; }
+.dark[data-skin='mint'] { --c-correct: #2dd4bf; --c-correct-ink: #042f2b; --c-present: #fb9a5b; --c-present-ink: #2a1200; }
+[data-skin='candy'] { --c-correct: #db2777; --c-correct-ink: #fff; --c-present: #0284c7; --c-present-ink: #fff; }
+.dark[data-skin='candy'] { --c-correct: #f472b6; --c-correct-ink: #3b0720; --c-present: #38bdf8; --c-present-ink: #04202e; }
+[data-skin='lavender'] { --c-correct: #6d5ce8; --c-correct-ink: #fff; --c-present: #eaa92b; --c-present-ink: #2b1c00; }
+.dark[data-skin='lavender'] { --c-correct: #a5a0ff; --c-correct-ink: #1b1554; --c-present: #f5c15a; --c-present-ink: #2a1a00; }
+
+[data-skin='ocean'] { --c-correct: #38bdf8; --c-correct-ink: #04202e; --c-present: #f6c56f; --c-present-ink: #2a1a00; }
 [data-skin='sunset'] { --c-correct: #e0533f; --c-correct-ink: #fff; --c-present: #f7c548; --c-present-ink: #2b1c00; }
 .dark[data-skin='sunset'] { --c-correct: #ff7a62; --c-correct-ink: #2a0a04; --c-present: #ffd36b; --c-present-ink: #2a1a00; }
 [data-skin='forest'] { --c-correct: #2f7d4a; --c-correct-ink: #fff; --c-present: #c9963a; --c-present-ink: #2b1c00; }
