@@ -16,7 +16,7 @@
 - [ ] Optional simple puzzle calendar or archive of past daily challenges.
 - [ ] Code-split dialogs and lazily load the accepted-guess list to reduce the initial bundle.
 - [ ] Service worker update prompt ("A new version is available").
-- [ ] A small number of achievements (only if they stay non-manipulative).
+- [x] A small number of achievements (only if they stay non-manipulative).
 - [ ] Optional export/import of statistics to move between devices.
 
 ## Mobile

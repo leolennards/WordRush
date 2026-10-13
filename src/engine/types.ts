@@ -5,7 +5,7 @@ export type LetterState = 'correct' | 'present' | 'absent';
 export type GameStatus = 'playing' | 'won' | 'lost';
 
 /** daily/practice are solo; challenge/race are played against a friend. */
-export type GameMode = 'daily' | 'practice' | 'challenge' | 'race';
+export type GameMode = 'daily' | 'practice' | 'challenge' | 'race' | 'blitz';
 
 /** The two single-player modes, which have their own statistics. */
 export type SoloMode = 'daily' | 'practice';
@@ -24,6 +24,8 @@ export interface GameState {
   hardMode: boolean;
   /** Daily challenges only: days since the epoch (0 = challenge #1). */
   dayIndex: number | null;
+  /** Practice only: positions whose letter was revealed by a hint, in order. */
+  hints?: number[];
 }
 
 export type GuessError =

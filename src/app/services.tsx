@@ -1,6 +1,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import type { Dictionary } from '@/engine';
 import type { KeyValueStore } from '@/lib/storage/store';
+import type { WordDefinition } from '@/lib/dictionary/define';
 
 /**
  * Platform services injected into the UI. Tests (and a future mobile shell)
@@ -11,6 +12,8 @@ export interface Services {
   dictionary: Dictionary;
   now: () => Date;
   random: () => number;
+  /** Looks up a word's meaning after a game; omitted where there is no network (tests). */
+  define?: (word: string) => Promise<WordDefinition | null>;
 }
 
 const ServicesContext = createContext<Services | null>(null);

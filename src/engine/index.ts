@@ -12,3 +12,6 @@ export * from './stats';
 export * from './practice';
 export * from './share';
 export * from './friends';
+export * from './hints';
+export * from './progress';
+export * from './blitz';

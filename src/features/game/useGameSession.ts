@@ -19,6 +19,8 @@ export interface GameSession {
   submit: () => void;
   replace: (game: GameState) => void;
   ackComplete: () => void;
+  /** Reveal one letter (Practice). */
+  hint: () => void;
 }
 
 /**
@@ -64,6 +66,7 @@ export function useGameSession(params: {
   );
   const replace = useCallback((g: GameState) => dispatch({ type: 'replace', game: g }), []);
   const ackComplete = useCallback(() => dispatch({ type: 'ack-complete' }), []);
+  const hint = useCallback(() => dispatch({ type: 'hint' }), []);
 
-  return { session, type, remove, submit, replace, ackComplete };
+  return { session, type, remove, submit, replace, ackComplete, hint };
 }

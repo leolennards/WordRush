@@ -1,0 +1,37 @@
+import {
+  Brain,
+  Calendar,
+  Crosshair,
+  Crown,
+  Dumbbell,
+  Flame,
+  Medal,
+  Shield,
+  Skull,
+  Sparkles,
+  Star,
+  Target,
+  Timer,
+  Zap,
+  CloudLightning,
+  type LucideIcon,
+} from 'lucide-react';
+import type { Achievement } from '@/engine';
+
+export const ACHIEVEMENT_ICONS: Record<Achievement['icon'], LucideIcon> = {
+  sparkles: Sparkles,
+  target: Target,
+  crosshair: Crosshair,
+  shield: Shield,
+  flame: Flame,
+  calendar: Calendar,
+  crown: Crown,
+  skull: Skull,
+  dumbbell: Dumbbell,
+  medal: Medal,
+  timer: Timer,
+  zap: Zap,
+  bolt: CloudLightning,
+  star: Star,
+  brain: Brain,
+};

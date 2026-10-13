@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-export type View = 'home' | 'daily' | 'practice' | 'friends' | 'challenge' | 'race';
+export type View = 'home' | 'daily' | 'practice' | 'blitz' | 'friends' | 'challenge' | 'race';
 
 export interface Route {
   view: View;
@@ -15,6 +15,7 @@ export function parseHash(hash: string): Route {
   switch (name) {
     case 'daily':
     case 'practice':
+    case 'blitz':
     case 'friends':
       return { view: name, id: null };
     case 'challenge':
@@ -33,7 +34,7 @@ export function routeToHash({ view, id }: Route): string {
 const read = () => parseHash(window.location.hash);
 
 /**
- * Keeps the current screen in the URL hash (#daily, #practice, #friends,
+ * Keeps the current screen in the URL hash (#daily, #practice, #blitz, #friends,
  * #challenge/<id>, #race/<id>; none = home) so it survives refresh and the
  * browser Back button returns to the previous screen.
  */

@@ -10,7 +10,12 @@ paid API or database — and keeps preferences, progress and statistics in `loca
 
 - Daily Challenge: the same answer for every player on the same UTC date, numbered (#1 = 11 Oct 2026, launch day),
   with a countdown to the next one. Progress and results survive refresh; there is no in-game reset.
-- Practice: unlimited words with separate statistics; never touches the daily game or streak.
+- Practice: unlimited words with separate statistics; never touches the daily game or streak. Up to two
+  hints per word reveal a letter.
+- Blitz: solve as many words as possible against the clock (90 s, +15 s per solve, −10 s per miss).
+- Levels, XP and 15 achievements; XP rewards fewer guesses, hard mode and the Daily Challenge.
+- "What it means": the answer's definition after each game (free Dictionary API).
+- Decorative tile backdrop in both themes; optional vibration on supported phones.
 - Correct duplicate-letter feedback, local dictionary (12,675 accepted guesses, 1,922 curated answers).
 - Physical and on-screen keyboards, invalid-word shake, flip reveals, win celebration.
 - Statistics: played, win %, current/best streak, guess distribution, average guesses, last daily result.

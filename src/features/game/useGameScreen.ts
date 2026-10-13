@@ -5,6 +5,9 @@ import { useSettings } from '@/features/settings/SettingsContext';
 import { useToast } from '@/components/layout/Toasts';
 import { usePhysicalKeyboard } from '@/hooks/usePhysicalKeyboard';
 import { playCue } from '@/lib/audio/sound';
+import { buzz } from '@/lib/haptics';
+import { markStarted } from '@/lib/storage/timers';
+import { useServices } from '@/app/services';
 import { rejectionMessage } from './sessionReducer';
 import type { GameSession } from './useGameSession';
 
@@ -24,23 +27,28 @@ export function useGameScreen(
   },
 ) {
   const { settings, reducedMotion } = useSettings();
+  const { store, now } = useServices();
   const { toast, announce } = useToast();
   const { game, input, revealingRow, rejection, justCompleted } = active.session;
 
   const sound = useCallback(
     (cue: Parameters<typeof playCue>[0]) => {
       if (settings.sound) playCue(cue);
+      if (settings.haptics && cue !== 'reveal') buzz(cue);
     },
-    [settings.sound],
+    [settings.sound, settings.haptics],
   );
 
   // ----- Input -----
   const onLetter = useCallback(
     (l: string) => {
-      if (game.status === 'playing' && revealingRow === null && input.length < GAME.wordLength) sound('key');
+      if (game.status === 'playing' && revealingRow === null && input.length < GAME.wordLength) {
+        sound('key');
+        if (game.guesses.length === 0 && input.length === 0) markStarted(store, game.id, now().getTime());
+      }
       active.type(l);
     },
-    [active, game.status, revealingRow, input.length, sound],
+    [active, game.status, game.guesses.length, game.id, revealingRow, input.length, sound, store, now],
   );
   usePhysicalKeyboard({ onLetter, onDelete: active.remove, onEnter: active.submit }, opts.inputEnabled);
 

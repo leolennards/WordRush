@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { GAME, TIMING } from '@/config/game';
 import type { GameState, LetterState } from '@/engine';
 
-type TileState = LetterState | 'tbd' | 'empty';
+type TileState = LetterState | 'tbd' | 'empty' | 'hint';
 type TileAnim = 'pop' | 'flip' | 'bounce' | undefined;
 
 const STATE_LABEL: Record<TileState, string> = {
@@ -11,6 +11,7 @@ const STATE_LABEL: Record<TileState, string> = {
   absent: 'not in the word',
   tbd: 'not submitted',
   empty: 'empty',
+  hint: 'hint, not typed yet',
 };
 
 interface BoardProps {
@@ -27,6 +28,9 @@ export function Board({ game, input, revealingRow, shakeKey, celebrate }: BoardP
   const rows = Array.from({ length: GAME.maxGuesses }, (_, r) => r);
   const currentRow = game.status === 'playing' ? game.guesses.length : -1;
   const winningRow = game.status === 'won' ? game.guesses.length - 1 : -1;
+  // Hinted letters are shown as ghosts in the row being typed.
+  const hintLetters = (game.hints ?? []).map((i) => [i, game.answer[i]!] as const);
+  const hintKey = hintLetters.map(([i, l]) => `${i}${l}`).join('');
 
   return (
     <div className="board" role="grid" aria-label="Game board" aria-rowcount={GAME.maxGuesses}>
@@ -45,6 +49,7 @@ export function Board({ game, input, revealingRow, shakeKey, celebrate }: BoardP
             }
             shake={shakeKey > 0 && r === currentRow}
             active={r === currentRow}
+            hints={r === currentRow ? hintKey : ''}
           />
         );
       })}
@@ -59,9 +64,13 @@ interface RowProps {
   mode: 'static' | 'reveal' | 'win';
   shake: boolean;
   active: boolean;
+  /** Pairs of position + letter, e.g. "0s3e" (a string so memo can compare it). */
+  hints: string;
 }
 
-const Row = memo(function Row({ index, letters, evaluation, mode, shake, active }: RowProps) {
+const Row = memo(function Row({ index, letters, evaluation, mode, shake, active, hints }: RowProps) {
+  const ghosts = new Map<number, string>();
+  for (let k = 0; k + 1 < hints.length; k += 2) ghosts.set(Number(hints[k]), hints[k + 1]!);
   const cells = Array.from({ length: GAME.wordLength }, (_, i) => i);
   const description = evaluation
     ? `${[...letters].map((l, i) => `${l.toUpperCase()} ${STATE_LABEL[evaluation[i] ?? 'absent']}`).join(', ')}`
@@ -79,8 +88,10 @@ const Row = memo(function Row({ index, letters, evaluation, mode, shake, active 
       data-shake={shake ? 'true' : undefined}
     >
       {cells.map((i) => {
-        const letter = letters[i] ?? '';
-        const state: TileState = evaluation?.[i] ?? (letter ? 'tbd' : 'empty');
+        const typed = letters[i] ?? '';
+        const ghost = !typed && !evaluation ? ghosts.get(i) : undefined;
+        const letter = typed || ghost || '';
+        const state: TileState = evaluation?.[i] ?? (typed ? 'tbd' : ghost ? 'hint' : 'empty');
         let anim: TileAnim;
         let delay = 0;
         if (mode === 'reveal') {

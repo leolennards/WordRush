@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.0 — 2026-10-13 (more fun)
+
+- **Background decal:** a soft dot grid and gently floating letter tiles in the game's own colours, in
+  light and dark themes. It fades out behind the board and stays still with reduced motion.
+- **Blitz mode:** solve as many words as you can against a 90-second clock (+15 s per solve, −10 s per
+  miss), with a live timer bar, best score and spoiler-free sharing.
+- **Levels and XP:** every game earns XP; a level bar on Home and in results.
+- **Achievements:** 15 to unlock, with a celebratory toast and an Achievements screen.
+- **Practice hints:** reveal up to two letters per word, shown as ghost tiles.
+- **What it means:** the answer's definition in the results.
+- **Vibration** setting on supported phones.
+- Home: level card, Blitz card and an Achievements link; the daily card no longer stretches.
+
 ## 1.4.0 — 2026-10-11 (apps)
 
 - **Android app** (Capacitor) with native Google sign-in, native share sheet, Wordskiis icon and launch

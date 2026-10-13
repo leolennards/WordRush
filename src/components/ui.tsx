@@ -124,3 +124,14 @@ export function Segmented<T extends string>({
     </div>
   );
 }
+
+/** A card (or bare content when `transparent`) laid over the board area. */
+export function BoardOverlay({ children, transparent }: { children: ReactNode; transparent?: boolean }) {
+  return (
+    <div className={`absolute inset-0 z-20 grid place-items-center p-6 ${transparent ? '' : 'bg-bg/70 backdrop-blur-sm'}`}>
+      <div className={`max-w-xs text-center ${transparent ? '' : 'rounded-[var(--radius-card)] border border-border bg-surface p-6 shadow-lg'}`}>
+        {children}
+      </div>
+    </div>
+  );
+}

@@ -5,7 +5,7 @@ import { App } from '@/app/App';
 import type { Services } from '@/app/services';
 import { dictionary } from '@/data/words';
 import { ANSWERS } from '@/data/words/answers';
-import { dailyAnswer } from '@/engine';
+import { BLITZ, dailyAnswer, pickPracticeAnswer } from '@/engine';
 import { createMemoryStore, type KeyValueStore } from '@/lib/storage/store';
 import { DEFAULT_SETTINGS, KEYS } from '@/lib/storage/schemas';
 import { HELP_EXAMPLES } from '@/components/dialogs/helpExamples';
@@ -307,5 +307,83 @@ describe('home dashboard and end of game', () => {
     await user.click(within(screen.getByRole('region', { name: 'Game over' })).getByRole('button', { name: /New word/ }));
     expect(screen.getByRole('group', { name: 'Keyboard' })).toBeInTheDocument();
     expect(rowText(0)).toBe('');
+  });
+});
+
+describe('levels, achievements and hints', () => {
+  it('awards XP and unlocks achievements after a win, and lists them', async () => {
+    const { user, store } = setup();
+    await guess(user, ANSWER);
+    const dialog = await screen.findByRole('dialog', {}, { timeout: 3000 });
+    expect(within(dialog).getByText(/^\+\d+ XP$/)).toBeInTheDocument();
+    expect((await screen.findAllByText(/^🏆 Achievements: .*First word.*Hole in one/)).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('⭐ Level 2 reached!').length).toBeGreaterThan(0);
+    const progress = JSON.parse(store.get(KEYS.progress)!).data;
+    expect(progress.unlocked).toHaveProperty('ace');
+    expect(progress.xp).toBeGreaterThan(0);
+
+    await user.keyboard('{Escape}');
+    await user.click(within(screen.getByRole('region', { name: 'Game over' })).getByRole('button', { name: /Home/ }));
+    await user.click(screen.getByRole('button', { name: /^Achievements — \d+ of \d+ unlocked$/ }));
+    const list = await screen.findByRole('dialog', { name: 'Achievements' });
+    expect(within(list).getByText('Hole in one')).toBeInTheDocument();
+    expect(within(list).getAllByText('(unlocked)').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('gives Practice hints that show on the board and in the result', async () => {
+    window.history.replaceState(null, '', '/#practice');
+    const { user, store } = setup();
+    const answer = JSON.parse(store.get(KEYS.practice)!).data.game.answer as string;
+    await user.click(screen.getByRole('button', { name: 'Hint, 2 left' }));
+    expect(await screen.findByText(`Hint: letter 1 is ${answer[0]!.toUpperCase()}`)).toBeInTheDocument();
+    expect(within(rows()[0]!).getAllByRole('gridcell')[0]).toHaveAttribute('data-state', 'hint');
+    await user.click(screen.getByRole('button', { name: 'Hint, 1 left' }));
+    expect(screen.getByRole('button', { name: 'No hints left' })).toBeDisabled();
+    // Hints survive a reload.
+    expect(JSON.parse(store.get(KEYS.practice)!).data.game.hints).toEqual([0, 1]);
+    await guess(user, answer);
+    const dialog = await screen.findByRole('dialog', {}, { timeout: 3000 });
+    expect(within(dialog).getByText('💡 2 hints')).toBeInTheDocument();
+  });
+
+  it('has no hints in the Daily Challenge', () => {
+    setup();
+    expect(screen.queryByRole('button', { name: /Hint/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('blitz', () => {
+  it('plays a timed run: solves add time, and the run ends when the clock runs out', async () => {
+    window.history.replaceState(null, '', '/#blitz');
+    let t = NOW.getTime();
+    const store = seededStore();
+    const services: Services = { store, dictionary, now: () => new Date(t), random: () => 0.5 };
+    const user = userEvent.setup();
+    render(<App services={services} />);
+
+    expect(screen.getByRole('heading', { name: 'Blitz' })).toBeInTheDocument();
+    expect(screen.getByRole('timer')).toHaveTextContent('1:30');
+    await user.click(screen.getByRole('button', { name: /Start/ }));
+
+    const first = pickPracticeAnswer(ANSWERS, [ANSWER], () => 0.5);
+    await guess(user, first);
+    expect(await screen.findByLabelText('1 words solved')).toBeInTheDocument();
+    // The next word loads after the reveal.
+    await waitFor(() => expect(rowText(0)).toBe(''), { timeout: 3000 });
+
+    t += BLITZ.startMs + BLITZ.bonusMs + 1000;
+    const result = await screen.findByRole('region', { name: 'Blitz result' }, { timeout: 3000 });
+    expect(within(result).getByText(/1 word solved/)).toBeInTheDocument();
+    expect(within(result).getByText(first)).toBeInTheDocument();
+    expect(JSON.parse(store.get(KEYS.progress)!).data.bestBlitz).toBe(1);
+    expect(screen.queryByRole('group', { name: 'Keyboard' })).not.toBeInTheDocument();
+  });
+
+  it('is reachable from the home dashboard', async () => {
+    window.history.replaceState(null, '', '/');
+    const { user } = setup();
+    await user.click(screen.getByRole('button', { name: 'Play Blitz' }));
+    expect(screen.getByRole('heading', { name: 'Blitz' })).toBeInTheDocument();
+    expect(window.location.hash).toBe('#blitz');
   });
 });

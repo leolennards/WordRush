@@ -5,6 +5,7 @@ import type { ThemePreference } from '@/lib/storage/schemas';
 import { BRAND, GAME } from '@/config/game';
 import { Button, Segmented, Switch } from '@/components/ui';
 import { Dialog } from './Dialog';
+import { hapticsSupported } from '@/lib/haptics';
 
 interface SettingsDialogProps {
   open: boolean;
@@ -72,6 +73,14 @@ export function SettingsDialog({ open, onClose, hardModeLocked, onReset, storage
           onChange={(sound) => update({ sound })}
           description="Soft sounds for typing and results."
         />
+        {hapticsSupported() && (
+          <Switch
+            label="Vibration"
+            checked={settings.haptics}
+            onChange={(haptics) => update({ haptics })}
+            description="Short buzzes when typing and finishing a game."
+          />
+        )}
 
         <div className="py-4">
           {!confirming ? (

@@ -1,7 +1,8 @@
 import { m } from 'motion/react';
-import { ArrowRight, BarChart3, ChevronRight, CircleHelp, Clock3, Flame, Settings, Shuffle, Smartphone, Trophy, Users } from 'lucide-react';
+import { ArrowRight, Award, BarChart3, ChevronRight, CircleHelp, Clock3, Flame, Settings, Shuffle, Smartphone, Trophy, Users, Zap } from 'lucide-react';
 import { BRAND, GAME } from '@/config/game';
-import { effectiveStreak, winPercentage, type GameState, type Stats } from '@/engine';
+import { ACHIEVEMENTS, effectiveStreak, winPercentage, type GameState, type Progress, type Stats } from '@/engine';
+import { LevelBar } from '@/components/progress/LevelBar';
 import { MiniBoard } from './MiniBoard';
 
 interface HomeProps {
@@ -17,6 +18,9 @@ interface HomeProps {
   onPlayDaily: () => void;
   onDailyResults: () => void;
   onPlayPractice: () => void;
+  onBlitz: () => void;
+  onAchievements: () => void;
+  progress: Progress;
   onFriends: () => void;
   /** Omitted when already running as an app. */
   onGetApp?: () => void;
@@ -64,6 +68,8 @@ export function Home(props: HomeProps) {
   const dailyDone = daily.status !== 'playing';
   const streak = effectiveStreak(dailyStats, props.todayIndex);
   const practiceInProgress = practice.status === 'playing' && practice.guesses.length > 0;
+  const unlocked = ACHIEVEMENTS.filter((a) => props.progress.unlocked[a.id]).length;
+  const best = props.progress.bestBlitz;
 
   return (
     <div className="mx-auto w-full max-w-[30rem] px-4 pt-5 pb-8 sm:pt-10 lg:max-w-[60rem]">
@@ -75,58 +81,79 @@ export function Home(props: HomeProps) {
       </m.header>
 
       <div className="grid gap-4 lg:grid-cols-[1.15fr_1fr] lg:gap-6">
-        {/* Daily challenge — the hero */}
-        <m.section
-          {...rise(1)}
-          aria-labelledby="home-daily"
-          className="relative overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-md sm:p-6"
-        >
-          <div className="flex items-start justify-between gap-5">
-            <div className="min-w-0">
-              <h3 id="home-daily" className="flex items-baseline gap-2">
-                <span className="text-sm font-semibold text-muted">Daily Challenge</span>
-                <span className="tabular text-sm font-bold">#{props.challengeNumber}</span>
-              </h3>
-              <p className="mt-3 max-w-[16rem] text-[0.95rem] leading-snug text-muted">{copy.detail}</p>
+        <div className="flex flex-col gap-4">
+          {/* Daily challenge — the hero */}
+          <m.section
+            {...rise(1)}
+            aria-labelledby="home-daily"
+            className="relative overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-md sm:p-6"
+          >
+            <div className="flex items-start justify-between gap-5">
+              <div className="min-w-0">
+                <h3 id="home-daily" className="flex items-baseline gap-2">
+                  <span className="text-sm font-semibold text-muted">Daily Challenge</span>
+                  <span className="tabular text-sm font-bold">#{props.challengeNumber}</span>
+                </h3>
+                <p className="mt-3 max-w-[16rem] text-[0.95rem] leading-snug text-muted">{copy.detail}</p>
+              </div>
+              <MiniBoard game={daily} className="shrink-0" />
             </div>
-            <MiniBoard game={daily} className="shrink-0" />
-          </div>
 
-          <div className="mt-6 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={dailyDone ? props.onDailyResults : props.onPlayDaily}
-              aria-label={`${copy.cta} — Daily Challenge #${props.challengeNumber}`}
-              className="group inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-ink px-5 font-semibold text-ink-text shadow-sm transition hover:opacity-90 active:scale-[0.985]"
-            >
-              {dailyDone && <Trophy className="size-4" aria-hidden />}
-              {copy.cta}
-              {!dailyDone && (
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
-              )}
-            </button>
-            {dailyDone && (
+            <div className="mt-6 flex items-center gap-2">
               <button
                 type="button"
-                onClick={props.onPlayDaily}
-                aria-label="See today’s board"
-                className="min-h-12 rounded-xl bg-surface-2 px-4 text-sm font-semibold transition hover:bg-surface-3"
+                onClick={dailyDone ? props.onDailyResults : props.onPlayDaily}
+                aria-label={`${copy.cta} — Daily Challenge #${props.challengeNumber}`}
+                className="group inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-ink px-5 font-semibold text-ink-text shadow-sm transition hover:opacity-90 active:scale-[0.985]"
               >
-                Board
+                {dailyDone && <Trophy className="size-4" aria-hidden />}
+                {copy.cta}
+                {!dailyDone && (
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                )}
               </button>
-            )}
-          </div>
+              {dailyDone && (
+                <button
+                  type="button"
+                  onClick={props.onPlayDaily}
+                  aria-label="See today’s board"
+                  className="min-h-12 rounded-xl bg-surface-2 px-4 text-sm font-semibold transition hover:bg-surface-3"
+                >
+                  Board
+                </button>
+              )}
+            </div>
 
-          <p className="tabular mt-4 flex items-center justify-center gap-1.5 text-xs text-muted">
-            <Clock3 className="size-3.5" aria-hidden />
-            Next puzzle in <span className="font-semibold text-text">{props.countdown}</span>
-          </p>
-        </m.section>
+            <p className="tabular mt-4 flex items-center justify-center gap-1.5 text-xs text-muted">
+              <Clock3 className="size-3.5" aria-hidden />
+              Next puzzle in <span className="font-semibold text-text">{props.countdown}</span>
+            </p>
+          </m.section>
+
+          {/* Level & achievements */}
+          <m.button
+            {...rise(2)}
+            type="button"
+            onClick={props.onAchievements}
+            aria-label={`Achievements — ${unlocked} of ${ACHIEVEMENTS.length} unlocked`}
+            className="group w-full rounded-[var(--radius-card)] border border-border bg-surface p-4 text-left transition hover:border-border-strong"
+          >
+            <LevelBar xp={props.progress.xp} />
+            <span className="mt-3 flex items-center justify-between text-sm">
+              <span className="flex items-center gap-1.5 font-semibold">
+                <Award className="size-4 text-present" aria-hidden />
+                {unlocked} of {ACHIEVEMENTS.length} achievements
+              </span>
+              <ChevronRight className="size-5 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
+            </span>
+          </m.button>
+
+        </div>
 
         <div className="flex flex-col gap-4">
           {/* Streak strip */}
           <m.section
-            {...rise(2)}
+            {...rise(3)}
             aria-label="Daily statistics"
             className="rounded-[var(--radius-card)] border border-border bg-surface"
           >
@@ -161,7 +188,7 @@ export function Home(props: HomeProps) {
 
           {/* Practice */}
           <m.button
-            {...rise(3)}
+            {...rise(4)}
             type="button"
             onClick={props.onPlayPractice}
             aria-label={`${practiceInProgress ? 'Continue' : 'Play'} Practice`}
@@ -183,9 +210,32 @@ export function Home(props: HomeProps) {
             <ChevronRight className="size-5 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
           </m.button>
 
+          {/* Blitz */}
+          <m.button
+            {...rise(5)}
+            type="button"
+            onClick={props.onBlitz}
+            aria-label="Play Blitz"
+            className="group flex w-full items-center gap-4 rounded-[var(--radius-card)] border border-border bg-surface p-5 text-left transition hover:border-border-strong"
+          >
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-present/20">
+              <Zap className="size-5 text-present" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-2 font-bold">
+                Blitz
+                <span className="rounded-full bg-present/20 px-1.5 py-px text-[0.65rem] font-bold tracking-wide uppercase">New</span>
+              </span>
+              <span className="block text-sm text-muted">
+                {best > 0 ? `Best: ${best} ${best === 1 ? 'word' : 'words'}. Beat it?` : 'As many words as you can, against the clock.'}
+              </span>
+            </span>
+            <ChevronRight className="size-5 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
+          </m.button>
+
           {props.friendsAvailable && (
             <m.button
-              {...rise(4)}
+              {...rise(6)}
               type="button"
               onClick={props.onFriends}
               aria-label={props.friendsPending > 0 ? `Friends — ${props.friendsPending} waiting for you` : 'Play with friends'}
@@ -209,11 +259,12 @@ export function Home(props: HomeProps) {
             </m.button>
           )}
 
-          <m.nav {...rise(5)} aria-label="More" className="flex flex-wrap justify-center gap-1 pt-1 lg:justify-start">
+          <m.nav {...rise(7)} aria-label="More" className="flex flex-wrap justify-center gap-1 pt-1 lg:justify-start">
             {[
               ...(props.onGetApp ? [{ label: 'Get the app', icon: Smartphone, onClick: props.onGetApp }] : []),
               { label: 'How to play', icon: CircleHelp, onClick: props.onHelp },
               { label: 'Statistics', icon: BarChart3, onClick: props.onStats },
+              { label: 'Achievements', icon: Award, onClick: props.onAchievements },
               { label: 'Settings', icon: Settings, onClick: props.onSettings },
             ].map(({ label, icon: Icon, onClick }) => (
               <button

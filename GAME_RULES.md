@@ -78,6 +78,25 @@ the next game. Hard-mode results are marked with `*` when shared.
 - Saved separately from the daily game, with separate statistics.
 - Starting a new word while a game with guesses is in progress asks for confirmation and records that
   game as a practice loss.
+- **Hints:** up to 2 per word. Each reveals the letter at the first position not yet found as correct;
+  it appears as a dashed "ghost" tile in the current row. Shared results show `💡n`, and each hint
+  costs 20 XP. There are no hints in the Daily Challenge.
+
+## Blitz
+
+- 90 seconds on the clock. Each solved word adds 15 s; a missed word (six wrong guesses) removes 10 s.
+- Words come from the answer list, never repeat within a run and never use today's daily answer.
+- The run ends when the clock reaches zero; runs are not saved if you leave the screen.
+- Your best score is kept; sharing shows one square per word, never the words.
+
+## Levels and achievements
+
+- XP per game: a win earns 50 + 15 × (6 − guesses), +25 in hard mode, +40 for the Daily Challenge,
+  −20 per hint (minimum 15). A loss earns 10. A Blitz run earns 10 + 25 per word.
+- Level *n* starts at 50 × n × (n − 1) XP (level 2 at 100, level 3 at 300, …).
+- Each finished game is counted once by its id, so refreshes never award XP twice.
+- 15 achievements (first win, solving in 1/2/6 guesses, streaks of 3/7/30, hard mode, under 60 s,
+  Practice and total wins, Blitz scores, level 5). Solve time runs from the first letter typed.
 
 ## Statistics
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, m } from 'motion/react';
 import { ArrowLeft, Loader2, RotateCcw, Users, Zap } from 'lucide-react';
 import { GAME } from '@/config/game';
@@ -10,7 +10,7 @@ import { useFriendGame } from '@/features/friends/useFriendGame';
 import { useGameScreen } from '@/features/game/useGameScreen';
 import { PlayArea } from '@/components/board/PlayArea';
 import { MiniBoard } from '@/components/home/MiniBoard';
-import { Button } from '@/components/ui';
+import { BoardOverlay, Button } from '@/components/ui';
 import { Avatar } from './Avatar';
 
 interface Props {
@@ -123,7 +123,7 @@ function RaceGame({ race, inputEnabled, onBack, onOpenRace }: { race: Race } & O
   let overlay = null;
   if (race.state === 'invited') {
     overlay = (
-      <Overlay>
+      <BoardOverlay>
         {race.host === me ? (
           <>
             <Loader2 className="mx-auto size-6 animate-spin text-muted" aria-hidden />
@@ -145,21 +145,21 @@ function RaceGame({ race, inputEnabled, onBack, onOpenRace }: { race: Race } & O
             </div>
           </>
         )}
-      </Overlay>
+      </BoardOverlay>
     );
   } else if (race.state === 'declined' || race.state === 'cancelled') {
     overlay = (
-      <Overlay>
+      <BoardOverlay>
         <p className="font-bold">{race.state === 'declined' ? `${otherName} declined the race.` : 'This race was cancelled.'}</p>
         <Button className="mt-4" onClick={onBack}>
           Back to friends
         </Button>
-      </Overlay>
+      </BoardOverlay>
     );
   } else if ((race.state === 'countdown' || race.state === 'playing') && msToStart > 0) {
     const n = Math.ceil(msToStart / 1000);
     overlay = (
-      <Overlay transparent>
+      <BoardOverlay transparent>
         <AnimatePresence mode="popLayout">
           <m.p
             key={n}
@@ -173,7 +173,7 @@ function RaceGame({ race, inputEnabled, onBack, onOpenRace }: { race: Race } & O
           </m.p>
         </AnimatePresence>
         <p className="mt-2 text-sm font-semibold text-muted">Get ready…</p>
-      </Overlay>
+      </BoardOverlay>
     );
   }
 
@@ -231,12 +231,3 @@ function RaceGame({ race, inputEnabled, onBack, onOpenRace }: { race: Race } & O
   );
 }
 
-function Overlay({ children, transparent }: { children: ReactNode; transparent?: boolean }) {
-  return (
-    <div className={`absolute inset-0 z-20 grid place-items-center p-6 ${transparent ? '' : 'bg-bg/70 backdrop-blur-sm'}`}>
-      <div className={`max-w-xs text-center ${transparent ? '' : 'rounded-[var(--radius-card)] border border-border bg-surface p-6 shadow-lg'}`}>
-        {children}
-      </div>
-    </div>
-  );
-}

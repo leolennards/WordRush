@@ -1,6 +1,7 @@
 import { GAME, STORAGE_PREFIX } from '@/config/game';
 import type { GameState, LetterState } from '@/engine';
 import type { Stats } from '@/engine/stats';
+import { emptyProgress, type Progress } from '@/engine/progress';
 import { isRecord, type Schema } from './versioned';
 
 export const KEYS = {
@@ -9,6 +10,8 @@ export const KEYS = {
   practice: `${STORAGE_PREFIX}:practice`,
   dailyStats: `${STORAGE_PREFIX}:stats:daily`,
   practiceStats: `${STORAGE_PREFIX}:stats:practice`,
+  progress: `${STORAGE_PREFIX}:progress`,
+  timers: `${STORAGE_PREFIX}:timers`,
 } as const;
 
 // ---------- Settings ----------
@@ -22,6 +25,8 @@ export interface Settings {
   /** Force reduced motion even if the OS does not request it. */
   reduceMotion: boolean;
   hardMode: boolean;
+  /** Short vibrations on supported phones. */
+  haptics: boolean;
   /** Whether the first-visit help has been shown. */
   seenHelp: boolean;
 }
@@ -32,6 +37,7 @@ export const DEFAULT_SETTINGS: Settings = {
   highContrast: false,
   reduceMotion: false,
   hardMode: false,
+  haptics: true,
   seenHelp: false,
 };
 
@@ -48,6 +54,7 @@ export const settingsSchema: Schema<Settings> = {
       highContrast: bool('highContrast'),
       reduceMotion: bool('reduceMotion'),
       hardMode: bool('hardMode'),
+      haptics: bool('haptics'),
       seenHelp: bool('seenHelp'),
     };
   },
@@ -60,7 +67,7 @@ const WORD = new RegExp(`^[a-z]{${GAME.wordLength}}$`);
 
 export function validateGameState(d: unknown): GameState | null {
   if (!isRecord(d)) return null;
-  const { mode, id, answer, guesses, evaluations, status, hardMode, dayIndex } = d;
+  const { mode, id, answer, guesses, evaluations, status, hardMode, dayIndex, hints } = d;
   if (mode !== 'daily' && mode !== 'practice' && mode !== 'challenge' && mode !== 'race') return null;
   if (typeof id !== 'string' || typeof answer !== 'string' || !WORD.test(answer)) return null;
   if (!Array.isArray(guesses) || !Array.isArray(evaluations)) return null;
@@ -82,6 +89,11 @@ export function validateGameState(d: unknown): GameState | null {
   const won = guesses.at(-1) === answer;
   const expected = won ? 'won' : guesses.length >= GAME.maxGuesses ? 'lost' : 'playing';
   if (status !== expected) return null;
+  if (
+    hints !== undefined &&
+    !(Array.isArray(hints) && hints.every((h) => Number.isInteger(h) && h >= 0 && h < GAME.wordLength))
+  )
+    return null;
   return {
     mode,
     id,
@@ -91,6 +103,7 @@ export function validateGameState(d: unknown): GameState | null {
     status,
     hardMode,
     dayIndex: dayIndex as number | null,
+    ...(hints !== undefined ? { hints: hints as number[] } : {}),
   };
 }
 
@@ -173,3 +186,36 @@ export const friendGameSchema: Schema<{ game: GameState }> = {
 };
 
 export const friendGameKey = (mode: 'challenge' | 'race', id: string) => `${STORAGE_PREFIX}:${mode}:${id}`;
+
+// ---------- Levels & achievements ----------
+
+export const progressSchema: Schema<Progress> = {
+  version: 1,
+  validate(d) {
+    if (!isRecord(d)) return null;
+    const base = emptyProgress();
+    const unlocked: Record<string, number> = {};
+    if (isRecord(d.unlocked)) {
+      for (const [k, v] of Object.entries(d.unlocked)) if (typeof v === 'number') unlocked[k] = v;
+    }
+    return {
+      xp: nonNegInt(d.xp) ? d.xp : base.xp,
+      unlocked,
+      wins: nonNegInt(d.wins) ? d.wins : 0,
+      practiceWins: nonNegInt(d.practiceWins) ? d.practiceWins : 0,
+      bestBlitz: nonNegInt(d.bestBlitz) ? d.bestBlitz : 0,
+      applied: Array.isArray(d.applied) ? d.applied.filter((x): x is string => typeof x === 'string') : [],
+    };
+  },
+};
+
+/** When each recent game's first letter was typed (game id → ms), for solve times. */
+export const timersSchema: Schema<Record<string, number>> = {
+  version: 1,
+  validate(d) {
+    if (!isRecord(d)) return null;
+    const out: Record<string, number> = {};
+    for (const [k, v] of Object.entries(d)) if (typeof v === 'number') out[k] = v;
+    return out;
+  },
+};

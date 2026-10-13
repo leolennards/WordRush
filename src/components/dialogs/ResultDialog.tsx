@@ -7,6 +7,7 @@ import { MiniBoard } from '@/components/home/MiniBoard';
 import { Button } from '@/components/ui';
 import { useSettings } from '@/features/settings/SettingsContext';
 import { Dialog } from './Dialog';
+import { WordMeaning } from './WordMeaning';
 
 const PRAISE = ['Genius!', 'Magnificent!', 'Impressive!', 'Splendid!', 'Great job!', 'Phew — got it!'];
 
@@ -23,10 +24,12 @@ interface ResultDialogProps {
   onPractice?: () => void;
   onNewGame?: () => void;
   onHome?: () => void;
+  /** XP earned by this game, once recorded. */
+  xp?: number;
 }
 
 export function ResultDialog(props: ResultDialogProps) {
-  const { open, onClose, game, stats, currentKey, title, countdown, onShare, onPractice, onNewGame, onHome } = props;
+  const { open, onClose, game, stats, currentKey, title, countdown, onShare, onPractice, onNewGame, onHome, xp } = props;
   const { reducedMotion } = useSettings();
   const won = game.status === 'won';
 
@@ -52,6 +55,16 @@ export function ResultDialog(props: ResultDialogProps) {
             ) : (
               <p className="mt-1 text-muted">Every miss makes the next one easier.</p>
             )}
+            {(xp || (game.hints?.length ?? 0) > 0) && (
+              <p className="mt-2 flex flex-wrap gap-1.5 text-xs font-bold">
+                {xp ? <span className="tabular rounded-full bg-accent/15 px-2 py-0.5 text-accent">+{xp} XP</span> : null}
+                {game.hints?.length ? (
+                  <span className="rounded-full bg-present/15 px-2 py-0.5 text-text">
+                    💡 {game.hints.length} {game.hints.length === 1 ? 'hint' : 'hints'}
+                  </span>
+                ) : null}
+              </p>
+            )}
           </div>
           {won && <MiniBoard game={game} tile="size-3.5 rounded-[3px]" className="shrink-0" />}
         </div>
@@ -76,6 +89,8 @@ export function ResultDialog(props: ResultDialogProps) {
             </div>
           </div>
         )}
+
+        <WordMeaning word={game.answer} />
 
         <StatsPanel
           stats={stats}

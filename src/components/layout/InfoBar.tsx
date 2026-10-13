@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { RotateCcw, Trophy } from 'lucide-react';
+import { Lightbulb, RotateCcw, Trophy } from 'lucide-react';
 import type { GameState } from '@/engine';
 import { keepFocus } from '@/lib/accessibility/keepFocus';
 
@@ -11,6 +11,9 @@ interface InfoBarProps {
   modeSwitch: ReactNode;
   onResults: () => void;
   onNewGame?: () => void;
+  /** Practice: reveal a letter. `hintsLeft` 0 disables it. */
+  onHint?: () => void;
+  hintsLeft?: number;
   staleAction?: { label: string; onClick: () => void };
 }
 
@@ -18,7 +21,7 @@ const chip =
   'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors hover:bg-surface-3';
 
 /** One compact row above the board, aligned to the board's width. */
-export function InfoBar({ heading, subheading, game, modeSwitch, onResults, onNewGame, staleAction }: InfoBarProps) {
+export function InfoBar({ heading, subheading, game, modeSwitch, onResults, onNewGame, onHint, hintsLeft = 0, staleAction }: InfoBarProps) {
   const finished = game.status !== 'playing';
   return (
     <div className="mx-auto flex w-full max-w-[26rem] items-center justify-between gap-3 px-3 pt-3 pb-1 sm:pt-5">
@@ -46,6 +49,19 @@ export function InfoBar({ heading, subheading, game, modeSwitch, onResults, onNe
             aria-label="Show results"
           >
             <Trophy className="size-3.5" aria-hidden /> <span className="hidden min-[400px]:inline">Results</span>
+          </button>
+        )}
+        {onHint && !finished && (
+          <button
+            type="button"
+            onMouseDown={keepFocus}
+            onClick={onHint}
+            disabled={hintsLeft === 0}
+            className={`${chip} bg-surface-2 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-surface-2`}
+            aria-label={hintsLeft > 0 ? `Hint, ${hintsLeft} left` : 'No hints left'}
+          >
+            <Lightbulb className="size-3.5 text-present" aria-hidden />
+            <span className="tabular">{hintsLeft}</span>
           </button>
         )}
         {onNewGame && !finished && (
