@@ -12,6 +12,8 @@
 - **What it means:** the answer's definition in the results.
 - **Vibration** setting on supported phones.
 - Home: level card, Blitz card and an Achievements link; the daily card no longer stretches.
+- How to play now covers hints, Blitz and levels.
+- **Android app 1.5.0** (versionCode 2) with all of the above; updates over the previous install.
 
 ## 1.4.0 — 2026-10-11 (apps)
 

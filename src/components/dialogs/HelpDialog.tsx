@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CalendarDays, Share2, Shuffle } from 'lucide-react';
+import { Award, CalendarDays, Share2, Shuffle, Zap } from 'lucide-react';
 import type { LetterState } from '@/engine';
 import { BRAND, GAME } from '@/config/game';
 import { Dialog } from './Dialog';
@@ -70,6 +70,20 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
             <Shuffle className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
             <span>
               <strong>Practice</strong> — unlimited words with separate statistics. It never affects your daily streak.
+              Stuck? Tap the 💡 for up to two hints per word.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <Zap className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <span>
+              <strong>Blitz</strong> — solve as many words as you can before the clock runs out. Solves add time, misses
+              cost time.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <Award className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <span>
+              <strong>Level up</strong> — every game earns XP, and there are achievements to unlock.
             </span>
           </li>
           <li className="flex gap-3">
