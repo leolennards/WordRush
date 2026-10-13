@@ -72,8 +72,10 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /** Loads the Firebase module and signs in. Only sets state asynchronously. */
+  // Resolves once Firebase is loaded and signed in (as a guest at least).
+  const connecting = useRef<Promise<void> | null>(null);
   const startConnection = useCallback(() => {
-    import('./api')
+    connecting.current = import('./api')
       .then(async (mod) => {
         api.current = mod;
         await mod.connect();
@@ -95,6 +97,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         });
       })
       .catch(fail);
+    return connecting.current;
   }, [fail]);
 
   useEffect(() => () => accountUnsub.current?.(), []);
@@ -244,8 +247,17 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         return api.current.watchRace(id, cb, fail);
       },
       async signInWithGoogle() {
-        const { a } = need();
+        // Works from anywhere (e.g. Settings), even before Friends has been opened.
+        if (!api.current) {
+          if (!configured) throw new Error('Sign-in isn’t available in this build.');
+          setStatus((st) => (st === 'idle' || st === 'error' ? 'connecting' : st));
+          await (connecting.current ?? startConnection());
+        }
+        const a = api.current;
+        if (!a) throw new Error('Couldn’t connect. Check your internet connection and try again.');
         const result = await a.signInWithGoogle();
+        // Reconnect automatically next time, so the account stays signed in across launches.
+        if (result !== 'cancelled') store.set(JOINED_KEY, '1');
         // Linking keeps the same user, so refresh the account details by hand.
         if (result === 'linked') setAccount(a.currentAccount());
         return result;
@@ -265,7 +277,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         });
       },
     };
-  }, [status, error, uid, account, profile, links, profiles, challenges, races, connect, need, pickAnswer, fail, store]);
+  }, [status, error, uid, account, profile, links, profiles, challenges, races, connect, need, pickAnswer, fail, store, configured, startConnection]);
 
   return <FriendsContext.Provider value={value}>{children}</FriendsContext.Provider>;
 }

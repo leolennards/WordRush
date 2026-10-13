@@ -6,6 +6,7 @@
  * player actually uses the Friends features.
  */
 import { initializeApp, type FirebaseApp } from 'firebase/app';
+import { ReCaptchaEnterpriseProvider, initializeAppCheck } from 'firebase/app-check';
 import {
   GoogleAuthProvider,
   connectAuthEmulator,
@@ -57,6 +58,14 @@ export async function connect(): Promise<string> {
   if (!config) throw new Error('Friends are not configured for this build');
   if (!app) {
     app = initializeApp(config.options);
+    // App Check: proves requests come from the real website or app (reCAPTCHA Enterprise,
+    // invisible). Firestore rejects requests without a valid token once enforcement is on.
+    if (config.appCheckSiteKey) {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(config.appCheckSiteKey),
+        isTokenAutoRefreshEnabled: true,
+      });
+    }
     auth = getAuth(app);
     // Long-polling fallback helps on restrictive networks and in tests.
     db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });

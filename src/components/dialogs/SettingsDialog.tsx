@@ -7,6 +7,7 @@ import { Button, Segmented, Switch } from '@/components/ui';
 import { SKINS, levelFor } from '@/engine';
 import { useProgress } from '@/features/progress/ProgressContext';
 import { ThemePicker } from '@/components/progress/ThemePicker';
+import { AccountSettings } from '@/components/friends/AccountSettings';
 import { Dialog } from './Dialog';
 import { hapticsSupported } from '@/lib/haptics';
 
@@ -36,6 +37,7 @@ export function SettingsDialog({ open, onClose, hardModeLocked, onReset, storage
   return (
     <Dialog open={open} onClose={close} title="Settings">
       <div className="divide-y divide-border">
+        <AccountSettings />
         <div className="flex flex-wrap items-center justify-between gap-3 py-3">
           <span className="font-semibold" id="theme-label">
             Appearance

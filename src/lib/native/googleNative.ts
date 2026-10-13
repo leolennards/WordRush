@@ -22,7 +22,9 @@ async function init() {
 export async function nativeGoogleIdToken(): Promise<string | null> {
   await init();
   try {
-    const res = await SocialLogin.login({ provider: 'google', options: { scopes: ['email', 'profile'] } });
+    // No custom scopes: email, profile and openid are the plugin's defaults, and passing scopes
+    // on Android requires a modified MainActivity ("You CANNOT use scopes…").
+    const res = await SocialLogin.login({ provider: 'google', options: {} });
     const token = (res.result as { idToken?: string | null }).idToken;
     return token ?? null;
   } catch (err) {
