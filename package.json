@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.10.0",
   "type": "module",
-  "description": "Wordskiis \u2014 a little word challenge every day.",
+  "description": "Wordskiis — a little word challenge every day.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -67,5 +67,8 @@
     "vitest": "^5.0.3",
     "word-list": "^4.1.0",
     "wordlist-english": "^1.2.1"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.6"
   }
 }
