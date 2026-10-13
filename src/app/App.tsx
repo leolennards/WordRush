@@ -40,13 +40,17 @@ import { RaceScreen } from '@/components/friends/RaceScreen';
 import { GetAppDialog } from '@/components/dialogs/GetAppDialog';
 import { isNativeApp } from '@/lib/native/platform';
 import { secondsSinceStart } from '@/lib/storage/timers';
+import { KEYS, rushSchema } from '@/lib/storage/schemas';
+import { readVersioned } from '@/lib/storage/versioned';
 import { ProgressProvider, useProgress } from '@/features/progress/ProgressContext';
 import { useAward } from '@/features/progress/useAward';
+import { WordsProvider, useWords } from '@/features/words/WordsContext';
 import { Backdrop } from '@/components/layout/Backdrop';
 import { BlitzScreen } from '@/components/blitz/BlitzScreen';
-import { DuoScreen } from '@/components/duo/DuoScreen';
+import { MultiScreen } from '@/components/multi/MultiScreen';
 import { SurvivalScreen } from '@/components/survival/SurvivalScreen';
 import { AchievementsDialog } from '@/components/dialogs/AchievementsDialog';
+import { ModsDialog } from '@/components/dialogs/ModsDialog';
 
 export function App({ services }: { services: Services }) {
   return (
@@ -56,9 +60,11 @@ export function App({ services }: { services: Services }) {
           <StatsProvider>
             <ToastProvider>
               <ProgressProvider>
-                <FriendsProvider>
-                  <Wordskiis />
-                </FriendsProvider>
+                <WordsProvider>
+                  <FriendsProvider>
+                    <Wordskiis />
+                  </FriendsProvider>
+                </WordsProvider>
               </ProgressProvider>
             </ToastProvider>
           </StatsProvider>
@@ -78,7 +84,7 @@ function MotionRoot({ children }: { children: ReactNode }) {
   );
 }
 
-type DialogName = 'help' | 'stats' | 'settings' | 'result' | 'confirm-new' | 'get-app' | 'achievements' | null;
+type DialogName = 'help' | 'stats' | 'settings' | 'result' | 'confirm-new' | 'get-app' | 'achievements' | 'mods' | null;
 
 /** Already running as an installed app (Android app, or added to a home screen)? */
 const runningAsApp = () =>
@@ -92,6 +98,7 @@ function Wordskiis() {
   const { toast } = useToast();
   const { progress, gains } = useProgress();
   const award = useAward();
+  const words = useWords();
 
   const [route, navigate] = useView();
   const { view } = route;
@@ -119,6 +126,8 @@ function Wordskiis() {
       hints: hintsUsed(g),
       seconds: secondsSinceStart(services.store, g.id, services.now().getTime()),
       ...(g.mode === 'daily' ? { streak: effectiveStreak(stats.daily, todayIndex) } : {}),
+      words: [{ answer: g.answer, won: g.status === 'won' }],
+      ...(g.mods?.length ? { mods: g.mods } : {}),
     });
   };
   const screen = useGameScreen(active, {
@@ -144,7 +153,11 @@ function Wordskiis() {
   }, [friendsStatus, publishDaily, dailyGame.dayIndex, dailyGame.status, dailyGame.evaluations, dailyStreak]);
 
   // ----- Sharing -----
-  const shareLabel = mode === 'daily' && game.dayIndex !== null ? `#${challengeNumber(game.dayIndex)}` : 'Practice';
+  const modNames = (game.mods ?? []).map((m) => (m === 'fog' ? 'Fog' : 'Blind keys'));
+  const shareLabel =
+    mode === 'daily' && game.dayIndex !== null
+      ? `#${challengeNumber(game.dayIndex)}`
+      : `Practice${modNames.length ? ` (${modNames.join(' + ')})` : ''}`;
   const onShare = useCallback(async () => {
     const url = BRAND.siteUrl || `${window.location.origin}${window.location.pathname}`;
     const text = buildShareText({
@@ -185,6 +198,8 @@ function Wordskiis() {
   const goFriends = useCallback(() => go('friends'), [go]);
   const goBlitz = useCallback(() => go('blitz'), [go]);
   const goDuo = useCallback(() => go('duo'), [go]);
+  const goQuad = useCallback(() => go('quad'), [go]);
+  const goRush = useCallback(() => go('rush'), [go]);
   const goSurvival = useCallback(() => go('survival'), [go]);
   const openChallenge = useCallback((id: string) => go('challenge', id), [go]);
   const openRace = useCallback((id: string) => go('race', id), [go]);
@@ -249,8 +264,16 @@ function Wordskiis() {
           onPlayPractice={() => changeMode('practice')}
           onBlitz={goBlitz}
           onDuo={goDuo}
+          onQuad={goQuad}
+          onRush={goRush}
+          rushScore={(() => {
+            const r = readVersioned(services.store, KEYS.rush, rushSchema);
+            return r && r.day === todayIndex ? r.solved : null;
+          })()}
           onSurvival={goSurvival}
           onAchievements={() => setDialog('achievements')}
+          onWordBook={words.showBook}
+          wordCount={words.book.length}
           progress={progress}
           onFriends={goFriends}
           onGetApp={runningAsApp() ? undefined : () => setDialog('get-app')}
@@ -267,9 +290,21 @@ function Wordskiis() {
       </main>
     );
   } else if (view === 'blitz') {
-    content = <BlitzScreen avoidAnswer={dailyGame.answer} inputEnabled={dialog === null} onHome={goHome} />;
-  } else if (view === 'duo') {
-    content = <DuoScreen avoidAnswer={dailyGame.answer} inputEnabled={dialog === null} onHome={goHome} />;
+    content = <BlitzScreen key="blitz" avoidAnswer={dailyGame.answer} inputEnabled={dialog === null} onHome={goHome} />;
+  } else if (view === 'duo' || view === 'quad') {
+    content = (
+      <MultiScreen key={view} mode={view} avoidAnswer={dailyGame.answer} inputEnabled={dialog === null} onHome={goHome} />
+    );
+  } else if (view === 'rush') {
+    content = (
+      <BlitzScreen
+        key="rush"
+        rushDay={todayIndex}
+        avoidAnswer={dailyGame.answer}
+        inputEnabled={dialog === null}
+        onHome={goHome}
+      />
+    );
   } else if (view === 'survival') {
     content = <SurvivalScreen avoidAnswer={dailyGame.answer} inputEnabled={dialog === null} onHome={goHome} />;
   } else if (view === 'challenge' && route.id) {
@@ -289,6 +324,8 @@ function Wordskiis() {
           onResults={() => setDialog('result')}
           onNewGame={mode === 'practice' ? requestNewPractice : undefined}
           onHint={mode === 'practice' ? onHint : undefined}
+          onMods={mode === 'practice' ? () => setDialog('mods') : undefined}
+          modsOn={(practice.session.game.mods?.length ?? 0) + (practice.session.game.hardMode ? 1 : 0)}
           hintsLeft={hintsLeft}
           staleAction={
             mode === 'daily' && daily.stale
@@ -310,6 +347,7 @@ function Wordskiis() {
               onPractice={mode === 'daily' ? () => changeMode('practice') : undefined}
               onNewGame={mode === 'practice' ? requestNewPractice : undefined}
               xp={gains[game.id]}
+              onMeaning={() => words.showWord(game.answer)}
             />
           }
         />
@@ -368,6 +406,11 @@ function Wordskiis() {
           xp={gains[game.id]}
         />
         <AchievementsDialog open={dialog === 'achievements'} onClose={closeDialog} />
+      <ModsDialog
+        open={dialog === 'mods'}
+        onClose={closeDialog}
+        locked={practice.session.game.status === 'playing' && practice.session.game.guesses.length > 0}
+      />
         <ConfirmDialog
           open={dialog === 'confirm-new'}
           onClose={closeDialog}

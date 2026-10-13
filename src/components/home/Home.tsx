@@ -2,6 +2,9 @@ import { m } from 'motion/react';
 import {
   ArrowRight,
   Award,
+  BookOpen,
+  CalendarClock,
+  Grid2x2,
   BarChart3,
   ChevronRight,
   CircleHelp,
@@ -37,8 +40,14 @@ interface HomeProps {
   onPlayPractice: () => void;
   onBlitz: () => void;
   onDuo: () => void;
+  onQuad: () => void;
+  onRush: () => void;
+  /** Today's Daily Rush score, or null if not played yet. */
+  rushScore: number | null;
   onSurvival: () => void;
   onAchievements: () => void;
+  onWordBook: () => void;
+  wordCount: number;
   progress: Progress;
   onFriends: () => void;
   /** Omitted when already running as an app. */
@@ -116,6 +125,19 @@ export function Home(props: HomeProps) {
       isNew: false,
     },
     {
+      name: 'Daily Rush',
+      label: props.rushScore === null ? 'Play Daily Rush' : 'Daily Rush result',
+      icon: CalendarClock,
+      tint: 'bg-accent/15',
+      iconClass: 'text-accent',
+      onClick: props.onRush,
+      detail:
+        props.rushScore === null
+          ? 'Same words for all. One try.'
+          : `Today: ${props.rushScore} ${props.rushScore === 1 ? 'word' : 'words'}`,
+      isNew: true,
+    },
+    {
       name: 'Duo',
       label: 'Play Duo',
       icon: Columns2,
@@ -123,6 +145,16 @@ export function Home(props: HomeProps) {
       iconClass: 'text-correct',
       onClick: props.onDuo,
       detail: props.progress.duoWins > 0 ? `${props.progress.duoWins} won` : 'Two words at once.',
+      isNew: false,
+    },
+    {
+      name: 'Quad',
+      label: 'Play Quad',
+      icon: Grid2x2,
+      tint: 'bg-present/15',
+      iconClass: 'text-present',
+      onClick: props.onQuad,
+      detail: props.progress.quadWins > 0 ? `${props.progress.quadWins} won` : 'Four words, nine guesses.',
       isNew: true,
     },
     {
@@ -133,7 +165,7 @@ export function Home(props: HomeProps) {
       iconClass: 'text-danger',
       onClick: props.onSurvival,
       detail: bestSurvival > 0 ? `Best: ${bestSurvival} ${bestSurvival === 1 ? 'word' : 'words'}` : 'Three lives. How far?',
-      isNew: true,
+      isNew: false,
     },
   ];
 
@@ -318,6 +350,7 @@ export function Home(props: HomeProps) {
               { label: 'How to play', icon: CircleHelp, onClick: props.onHelp },
               { label: 'Statistics', icon: BarChart3, onClick: props.onStats },
               { label: 'Achievements', icon: Award, onClick: props.onAchievements },
+              { label: 'Word Book', icon: BookOpen, onClick: props.onWordBook },
               { label: 'Settings', icon: Settings, onClick: props.onSettings },
             ].map(({ label, icon: Icon, onClick }) => (
               <button

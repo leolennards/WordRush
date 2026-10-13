@@ -21,11 +21,15 @@ export const QUESTS: readonly Quest[] = [
   { id: 'blitz-5', title: 'Score 5 or more in one Blitz run', target: 1, count: (e) => ((e.blitzScore ?? 0) >= 5 ? 1 : 0) },
   { id: 'blitz-2', title: 'Play 2 Blitz runs', target: 2, count: (e) => (e.mode === 'blitz' ? 1 : 0) },
   { id: 'duo-win', title: 'Win a Duo game', target: 1, count: (e) => (e.mode === 'duo' && e.won ? 1 : 0) },
+  { id: 'quad-win', title: 'Win a Quad game', target: 1, count: (e) => (e.mode === 'quad' && e.won ? 1 : 0) },
   { id: 'survive-3', title: 'Reach 3 words in Survival', target: 1, count: (e) => ((e.survivalScore ?? 0) >= 3 ? 1 : 0) },
   { id: 'hard-win', title: 'Win a game in Hard mode', target: 1, count: (e) => (word(e) && e.won && e.hardMode ? 1 : 0) },
   { id: 'no-hints', title: 'Solve a Practice word without hints', target: 1, count: (e) => (e.mode === 'practice' && e.won && e.hints === 0 ? 1 : 0) },
   { id: 'speedy', title: 'Solve a word in under 2 minutes', target: 1, count: (e) => (e.won && e.seconds !== null && e.seconds < 120 ? 1 : 0) },
-  { id: 'wins-5', title: 'Win 5 games of any kind', target: 5, count: (e) => ((word(e) || e.mode === 'duo') && e.won ? 1 : 0) },
+  { id: 'mod-win', title: 'Win a Practice word with a mod on', target: 1, count: (e) => (e.mode === 'practice' && e.won && (e.mods?.length ?? 0) > 0 ? 1 : 0) },
+  { id: 'rush', title: 'Play today’s Daily Rush', target: 1, count: (e) => (e.rush ? 1 : 0) },
+  { id: 'words-10', title: 'Play 10 words in any mode', target: 10, count: (e) => e.words?.length ?? 0 },
+  { id: 'wins-5', title: 'Win 5 games of any kind', target: 5, count: (e) => ((word(e) || e.mode === 'duo' || e.mode === 'quad') && e.won ? 1 : 0) },
 ];
 
 export const QUEST_XP = 60;

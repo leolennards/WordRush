@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.7.0 — 2026-10-13 (more modes, mods and meanings)
+
+- **Reward cards** replace emoji pop-ups: designed cards for achievements, quests and level-ups, with an
+  icon tile, a sheen and a confetti burst on level-up. They arrive one after another along the top edge.
+  Emojis were removed from in-game text and from share titles (the coloured squares stay).
+- **Word meanings everywhere:** a full sheet with pronunciation audio, up to three parts of speech,
+  examples and synonyms. Opens from results, the end-of-game panel and every word chip. Falls back to
+  Wiktionary when the Dictionary API is slow or down.
+- **Word Book:** every word you play is collected; search, filter and tap for its meaning.
+- **Quad:** four words, nine shared guesses, compact boards and a four-way split keyboard.
+- **Daily Rush:** a Blitz run on the same words for everyone, once a day.
+- **Practice mods:** Fog and Blind keys, each worth bonus XP, in a new Mods panel.
+- 6 new achievements (29 in total) and 4 new daily quests.
+- Practice tools sit on their own row on phones so the title is never squeezed.
+- **Android app 1.7.0** (versionCode 4).
+
 ## 1.6.0 — 2026-10-13 (new modes and challenges)
 
 - **Duo:** two hidden words at once with 7 shared guesses, side-by-side boards and a split-colour

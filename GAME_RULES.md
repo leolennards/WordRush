@@ -96,6 +96,25 @@ the next game. Hard-mode results are marked with `*` when shared.
 - Keys show two halves: the left half is word 1, the right half is word 2 (blank once that word is solved).
 - Saved after every guess. A win earns 70 + 15 × (7 − guesses) XP.
 
+## Quad
+
+- Like Duo, with four hidden words and 9 shared guesses. Keys are split into quarters in board order
+  (top-left word 1, top-right word 2, bottom-left word 3, bottom-right word 4).
+- A win earns 120 + 20 × (9 − guesses) XP.
+
+## Daily Rush
+
+- A Blitz run (same clock rules) once per UTC day. The words come from a seeded shuffle of the day, so
+  everyone gets the same words in the same order.
+- One try: the run is saved as it goes, and leaving part-way ends it with the score so far.
+
+## Practice mods
+
+- **Fog:** only the latest submitted guess is visible while playing; every row reappears when the game ends.
+  +30% XP on a win.
+- **Blind keys:** the keyboard shows no colours until the game ends. +25% XP on a win.
+- Mods stack, and can only change before the first guess of a word (like Hard mode).
+
 ## Survival
 
 - Solve word after word. You start with 3 lives (the most you can hold).
@@ -114,7 +133,7 @@ the next game. Hard-mode results are marked with `*` when shared.
   −20 per hint (minimum 15). A loss earns 10. A Blitz run earns 10 + 25 per word.
 - Level *n* starts at 50 × n × (n − 1) XP (level 2 at 100, level 3 at 300, …).
 - Each finished game is counted once by its id, so refreshes never award XP twice.
-- 23 achievements, including Duo, Survival and daily-quest ones (first win, solving in 1/2/6 guesses, streaks of 3/7/30, hard mode, under 60 s,
+- 29 achievements, including Duo, Quad, Survival, mods, Daily Rush and daily-quest ones (first win, solving in 1/2/6 guesses, streaks of 3/7/30, hard mode, under 60 s,
   Practice and total wins, Blitz scores, level 5). Solve time runs from the first letter typed.
 
 ## Statistics

@@ -1,10 +1,10 @@
 import { GAME, STORAGE_PREFIX } from '@/config/game';
-import type { GameState, LetterState } from '@/engine';
+import { MODS, type GameState, type LetterState, type Mod } from '@/engine/types';
 import type { Stats } from '@/engine/stats';
 import { emptyProgress, type Progress } from '@/engine/progress';
 import type { QuestState } from '@/engine/quests';
 import type { SurvivalRun } from '@/engine/survival';
-import type { DuoState } from '@/engine/duo';
+import type { MultiState } from '@/engine/multi';
 import { isRecord, type Schema } from './versioned';
 
 export const KEYS = {
@@ -15,6 +15,9 @@ export const KEYS = {
   practiceStats: `${STORAGE_PREFIX}:stats:practice`,
   progress: `${STORAGE_PREFIX}:progress`,
   duo: `${STORAGE_PREFIX}:duo`,
+  quad: `${STORAGE_PREFIX}:quad`,
+  rush: `${STORAGE_PREFIX}:rush`,
+  wordbook: `${STORAGE_PREFIX}:wordbook`,
   survival: `${STORAGE_PREFIX}:survival`,
   timers: `${STORAGE_PREFIX}:timers`,
 } as const;
@@ -32,6 +35,9 @@ export interface Settings {
   hardMode: boolean;
   /** Short vibrations on supported phones. */
   haptics: boolean;
+  /** Practice mods. */
+  modFog: boolean;
+  modBlind: boolean;
   /** Whether the first-visit help has been shown. */
   seenHelp: boolean;
 }
@@ -43,6 +49,8 @@ export const DEFAULT_SETTINGS: Settings = {
   reduceMotion: false,
   hardMode: false,
   haptics: true,
+  modFog: false,
+  modBlind: false,
   seenHelp: false,
 };
 
@@ -60,6 +68,8 @@ export const settingsSchema: Schema<Settings> = {
       reduceMotion: bool('reduceMotion'),
       hardMode: bool('hardMode'),
       haptics: bool('haptics'),
+      modFog: bool('modFog'),
+      modBlind: bool('modBlind'),
       seenHelp: bool('seenHelp'),
     };
   },
@@ -72,7 +82,7 @@ const WORD = new RegExp(`^[a-z]{${GAME.wordLength}}$`);
 
 export function validateGameState(d: unknown): GameState | null {
   if (!isRecord(d)) return null;
-  const { mode, id, answer, guesses, evaluations, status, hardMode, dayIndex, hints } = d;
+  const { mode, id, answer, guesses, evaluations, status, hardMode, dayIndex, hints, mods } = d;
   if (mode !== 'daily' && mode !== 'practice' && mode !== 'challenge' && mode !== 'race' && mode !== 'survival') return null;
   if (typeof id !== 'string' || typeof answer !== 'string' || !WORD.test(answer)) return null;
   if (!Array.isArray(guesses) || !Array.isArray(evaluations)) return null;
@@ -109,6 +119,7 @@ export function validateGameState(d: unknown): GameState | null {
     hardMode,
     dayIndex: dayIndex as number | null,
     ...(hints !== undefined ? { hints: hints as number[] } : {}),
+    ...(Array.isArray(mods) ? { mods: mods.filter((x): x is Mod => MODS.includes(x as Mod)) } : {}),
   };
 }
 
@@ -218,6 +229,8 @@ export const progressSchema: Schema<Progress> = {
       bestBlitz: nonNegInt(d.bestBlitz) ? d.bestBlitz : 0,
       bestSurvival: nonNegInt(d.bestSurvival) ? d.bestSurvival : 0,
       duoWins: nonNegInt(d.duoWins) ? d.duoWins : 0,
+      quadWins: nonNegInt(d.quadWins) ? d.quadWins : 0,
+      wordsPlayed: nonNegInt(d.wordsPlayed) ? d.wordsPlayed : 0,
       questsDone: nonNegInt(d.questsDone) ? d.questsDone : 0,
       quests: validateQuests(d.quests),
       applied: Array.isArray(d.applied) ? d.applied.filter((x): x is string => typeof x === 'string') : [],
@@ -242,25 +255,31 @@ const isWord = (w: unknown): w is string => typeof w === 'string' && WORD.test(w
 const isRow = (row: unknown) =>
   Array.isArray(row) && row.length === GAME.wordLength && row.every((x) => LETTER_STATES.includes(x as LetterState));
 
-export interface DuoSession {
-  game: DuoState;
-  /** Duo games started so far. */
+export interface MultiSession {
+  game: MultiState;
+  /** Games started so far in this mode. */
   number: number;
 }
 
-export const duoSchema: Schema<DuoSession> = {
-  version: 1,
-  validate(d) {
-    if (!isRecord(d) || !nonNegInt(d.number) || !isRecord(d.game)) return null;
-    const { id, answers, guesses, evaluations, status } = d.game;
-    if (typeof id !== 'string' || !Array.isArray(answers) || answers.length !== 2 || !answers.every(isWord)) return null;
-    if (!Array.isArray(guesses) || !guesses.every(isWord)) return null;
-    if (!Array.isArray(evaluations) || evaluations.length !== 2) return null;
-    if (!evaluations.every((rows) => Array.isArray(rows) && rows.length <= guesses.length && rows.every(isRow))) return null;
-    if (status !== 'playing' && status !== 'won' && status !== 'lost') return null;
-    return { number: d.number, game: d.game as unknown as DuoState };
-  },
-};
+/** Saved Duo or Quad game with `words` answers. Older saves without maxGuesses get it filled in. */
+export function multiSchema(words: number, maxGuesses: number): Schema<MultiSession> {
+  return {
+    version: 1,
+    validate(d) {
+      if (!isRecord(d) || !nonNegInt(d.number) || !isRecord(d.game)) return null;
+      const { id, answers, guesses, evaluations, status } = d.game;
+      if (typeof id !== 'string' || !Array.isArray(answers) || answers.length !== words || !answers.every(isWord)) return null;
+      if (!Array.isArray(guesses) || guesses.length > maxGuesses || !guesses.every(isWord)) return null;
+      if (!Array.isArray(evaluations) || evaluations.length !== words) return null;
+      if (!evaluations.every((rows) => Array.isArray(rows) && rows.length <= guesses.length && rows.every(isRow))) return null;
+      if (status !== 'playing' && status !== 'won' && status !== 'lost') return null;
+      return {
+        number: d.number,
+        game: { id, answers, guesses, evaluations: evaluations as MultiState['evaluations'], status, maxGuesses },
+      };
+    },
+  };
+}
 
 export interface SurvivalSession {
   run: SurvivalRun;
@@ -281,5 +300,53 @@ export const survivalSchema: Schema<SurvivalSession> = {
         isRecord(w) && isWord(w.answer) && typeof w.won === 'boolean' && nonNegInt(w.guesses),
     );
     return { run: { id: id as number, score, lives: lives as number, words: clean, lastWordId }, game };
+  },
+};
+
+// ---------- Word Book ----------
+
+export interface WordBookEntry {
+  word: string;
+  /** Where it was played: daily, practice, blitz, duo, quad, survival, rush. */
+  mode: string;
+  won: boolean;
+  /** When it was collected (ms). */
+  at: number;
+}
+
+export const WORDBOOK_LIMIT = 1000;
+
+export const wordbookSchema: Schema<WordBookEntry[]> = {
+  version: 1,
+  validate(d) {
+    if (!Array.isArray(d)) return null;
+    return d
+      .filter(
+        (e): e is WordBookEntry =>
+          isRecord(e) && isWord(e.word) && typeof e.mode === 'string' && typeof e.won === 'boolean' && typeof e.at === 'number',
+      )
+      .slice(-WORDBOOK_LIMIT);
+  },
+};
+
+// ---------- Daily Rush ----------
+
+export interface RushResult {
+  day: number;
+  solved: number;
+  words: { answer: string; won: boolean }[];
+  /** False while the run is in progress (leaving ends it with this score). */
+  done: boolean;
+}
+
+export const rushSchema: Schema<RushResult> = {
+  version: 1,
+  validate(d) {
+    if (!isRecord(d) || !Number.isInteger(d.day) || !nonNegInt(d.solved) || typeof d.done !== 'boolean') return null;
+    if (!Array.isArray(d.words)) return null;
+    const words = d.words.filter(
+      (w): w is RushResult['words'][number] => isRecord(w) && isWord(w.answer) && typeof w.won === 'boolean',
+    );
+    return { day: d.day as number, solved: d.solved, words, done: d.done };
   },
 };

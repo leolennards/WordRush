@@ -209,7 +209,7 @@ function RaceGame({ race, inputEnabled, onBack, onOpenRace }: { race: Race } & O
             <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto w-full max-w-[30rem] px-3" role="region" aria-label="Race result">
               <div className="rounded-[var(--radius-card)] border border-border bg-surface p-4 text-center shadow-md">
                 <p className="text-xl font-extrabold">
-                  {outcome === 'won' ? 'You won the race! 🏆' : outcome === 'draw' ? 'It’s a draw.' : `${otherName} won this one.`}
+                  {outcome === 'won' ? 'You won the race!' : outcome === 'draw' ? 'It’s a draw.' : `${otherName} won this one.`}
                 </p>
                 <p className="mt-0.5 text-sm text-muted">
                   The word was <strong className="text-text">{race.answer.toUpperCase()}</strong>

@@ -16,8 +16,13 @@ paid API or database — and keeps preferences, progress and statistics in `loca
 - Duo: two hidden words at once with 7 shared guesses and a split-colour keyboard.
 - Survival: word after word with 3 lives; quick solves win a life back. Runs survive a refresh.
 - Daily quests: three goals per day (the same for everyone) worth bonus XP.
-- Levels, XP and 23 achievements; XP rewards fewer guesses, hard mode and the Daily Challenge.
-- "What it means": the answer's definition after each game (free Dictionary API).
+- Quad: four words with 9 shared guesses, on four compact boards.
+- Daily Rush: a Blitz run on the same seeded words for everyone, once per day.
+- Practice mods: Fog (only the latest guess stays visible) and Blind keys (no keyboard colours), each worth bonus XP.
+- Word meanings everywhere: a full sheet with pronunciation, senses, examples and synonyms (Dictionary API with
+  a Wiktionary fallback), and a searchable Word Book of every word you've played.
+- Reward cards for achievements, quests and level-ups (with a confetti burst on level-up).
+- Levels, XP and 29 achievements; XP rewards fewer guesses, hard mode and the Daily Challenge.
 - Decorative tile backdrop in both themes; optional vibration on supported phones.
 - Correct duplicate-letter feedback, local dictionary (12,675 accepted guesses, 1,922 curated answers).
 - Physical and on-screen keyboards, invalid-word shake, flip reveals, win celebration.

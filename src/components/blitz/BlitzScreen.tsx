@@ -1,8 +1,12 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, m } from 'motion/react';
-import { ArrowLeft, House, Play, RotateCcw, Share2, Timer, Zap } from 'lucide-react';
+import { ArrowLeft, CalendarClock, House, Play, RotateCcw, Share2, Timer, Zap } from 'lucide-react';
 import { BRAND } from '@/config/game';
-import { BLITZ, buildBlitzShareText, formatClock, type BlitzRun } from '@/engine';
+import { BLITZ, buildBlitzShareText, challengeNumber, formatClock, rushSeed, type BlitzRun } from '@/engine';
+import { useServices } from '@/app/services';
+import { KEYS, rushSchema, type RushResult } from '@/lib/storage/schemas';
+import { readVersioned, writeVersioned } from '@/lib/storage/versioned';
+import { useCountdown } from '@/hooks/useToday';
 import { useBlitz } from '@/features/blitz/useBlitz';
 import { useGameScreen } from '@/features/game/useGameScreen';
 import { useAward } from '@/features/progress/useAward';
@@ -12,15 +16,32 @@ import { shareResult } from '@/features/sharing/shareResult';
 import { PlayArea } from '@/components/board/PlayArea';
 import { useToast } from '@/components/layout/Toasts';
 import { BoardOverlay, Button } from '@/components/ui';
+import { WordChip } from '@/components/words/WordChip';
 
 interface BlitzScreenProps {
   /** Today's daily answer, never used in Blitz to avoid spoilers. */
   avoidAnswer: string;
   inputEnabled: boolean;
   onHome: () => void;
+  /** Daily Rush: today's day index (same words for everyone, one try). */
+  rushDay?: number;
 }
 
-export function BlitzScreen({ avoidAnswer, inputEnabled, onHome }: BlitzScreenProps) {
+export function BlitzScreen(props: BlitzScreenProps) {
+  const { store } = useServices();
+  // Today's Rush already played (or left part-way): show the result instead.
+  const [done] = useState(() => {
+    if (props.rushDay === undefined) return null;
+    const saved = readVersioned(store, KEYS.rush, rushSchema);
+    return saved && saved.day === props.rushDay ? saved : null;
+  });
+  if (done) return <RushDone result={done} onHome={props.onHome} />;
+  return <BlitzGame {...props} />;
+}
+
+function BlitzGame({ avoidAnswer, inputEnabled, onHome, rushDay }: BlitzScreenProps) {
+  const rush = rushDay !== undefined;
+  const { store } = useServices();
   const award = useAward();
   const { progress } = useProgress();
   const best = progress.bestBlitz;
@@ -30,7 +51,7 @@ export function BlitzScreen({ avoidAnswer, inputEnabled, onHome }: BlitzScreenPr
   const onRunEnd = useCallback(
     (run: BlitzRun) =>
       award({
-        id: `blitz-${run.startedAt}`,
+        id: rush ? `rush-${rushDay}` : `blitz-${run.startedAt}`,
         mode: 'blitz',
         won: run.solved > 0,
         guesses: 0,
@@ -38,19 +59,35 @@ export function BlitzScreen({ avoidAnswer, inputEnabled, onHome }: BlitzScreenPr
         hints: 0,
         seconds: null,
         blitzScore: run.solved,
+        ...(rush ? { rush: true } : {}),
+        words: run.words.map((w) => ({ answer: w.answer, won: w.won })),
       }),
-    [award],
+    [award, rush, rushDay],
   );
 
-  const blitz = useBlitz(avoidAnswer, onRunEnd);
+  const blitz = useBlitz(avoidAnswer, onRunEnd, rush ? rushSeed(rushDay) : undefined);
   const { phase, run, remaining } = blitz;
   const playing = phase === 'playing';
   const screen = useGameScreen(blitz, { inputEnabled: inputEnabled && playing, onCompleted: blitz.next });
 
   const start = () => {
     setBestBefore(best);
+    if (rush) writeVersioned(store, KEYS.rush, rushSchema, { day: rushDay, solved: 0, words: [], done: false });
     blitz.start();
   };
+
+  // Daily Rush: save progress as it happens, so leaving counts as finishing.
+  useEffect(() => {
+    if (!rush || !run) return;
+    writeVersioned(store, KEYS.rush, rushSchema, {
+      day: rushDay,
+      solved: run.solved,
+      words: run.words.map((w) => ({ answer: w.answer, won: w.won })),
+      done: phase === 'over',
+    });
+  }, [rush, rushDay, run, phase, store]);
+
+  const title = rush ? `Daily Rush #${challengeNumber(rushDay)}` : 'Blitz';
 
   const low = playing && remaining <= 10_000;
   const fill = Math.min(1, remaining / BLITZ.startMs);
@@ -61,14 +98,16 @@ export function BlitzScreen({ avoidAnswer, inputEnabled, onHome }: BlitzScreenPr
     overlay = (
       <BoardOverlay>
         <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-present/20">
-          <Zap className="size-6 text-present" aria-hidden />
+          {rush ? <CalendarClock className="size-6 text-present" aria-hidden /> : <Zap className="size-6 text-present" aria-hidden />}
         </span>
-        <p className="mt-3 text-lg font-extrabold">Blitz</p>
+        <p className="mt-3 text-lg font-extrabold">{title}</p>
         <p className="mt-1 text-sm text-muted">
+          {rush && 'Everyone gets the same words today, and you get one try. '}
           Solve as many words as you can in {BLITZ.startMs / 1000} seconds. Each solve adds{' '}
           <strong className="text-text">+{BLITZ.bonusMs / 1000}s</strong>, a miss costs {BLITZ.penaltyMs / 1000}s.
         </p>
-        {best > 0 && (
+        {rush && <p className="mt-2 text-xs text-muted">Leaving during the run ends it.</p>}
+        {!rush && best > 0 && (
           <p className="mt-2 text-sm font-semibold">
             Your best: {best} {best === 1 ? 'word' : 'words'}
           </p>
@@ -92,9 +131,9 @@ export function BlitzScreen({ avoidAnswer, inputEnabled, onHome }: BlitzScreenPr
           <ArrowLeft className="size-5" aria-hidden />
         </button>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-[1.05rem] leading-tight font-bold tracking-tight">Blitz</h2>
+          <h2 className="truncate text-[1.05rem] leading-tight font-bold tracking-tight">{title}</h2>
           <p className="truncate text-xs text-muted">
-            {best > 0 ? `Best: ${best} ${best === 1 ? 'word' : 'words'}` : 'Beat the clock'}
+            {rush ? 'Same words for everyone · one try' : best > 0 ? `Best: ${best} ${best === 1 ? 'word' : 'words'}` : 'Beat the clock'}
           </p>
         </div>
         <div
@@ -150,7 +189,13 @@ export function BlitzScreen({ avoidAnswer, inputEnabled, onHome }: BlitzScreenPr
         forceEnd={phase === 'over'}
         endPanel={
           run && phase === 'over' ? (
-            <BlitzResult run={run} bestBefore={bestBefore} onAgain={start} onHome={onHome} />
+            <BlitzResult
+              run={run}
+              bestBefore={bestBefore}
+              onAgain={rush ? undefined : start}
+              onHome={onHome}
+              label={rush ? title : undefined}
+            />
           ) : null
         }
       />
@@ -163,12 +208,17 @@ function BlitzResult({
   bestBefore,
   onAgain,
   onHome,
+  label,
 }: {
-  run: BlitzRun;
+  run: { solved: number; words: { answer: string; won: boolean }[] };
   bestBefore: number;
-  onAgain: () => void;
+  /** Omitted for Daily Rush (one try). */
+  onAgain?: () => void;
   onHome: () => void;
+  /** Daily Rush title, used in the share text. */
+  label?: string;
 }) {
+  const countdown = useCountdown(useServices().now);
   const { settings, resolvedTheme } = useSettings();
   const { toast } = useToast();
   const newBest = run.solved > bestBefore && run.solved > 0;
@@ -176,6 +226,7 @@ function BlitzResult({
   const share = async () => {
     const text = buildBlitzShareText({
       brand: BRAND.name,
+      label,
       solved: run.solved,
       results: run.words.map((w) => w.won),
       highContrast: settings.highContrast,
@@ -215,28 +266,58 @@ function BlitzResult({
           </button>
         </div>
         {run.words.length > 0 && (
-          <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="Words this run">
-            {run.words.map((w, i) => (
-              <li
-                key={i}
-                className={`rounded-lg px-2 py-1 text-xs font-bold tracking-wide uppercase ${
-                  w.won ? 'bg-correct text-correct-ink' : 'bg-surface-2 text-muted line-through'
-                }`}
-              >
-                {w.answer}
-              </li>
-            ))}
-          </ul>
+          <>
+            <p className="mt-3 text-xs font-semibold text-muted">Tap a word for its meaning</p>
+            <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label="Words this run">
+              {run.words.map((w, i) => (
+                <li key={i}>
+                  <WordChip word={w.answer} won={w.won} />
+                </li>
+              ))}
+            </ul>
+          </>
         )}
         <div className="mt-3 flex gap-2">
           <Button onClick={onHome} className="flex-1">
             <House className="size-4" aria-hidden /> Home
           </Button>
-          <Button variant="primary" onClick={onAgain} className="flex-1">
-            <RotateCcw className="size-4" aria-hidden /> Play again
-          </Button>
+          {onAgain ? (
+            <Button variant="primary" onClick={onAgain} className="flex-1">
+              <RotateCcw className="size-4" aria-hidden /> Play again
+            </Button>
+          ) : (
+            <p className="tabular flex flex-1 items-center justify-center text-center text-xs text-muted">
+              Next Rush in <span className="ml-1 font-semibold text-text">{countdown}</span>
+            </p>
+          )}
         </div>
       </div>
     </m.div>
+  );
+}
+
+/** Today's Daily Rush, already played. */
+function RushDone({ result, onHome }: { result: RushResult; onHome: () => void }) {
+  const title = `Daily Rush #${challengeNumber(result.day)}`;
+  return (
+    <main id="game" className="flex min-h-0 flex-1 flex-col">
+      <div className="mx-auto flex w-full max-w-[30rem] items-center gap-3 px-3 pt-3 pb-1 sm:pt-5">
+        <button
+          type="button"
+          onClick={onHome}
+          className="grid size-9 shrink-0 place-items-center rounded-full text-muted hover:bg-surface-2 hover:text-text"
+          aria-label="Back to home"
+        >
+          <ArrowLeft className="size-5" aria-hidden />
+        </button>
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-[1.05rem] leading-tight font-bold tracking-tight">{title}</h2>
+          <p className="truncate text-xs text-muted">{result.done ? 'You’ve played today’s Rush' : 'Your run ended when you left'}</p>
+        </div>
+      </div>
+      <div className="flex flex-1 items-center pb-6">
+        <BlitzResult run={result} bestBefore={Infinity} onHome={onHome} label={title} />
+      </div>
+    </main>
   );
 }

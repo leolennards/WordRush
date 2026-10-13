@@ -66,7 +66,7 @@ export function usePracticeGame(avoidAnswer: string): PracticeGame {
     [record],
   );
 
-  const session = useGameSession({ initialGame, persist, onFinished });
+  const session = useGameSession({ initialGame, persist, onFinished, followMods: true });
   const { game } = session.session;
   const { replace } = session;
 

@@ -1,4 +1,4 @@
-import { Clock3, House, RotateCcw, Share2, Shuffle } from 'lucide-react';
+import { Clock3, House, Lightbulb, RotateCcw, Share2, Shuffle } from 'lucide-react';
 import { m } from 'motion/react';
 import type { GameState, Stats } from '@/engine';
 import { GAME } from '@/config/game';
@@ -49,8 +49,15 @@ export function ResultDialog(props: ResultDialogProps) {
             </m.p>
             {won ? (
               <p className="mt-1 text-muted">
-                You solved it in <strong className="text-text">{game.guesses.length}</strong> of {GAME.maxGuesses}{' '}
-                {game.guesses.length === 1 ? 'guess' : 'guesses'}.
+                {game.guesses.length === 1 ? (
+                  <>
+                    You solved it in <strong className="text-text">one</strong> guess.
+                  </>
+                ) : (
+                  <>
+                    You solved it in <strong className="text-text">{game.guesses.length}</strong> of {GAME.maxGuesses} guesses.
+                  </>
+                )}
               </p>
             ) : (
               <p className="mt-1 text-muted">Every miss makes the next one easier.</p>
@@ -59,8 +66,9 @@ export function ResultDialog(props: ResultDialogProps) {
               <p className="mt-2 flex flex-wrap gap-1.5 text-xs font-bold">
                 {xp ? <span className="tabular rounded-full bg-accent/15 px-2 py-0.5 text-accent">+{xp} XP</span> : null}
                 {game.hints?.length ? (
-                  <span className="rounded-full bg-present/15 px-2 py-0.5 text-text">
-                    💡 {game.hints.length} {game.hints.length === 1 ? 'hint' : 'hints'}
+                  <span className="inline-flex items-center gap-1 rounded-full bg-present/15 px-2 py-0.5 text-text">
+                    <Lightbulb className="size-3 text-present" aria-hidden />
+                    {game.hints.length} {game.hints.length === 1 ? 'hint' : 'hints'}
                   </span>
                 ) : null}
               </p>

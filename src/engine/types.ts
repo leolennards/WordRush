@@ -26,7 +26,13 @@ export interface GameState {
   dayIndex: number | null;
   /** Practice only: positions whose letter was revealed by a hint, in order. */
   hints?: number[];
+  /** Practice only: twists chosen before the first guess. */
+  mods?: Mod[];
 }
+
+/** Fog: only the latest guess stays visible. Blind: the keyboard shows no colours. */
+export type Mod = 'fog' | 'blind';
+export const MODS: readonly Mod[] = ['fog', 'blind'];
 
 export type GuessError =
   | { kind: 'game-over' }

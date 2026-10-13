@@ -20,6 +20,12 @@ import {
   Map as MapIcon,
   ScrollText,
   Swords,
+  Grid2x2,
+  Brush,
+  CloudFog,
+  EyeOff,
+  Rocket,
+  BookOpen,
   type LucideIcon,
 } from 'lucide-react';
 import type { Achievement } from '@/engine';
@@ -46,4 +52,10 @@ export const ACHIEVEMENT_ICONS: Record<Achievement['icon'], LucideIcon> = {
   columns: Columns2,
   heart: Heart,
   swords: Swords,
+  grid: Grid2x2,
+  broom: Brush,
+  cloud: CloudFog,
+  eyeoff: EyeOff,
+  rocket: Rocket,
+  book: BookOpen,
 };

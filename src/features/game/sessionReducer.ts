@@ -1,4 +1,13 @@
-import { applyHint, canToggleHardMode, submitGuess, type Dictionary, type GameRules, type GameState, type GuessError } from '@/engine';
+import {
+  applyHint,
+  canToggleHardMode,
+  submitGuess,
+  type Dictionary,
+  type GameRules,
+  type GameState,
+  type GuessError,
+  type Mod,
+} from '@/engine';
 
 /**
  * UI-level session state wrapping the pure engine state. Everything that can
@@ -25,6 +34,7 @@ export type SessionAction =
   | { type: 'ack-complete' }
   | { type: 'set-hard-mode'; enabled: boolean }
   | { type: 'hint' }
+  | { type: 'set-mods'; mods: Mod[] }
   | { type: 'replace'; game: GameState };
 
 export function initSession(game: GameState): SessionState {
@@ -73,6 +83,12 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
     case 'set-hard-mode':
       if (!canToggleHardMode(state.game) || state.game.hardMode === action.enabled) return state;
       return { ...state, game: { ...state.game, hardMode: action.enabled } };
+    case 'set-mods': {
+      if (!canToggleHardMode(state.game)) return state;
+      const current = state.game.mods ?? [];
+      if (current.length === action.mods.length && current.every((m) => action.mods.includes(m))) return state;
+      return { ...state, game: { ...state.game, mods: action.mods } };
+    }
     case 'hint': {
       if (locked(state)) return state;
       const game = applyHint(state.game);

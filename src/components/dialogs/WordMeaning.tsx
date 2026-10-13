@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, ChevronRight } from 'lucide-react';
+import { useWords } from '@/features/words/WordsContext';
 import { useServices } from '@/app/services';
 import type { WordDefinition } from '@/lib/dictionary/define';
 
@@ -8,6 +9,7 @@ type State = { word: string; result: WordDefinition | null | 'loading' };
 /** "What it means" card for a finished game's answer. Hidden if nothing is found. */
 export function WordMeaning({ word }: { word: string }) {
   const { define } = useServices();
+  const { showWord } = useWords();
   const [state, setState] = useState<State>({ word, result: 'loading' });
 
   useEffect(() => {
@@ -41,6 +43,13 @@ export function WordMeaning({ word }: { word: string }) {
           </p>
           <p className="mt-0.5 text-[0.95rem] leading-snug">{result.definition}</p>
           {result.example && <p className="mt-1 text-sm text-muted italic">“{result.example}”</p>}
+          <button
+            type="button"
+            onClick={() => showWord(word)}
+            className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"
+          >
+            Full meaning{result.audio ? ' and pronunciation' : ''} <ChevronRight className="size-4" aria-hidden />
+          </button>
         </>
       )}
     </section>

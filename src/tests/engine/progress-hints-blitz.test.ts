@@ -20,7 +20,7 @@ import {
   type GameEvent,
   type GameState,
 } from '@/engine';
-import { parseEntry } from '@/lib/dictionary/define';
+import { parseEntry, parseWiktionary } from '@/lib/dictionary/define';
 import { validateGameState } from '@/lib/storage/schemas';
 
 const event = (over: Partial<GameEvent> = {}): GameEvent => ({
@@ -74,7 +74,7 @@ describe('hints', () => {
       highContrast: false,
       darkSquares: false,
     });
-    expect(text.split('\n')[0]).toBe('Wordskiis Practice 1/6 💡2');
+    expect(text.split('\n')[0]).toBe('Wordskiis Practice 1/6 (2 hints)');
   });
 });
 
@@ -163,7 +163,7 @@ describe('blitz', () => {
       darkSquares: true,
       url: 'https://x.test',
     });
-    expect(text).toBe('Wordskiis Blitz ⚡ 2 words\n\n🟩⬛🟩\n\nhttps://x.test');
+    expect(text).toBe('Wordskiis Blitz: 2 words\n\n🟩⬛🟩\n\nhttps://x.test');
   });
 });
 
@@ -172,13 +172,47 @@ describe('word meanings', () => {
     const data = [
       { meanings: [{ partOfSpeech: 'noun', definitions: [{ definition: ' A large bird. ', example: 'a crane flew' }] }] },
     ];
-    expect(parseEntry('crane', data)).toEqual({
+    expect(parseEntry('crane', data)).toMatchObject({
       word: 'crane',
       partOfSpeech: 'noun',
       definition: 'A large bird.',
       example: 'a crane flew',
     });
+    const rich = parseEntry('crane', [
+      {
+        phonetic: '/kreɪn/',
+        phonetics: [{ audio: '' }, { audio: 'https://audio.test/crane.mp3' }],
+        meanings: [
+          { partOfSpeech: 'noun', synonyms: ['derrick'], definitions: [{ definition: 'A bird.' }, { definition: 'A machine.' }, { definition: 'Third.' }] },
+          { partOfSpeech: 'verb', definitions: [{ definition: 'To stretch the neck.', example: 'she craned' }] },
+        ],
+      },
+    ]);
+    expect(rich).toMatchObject({ phonetic: '/kreɪn/', audio: 'https://audio.test/crane.mp3' });
+    expect(rich!.senses).toHaveLength(2);
+    expect(rich!.senses[0]!.definitions).toHaveLength(2); // capped
+    expect(rich!.senses[0]!.synonyms).toEqual(['derrick']);
     expect(parseEntry('crane', { title: 'No Definitions Found' })).toBeNull();
     expect(parseEntry('crane', [{ meanings: [] }])).toBeNull();
+  });
+
+  it('falls back to Wiktionary entries, as plain text', () => {
+    const data = {
+      fr: [{ partOfSpeech: 'Noun', definitions: [{ definition: 'French only' }] }],
+      en: [
+        {
+          partOfSpeech: 'Noun',
+          definitions: [
+            { definition: '' },
+            { definition: 'A <a href="/wiki/bird">bird</a> &amp; more.', examples: ['The <b>crane</b> flew.'] },
+          ],
+        },
+        { partOfSpeech: 'Verb', definitions: [{ definition: 'To stretch.' }] },
+      ],
+    };
+    const r = parseWiktionary('crane', data);
+    expect(r).toMatchObject({ partOfSpeech: 'noun', definition: 'A bird & more.', example: 'The crane flew.' });
+    expect(r!.senses.map((x) => x.partOfSpeech)).toEqual(['noun', 'verb']);
+    expect(parseWiktionary('crane', { title: 'Not found' })).toBeNull();
   });
 });

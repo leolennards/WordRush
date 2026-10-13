@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer } from 'react';
 import { GAME, TIMING } from '@/config/game';
-import type { GameState } from '@/engine';
+import type { GameState, Mod } from '@/engine';
 import { useServices } from '@/app/services';
 import { useSettings } from '@/features/settings/SettingsContext';
 import { initSession, sessionReducer, type SessionState } from './sessionReducer';
@@ -33,6 +33,8 @@ export function useGameSession(params: {
   onFinished: (game: GameState) => void;
   /** Follow the Hard mode setting (solo games). Friend games stay on normal rules for fairness. */
   followHardMode?: boolean;
+  /** Follow the mod settings (Practice). */
+  followMods?: boolean;
 }): GameSession {
   const { dictionary } = useServices();
   const { settings, reducedMotion } = useSettings();
@@ -57,6 +59,14 @@ export function useGameSession(params: {
   useEffect(() => {
     if (followHardMode) dispatch({ type: 'set-hard-mode', enabled: settings.hardMode });
   }, [settings.hardMode, game.id, followHardMode]);
+
+  const followMods = params.followMods ?? false;
+  const { modFog, modBlind } = settings;
+  useEffect(() => {
+    if (!followMods) return;
+    const mods: Mod[] = [...(modFog ? (['fog'] as const) : []), ...(modBlind ? (['blind'] as const) : [])];
+    dispatch({ type: 'set-mods', mods });
+  }, [followMods, modFog, modBlind, game.id]);
 
   const type = useCallback((letter: string) => dispatch({ type: 'type', letter, wordLength: GAME.wordLength }), []);
   const remove = useCallback(() => dispatch({ type: 'delete' }), []);

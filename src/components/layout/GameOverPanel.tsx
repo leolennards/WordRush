@@ -1,5 +1,5 @@
 import { m } from 'motion/react';
-import { House, RotateCcw, Share2, Shuffle, Trophy } from 'lucide-react';
+import { BookOpen, House, RotateCcw, Share2, Shuffle, Trophy } from 'lucide-react';
 import type { GameState } from '@/engine';
 
 interface GameOverPanelProps {
@@ -14,13 +14,15 @@ interface GameOverPanelProps {
   onNewGame?: () => void;
   /** XP earned by this game, once recorded. */
   xp?: number;
+  /** Opens the answer's meaning. */
+  onMeaning?: () => void;
 }
 
 const secondary =
   'inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-surface-2 px-2 text-sm font-semibold transition hover:bg-surface-3 active:scale-[0.98]';
 
 /** Shown in place of the keyboard once a game is over, so there is always a clear next step. */
-export function GameOverPanel({ game, countdown, onResults, onShare, onHome, onPractice, onNewGame, xp }: GameOverPanelProps) {
+export function GameOverPanel({ game, countdown, onResults, onShare, onHome, onPractice, onNewGame, xp, onMeaning }: GameOverPanelProps) {
   const won = game.status === 'won';
   return (
     <m.div
@@ -35,7 +37,7 @@ export function GameOverPanel({ game, countdown, onResults, onShare, onHome, onP
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1 pl-1">
             <p className="flex items-center gap-2 font-bold">
-              {won ? `Solved in ${game.guesses.length}! 🎉` : `The word was ${game.answer.toUpperCase()}`}
+              {won ? `Solved in ${game.guesses.length}!` : `The word was ${game.answer.toUpperCase()}`}
               {xp ? (
                 <m.span
                   initial={{ scale: 0.6, opacity: 0 }}
@@ -71,6 +73,11 @@ export function GameOverPanel({ game, countdown, onResults, onShare, onHome, onP
           <button type="button" onClick={onResults} className={secondary}>
             <Trophy className="size-4" aria-hidden /> Results
           </button>
+          {onMeaning && (
+            <button type="button" onClick={onMeaning} className={secondary} aria-label={`Meaning of ${game.answer.toUpperCase()}`}>
+              <BookOpen className="size-4" aria-hidden /> Meaning
+            </button>
+          )}
           {onNewGame && (
             <button type="button" onClick={onNewGame} className={secondary}>
               <RotateCcw className="size-4" aria-hidden /> New word

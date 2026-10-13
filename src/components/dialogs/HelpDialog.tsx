@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Award, CalendarDays, Columns2, Heart, ScrollText, Share2, Shuffle, Zap } from 'lucide-react';
+import { Award, BookOpen, CalendarClock, CalendarDays, Columns2, Heart, ScrollText, Share2, Shuffle, SlidersHorizontal, Zap } from 'lucide-react';
 import type { LetterState } from '@/engine';
 import { BRAND, GAME } from '@/config/game';
 import { Dialog } from './Dialog';
@@ -70,7 +70,7 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
             <Shuffle className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
             <span>
               <strong>Practice</strong> — unlimited words with separate statistics. It never affects your daily streak.
-              Stuck? Tap the 💡 for up to two hints per word.
+              Stuck? Tap the hint button for up to two letters per word.
             </span>
           </li>
           <li className="flex gap-3">
@@ -83,8 +83,22 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
           <li className="flex gap-3">
             <Columns2 className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
             <span>
-              <strong>Duo</strong> — two hidden words at once with 7 shared guesses. Each key shows a colour for each
-              word: left half for word 1, right half for word 2.
+              <strong>Duo and Quad</strong> — two words with 7 shared guesses, or four with 9. Each key is split
+              into one colour per word, in board order.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <CalendarClock className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <span>
+              <strong>Daily Rush</strong> — a Blitz run on the same words for everyone, once a day. Compare scores
+              with friends.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <SlidersHorizontal className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <span>
+              <strong>Mods</strong> — in Practice, try Fog (only your latest guess stays visible) or Blind keys (no
+              keyboard colours) for bonus XP.
             </span>
           </li>
           <li className="flex gap-3">
@@ -98,6 +112,12 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
             <ScrollText className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
             <span>
               <strong>Daily quests</strong> — three new goals every day for bonus XP.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <BookOpen className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <span>
+              <strong>Word Book</strong> — every word you play is collected with its meaning and pronunciation.
             </span>
           </li>
           <li className="flex gap-3">

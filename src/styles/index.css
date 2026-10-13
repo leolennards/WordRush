@@ -289,6 +289,41 @@ button {
 }
 
 /* =========================================================================
+   Reward cards (achievements, level-ups, quests)
+   ========================================================================= */
+.reward-card::before {
+  /* Soft glow in the reward's colour. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 140% at 0% 50%, color-mix(in srgb, var(--glow) 22%, transparent), transparent 60%);
+  pointer-events: none;
+}
+.reward-card::after {
+  /* One sheen sweeping across the card. */
+  content: '';
+  position: absolute;
+  inset: -50% auto -50% -40%;
+  width: 35%;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+  animation: reward-sheen 1.1s 0.25s var(--ease-out) both;
+  pointer-events: none;
+}
+.dark .reward-card::after {
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.12), transparent);
+}
+@keyframes reward-sheen {
+  from { left: -40%; }
+  to { left: 130%; }
+}
+.reward-tile-gold {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--c-present) 80%, #fff), var(--c-present));
+  color: var(--c-present-ink);
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.12), 0 6px 16px -6px var(--c-present);
+}
+
+/* =========================================================================
    Board & tiles
    ========================================================================= */
 .board-area {
@@ -335,6 +370,35 @@ button {
 .tile[data-state='tbd'] {
   --tile-border: var(--c-tile-filled-border);
 }
+/* Fog mod: earlier guesses are hidden until the game ends. */
+.tile[data-state='fog'] {
+  --tile-border: transparent;
+  background:
+    repeating-linear-gradient(-45deg, transparent 0 6px, color-mix(in srgb, var(--c-text) 5%, transparent) 6px 12px),
+    color-mix(in srgb, var(--c-surface-3) 80%, transparent);
+  animation: fog-in 500ms var(--ease-out) both;
+}
+@keyframes fog-in {
+  from { filter: blur(0); opacity: 1; }
+  40% { filter: blur(3px); opacity: 0.6; }
+  to { filter: blur(0); opacity: 1; }
+}
+
+/* Small boards (Quad). */
+.board[data-compact] {
+  --gap: clamp(2px, 1.2cqmin, 5px);
+}
+.board[data-compact] .tile {
+  font-size: clamp(0.7rem, 7cqmin, 1.5rem);
+  border-width: 1.5px;
+  border-radius: clamp(3px, 1.4cqmin, 0.4rem);
+}
+.board[data-compact] .tile[data-state='correct'],
+.board[data-compact] .tile[data-state='present'],
+.board[data-compact] .tile[data-state='absent'] {
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.12);
+}
+
 /* A hinted letter waiting in an empty tile of the current row. */
 .tile[data-state='hint'] {
   --tile-border: color-mix(in srgb, var(--c-correct) 55%, transparent);
@@ -492,21 +556,39 @@ button {
   box-shadow: none;
 }
 
-/* Duo: each half of a key shows that word's colour. */
-.key[data-left],
-.key[data-right] {
-  --kl: var(--c-key);
-  --kr: var(--c-key);
-  background: linear-gradient(90deg, var(--kl) 0 50%, var(--kr) 50% 100%);
+/* Duo/Quad: each part of a key shows one word's colour
+   (Duo: left/right halves; Quad: four quarters, reading order). */
+.key[data-split] {
+  --k0: var(--c-key);
+  --k1: var(--c-key);
+  --k2: var(--c-key);
+  --k3: var(--c-key);
   text-shadow: 0 0 4px var(--c-key), 0 0 2px var(--c-key);
 }
-.key[data-left='correct'] { --kl: var(--c-correct); }
-.key[data-left='present'] { --kl: var(--c-present); }
-.key[data-left='absent'] { --kl: var(--c-key-absent); }
-.key[data-right='correct'] { --kr: var(--c-correct); }
-.key[data-right='present'] { --kr: var(--c-present); }
-.key[data-right='absent'] { --kr: var(--c-key-absent); }
-.key[data-left='absent'][data-right='absent'] {
+.key[data-split='2'] {
+  background: linear-gradient(90deg, var(--k0) 0 50%, var(--k1) 50% 100%);
+}
+.key[data-split='4'] {
+  background:
+    linear-gradient(var(--k0), var(--k0)) top left / 50% 50% no-repeat,
+    linear-gradient(var(--k1), var(--k1)) top right / 50% 50% no-repeat,
+    linear-gradient(var(--k2), var(--k2)) bottom left / 50% 50% no-repeat,
+    linear-gradient(var(--k3), var(--k3)) bottom right / 50% 50% no-repeat;
+}
+.key[data-k0='correct'] { --k0: var(--c-correct); }
+.key[data-k0='present'] { --k0: var(--c-present); }
+.key[data-k0='absent'] { --k0: var(--c-key-absent); }
+.key[data-k1='correct'] { --k1: var(--c-correct); }
+.key[data-k1='present'] { --k1: var(--c-present); }
+.key[data-k1='absent'] { --k1: var(--c-key-absent); }
+.key[data-k2='correct'] { --k2: var(--c-correct); }
+.key[data-k2='present'] { --k2: var(--c-present); }
+.key[data-k2='absent'] { --k2: var(--c-key-absent); }
+.key[data-k3='correct'] { --k3: var(--c-correct); }
+.key[data-k3='present'] { --k3: var(--c-present); }
+.key[data-k3='absent'] { --k3: var(--c-key-absent); }
+/* Ruled out for every word still in play. */
+.key[data-dead] {
   --key-ink: var(--c-key-absent-ink);
   text-shadow: none;
   box-shadow: none;

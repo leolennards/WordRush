@@ -12,6 +12,7 @@ import { useSurvival } from '@/features/survival/useSurvival';
 import { PlayArea } from '@/components/board/PlayArea';
 import { useToast } from '@/components/layout/Toasts';
 import { BoardOverlay, Button } from '@/components/ui';
+import { WordChip } from '@/components/words/WordChip';
 
 interface SurvivalScreenProps {
   avoidAnswer: string;
@@ -36,6 +37,7 @@ export function SurvivalScreen({ avoidAnswer, inputEnabled, onHome }: SurvivalSc
         hints: 0,
         seconds: null,
         survivalScore: run.score,
+        words: run.words.map((w) => ({ answer: w.answer, won: w.won })),
       }),
     [award],
   );
@@ -185,18 +187,16 @@ function SurvivalResult({
           </button>
         </div>
         {run.words.length > 0 && (
-          <ul className="mt-3 flex max-h-24 flex-wrap gap-1.5 overflow-y-auto" aria-label="Words this run">
-            {run.words.map((w, i) => (
-              <li
-                key={i}
-                className={`rounded-lg px-2 py-1 text-xs font-bold tracking-wide uppercase ${
-                  w.won ? 'bg-correct text-correct-ink' : 'bg-surface-2 text-muted line-through'
-                }`}
-              >
-                {w.answer}
-              </li>
-            ))}
-          </ul>
+          <>
+            <p className="mt-3 text-xs font-semibold text-muted">Tap a word for its meaning</p>
+            <ul className="mt-1.5 flex max-h-24 flex-wrap gap-1.5 overflow-y-auto" aria-label="Words this run">
+              {run.words.map((w, i) => (
+                <li key={i}>
+                  <WordChip word={w.answer} won={w.won} />
+                </li>
+              ))}
+            </ul>
+          </>
         )}
         <div className="mt-3 flex gap-2">
           <Button onClick={onHome} className="flex-1">

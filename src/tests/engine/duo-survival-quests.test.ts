@@ -1,80 +1,93 @@
 import { describe, expect, it } from 'vitest';
 import {
-  DUO_MAX_GUESSES,
+  MULTI,
   QUESTS,
   QUEST_XP,
   SURVIVAL,
   advanceQuests,
   applyEvent,
-  buildDuoShareText,
-  createDuo,
-  duoBoard,
-  duoKeyStates,
-  duoSolved,
+  buildMultiShareText,
+  createMulti,
   emptyProgress,
   finishSurvivalWord,
+  multiBoard,
+  multiKeyStates,
+  multiSolved,
   questsFor,
   startSurvival,
-  submitDuo,
+  submitMulti,
   survivalOver,
+  xpFor,
   type Dictionary,
   type GameEvent,
 } from '@/engine';
-import { duoSchema, progressSchema } from '@/lib/storage/schemas';
+import { multiSchema, progressSchema } from '@/lib/storage/schemas';
 
 const dict: Dictionary = { answers: ['crane', 'slate'], isAccepted: (w) => /^[a-z]{5}$/.test(w) };
-const play = (words: string[]) => {
-  let s = createDuo('duo-1', ['crane', 'slate']);
+const DUO = MULTI.duo.maxGuesses;
+const play = (words: string[], answers = ['crane', 'slate'], max = DUO) => {
+  let s = createMulti('duo-1', answers, max);
   for (const w of words) {
-    const r = submitDuo(s, w, dict);
+    const r = submitMulti(s, w, dict);
     if (!r.ok) throw new Error(r.error.kind);
     s = r.state;
   }
   return s;
 };
 
-describe('duo', () => {
-  it('checks each guess against both words and stops a board once solved', () => {
+describe('duo and quad', () => {
+  it('checks each guess against every word and stops a board once solved', () => {
     const s = play(['crane', 'blimp']);
-    expect(duoSolved(s, 0)).toBe(true);
+    expect(multiSolved(s, 0)).toBe(true);
     expect(s.evaluations[0]).toHaveLength(1);
     expect(s.evaluations[1]).toHaveLength(2);
     expect(s.status).toBe('playing');
-    expect(duoBoard(s, 0)).toMatchObject({ status: 'won', guesses: ['crane'] });
-    expect(duoBoard(s, 1).guesses).toEqual(['crane', 'blimp']);
+    expect(multiBoard(s, 0)).toMatchObject({ status: 'won', guesses: ['crane'] });
+    expect(multiBoard(s, 1).guesses).toEqual(['crane', 'blimp']);
   });
 
-  it('is won when both words are found, and lost after the last guess', () => {
+  it('is won when all words are found, and lost after the last guess', () => {
     expect(play(['crane', 'slate']).status).toBe('won');
-    const lost = play(Array.from({ length: DUO_MAX_GUESSES }, () => 'blimp'));
+    const lost = play(Array.from({ length: DUO }, () => 'blimp'));
     expect(lost.status).toBe('lost');
-    expect(submitDuo(lost, 'crane', dict)).toEqual({ ok: false, error: { kind: 'game-over' } });
+    expect(submitMulti(lost, 'crane', dict)).toEqual({ ok: false, error: { kind: 'game-over' } });
+  });
+
+  it('plays four words in Quad with nine guesses', () => {
+    const answers = ['crane', 'slate', 'blimp', 'mound'];
+    const s = play(['crane', 'slate', 'blimp'], answers, MULTI.quad.maxGuesses);
+    expect(s.status).toBe('playing');
+    expect(play(['crane', 'slate', 'blimp', 'mound'], answers, MULTI.quad.maxGuesses).status).toBe('won');
+    expect(multiKeyStates(s).m).toEqual([undefined, undefined, undefined, 'present']);
   });
 
   it('rejects incomplete and unknown words without using a guess', () => {
-    const s = createDuo('duo-1', ['crane', 'slate']);
-    expect(submitDuo(s, 'cra', dict)).toEqual({ ok: false, error: { kind: 'incomplete' } });
+    const s = createMulti('duo-1', ['crane', 'slate'], DUO);
+    expect(submitMulti(s, 'cra', dict)).toEqual({ ok: false, error: { kind: 'incomplete' } });
     const strict: Dictionary = { ...dict, isAccepted: () => false };
-    expect(submitDuo(s, 'qqqqq', strict)).toEqual({ ok: false, error: { kind: 'not-in-list' } });
+    expect(submitMulti(s, 'qqqqq', strict)).toEqual({ ok: false, error: { kind: 'not-in-list' } });
   });
 
-  it('gives split keyboard colours and hides a solved word’s half', () => {
-    const s = play(['slate']);
-    const keys = duoKeyStates(s);
-    expect(keys.a).toEqual(['correct', undefined]); // word 2 solved: its half is blank
+  it('gives split keyboard colours and hides a solved word’s part', () => {
+    const keys = multiKeyStates(play(['slate']));
+    expect(keys.a).toEqual(['correct', undefined]);
     expect(keys.s).toEqual(['absent', undefined]);
   });
 
-  it('shares both grids side by side without the words', () => {
-    const text = buildDuoShareText({ brand: 'W', state: play(['crane', 'slate']), highContrast: false, darkSquares: false });
-    expect(text.split('\n')[0]).toBe(`W Duo 2/${DUO_MAX_GUESSES}`);
+  it('shares the grids without the words', () => {
+    const text = buildMultiShareText({ brand: 'W', mode: 'duo', state: play(['crane', 'slate']), highContrast: false, darkSquares: false });
+    expect(text.split('\n')[0]).toBe(`W Duo 2/${DUO}`);
     expect(text).not.toMatch(/crane|slate/i);
   });
 
-  it('survives a save and reload', () => {
+  it('survives a save and reload, including older saves', () => {
+    const schema = multiSchema(2, DUO);
     const saved = JSON.parse(JSON.stringify({ game: play(['crane']), number: 3 }));
-    expect(duoSchema.validate(saved)?.game.guesses).toEqual(['crane']);
-    expect(duoSchema.validate({ ...saved, game: { ...saved.game, answers: ['x'] } })).toBeNull();
+    expect(schema.validate(saved)?.game.guesses).toEqual(['crane']);
+    delete saved.game.maxGuesses;
+    expect(schema.validate(saved)?.game.maxGuesses).toBe(DUO);
+    expect(schema.validate({ ...saved, game: { ...saved.game, answers: ['x'] } })).toBeNull();
+    expect(multiSchema(4, 9).validate(saved)).toBeNull();
   });
 });
 
@@ -144,11 +157,31 @@ describe('daily quests', () => {
     expect(r.progress.unlocked['quest-1']).toBeDefined();
     expect(r.progress.unlocked['duo-win']).toBeDefined();
     expect(r.progress.unlocked['duo-quick']).toBeDefined();
+    expect(xpFor(ev({ mode: 'quad', guesses: 5 }))).toBeGreaterThan(xpFor(ev({ mode: 'duo', guesses: 5 })));
     // Round-trips through storage.
     expect(progressSchema.validate(JSON.parse(JSON.stringify(r.progress)))?.quests).toEqual(r.progress.quests);
   });
 
   it('has unique quest ids', () => {
     expect(new Set(QUESTS.map((q) => q.id)).size).toBe(QUESTS.length);
+  });
+});
+
+describe('mods', () => {
+  const ev = (over: Partial<GameEvent>): GameEvent => ({
+    id: 'p',
+    mode: 'practice',
+    won: true,
+    guesses: 4,
+    hardMode: false,
+    hints: 0,
+    seconds: null,
+    ...over,
+  });
+  it('are worth more XP and unlock their achievements', () => {
+    expect(xpFor(ev({ mods: ['fog'] }))).toBeGreaterThan(xpFor(ev({})));
+    expect(xpFor(ev({ mods: ['fog', 'blind'] }))).toBeGreaterThan(xpFor(ev({ mods: ['fog'] })));
+    const r = applyEvent(emptyProgress(), ev({ mods: ['fog', 'blind'] }), 1);
+    expect(r.unlocked.map((a) => a.id)).toEqual(expect.arrayContaining(['fog-win', 'blind-win']));
   });
 });

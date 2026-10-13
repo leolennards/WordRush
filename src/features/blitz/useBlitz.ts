@@ -4,6 +4,7 @@ import {
   createGame,
   finishBlitzWord,
   pickPracticeAnswer,
+  seededRandom,
   startBlitz,
   type BlitzRun,
   type GameState,
@@ -29,17 +30,23 @@ const noop = () => {};
  * Blitz runs live in memory only: leaving the screen ends the run.
  * `onRunEnd` is called once when the clock reaches zero.
  */
-export function useBlitz(avoidAnswer: string, onRunEnd: (run: BlitzRun) => void): Blitz {
+export function useBlitz(
+  avoidAnswer: string,
+  onRunEnd: (run: BlitzRun) => void,
+  /** Daily Rush: words come from this seed, so everyone gets the same ones. */
+  seed?: number,
+): Blitz {
   const { dictionary, random, now } = useServices();
   const used = useRef<string[]>([]);
   const counter = useRef(0);
+  const rng = useRef<() => number>(random);
 
   const nextGame = useCallback(() => {
-    const answer = pickPracticeAnswer(dictionary.answers, [...used.current, avoidAnswer], random);
+    const answer = pickPracticeAnswer(dictionary.answers, [...used.current, avoidAnswer], rng.current);
     used.current.push(answer);
     counter.current += 1;
     return createGame({ mode: 'blitz', id: `blitz-word-${counter.current}`, answer });
-  }, [dictionary, random, avoidAnswer]);
+  }, [dictionary, avoidAnswer]);
 
   const [phase, setPhase] = useState<BlitzPhase>('ready');
   const [run, setRun] = useState<BlitzRun | null>(null);
@@ -86,6 +93,7 @@ export function useBlitz(avoidAnswer: string, onRunEnd: (run: BlitzRun) => void)
   const start = useCallback(() => {
     const t = now().getTime();
     used.current = [];
+    rng.current = seed === undefined ? random : seededRandom(seed);
     setClock(t);
     const fresh = startBlitz(t);
     runRef.current = fresh;
@@ -93,7 +101,7 @@ export function useBlitz(avoidAnswer: string, onRunEnd: (run: BlitzRun) => void)
     setRun(fresh);
     replace(nextGame());
     setPhase('playing');
-  }, [now, replace, nextGame]);
+  }, [now, replace, nextGame, seed, random]);
 
   const next = useCallback(() => {
     if (phaseRef.current === 'playing') replace(nextGame());

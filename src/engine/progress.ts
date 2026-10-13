@@ -4,8 +4,12 @@
  * never award anything twice.
  */
 import { QUEST_XP, advanceQuests, questsFor, type Quest, type QuestState } from './quests';
+import type { Mod } from './types';
 
-export type ProgressMode = 'daily' | 'practice' | 'blitz' | 'duo' | 'survival';
+/** XP multiplier for each mod on a won game. */
+export const MOD_BONUS: Record<Mod, number> = { fog: 0.3, blind: 0.25 };
+
+export type ProgressMode = 'daily' | 'practice' | 'blitz' | 'duo' | 'quad' | 'survival';
 
 export interface GameEvent {
   /** Unique per game or run: `daily-12`, `practice-40`, `blitz-<start ms>`. */
@@ -24,6 +28,12 @@ export interface GameEvent {
   blitzScore?: number;
   /** Survival: words solved in the run. */
   survivalScore?: number;
+  /** The answers played, for the Word Book. */
+  words?: { answer: string; won: boolean }[];
+  /** Practice mods that were on. */
+  mods?: Mod[];
+  /** Daily Rush run. */
+  rush?: boolean;
 }
 
 export interface Progress {
@@ -35,6 +45,9 @@ export interface Progress {
   bestBlitz: number;
   bestSurvival: number;
   duoWins: number;
+  quadWins: number;
+  /** Answers played in all modes (counted per game). */
+  wordsPlayed: number;
   /** Total daily quests completed. */
   questsDone: number;
   /** Today's quest progress (reset when the UTC day changes). */
@@ -51,6 +64,8 @@ export const emptyProgress = (): Progress => ({
   bestBlitz: 0,
   bestSurvival: 0,
   duoWins: 0,
+  quadWins: 0,
+  wordsPlayed: 0,
   questsDone: 0,
   quests: null,
   applied: [],
@@ -61,7 +76,7 @@ export interface Achievement {
   title: string;
   description: string;
   /** Lucide icon name used by the UI. */
-  icon: 'sparkles' | 'target' | 'crosshair' | 'shield' | 'flame' | 'calendar' | 'crown' | 'skull' | 'dumbbell' | 'medal' | 'timer' | 'zap' | 'bolt' | 'star' | 'brain' | 'scroll' | 'list' | 'map' | 'columns' | 'heart' | 'swords';
+  icon: 'sparkles' | 'target' | 'crosshair' | 'shield' | 'flame' | 'calendar' | 'crown' | 'skull' | 'dumbbell' | 'medal' | 'timer' | 'zap' | 'bolt' | 'star' | 'brain' | 'scroll' | 'list' | 'map' | 'columns' | 'heart' | 'swords' | 'grid' | 'broom' | 'cloud' | 'eyeoff' | 'rocket' | 'book';
   /** True once this event (with the updated progress) earns it. */
   earned: (p: Progress, e: GameEvent) => boolean;
 }
@@ -83,6 +98,12 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
   { id: 'blitz-10', title: 'Lightning', description: 'Solve 10 words in one Blitz run.', icon: 'bolt', earned: (_, e) => (e.blitzScore ?? 0) >= 10 },
   { id: 'duo-win', title: 'Double trouble', description: 'Win a Duo game.', icon: 'columns', earned: (p) => p.duoWins >= 1 },
   { id: 'duo-quick', title: 'Twin strike', description: 'Win a Duo game in 4 guesses or fewer.', icon: 'swords', earned: (_, e) => e.mode === 'duo' && e.won && e.guesses <= 4 },
+  { id: 'quad-win', title: 'Four of a kind', description: 'Win a Quad game.', icon: 'grid', earned: (p) => p.quadWins >= 1 },
+  { id: 'quad-quick', title: 'Clean sweep', description: 'Win a Quad game in 6 guesses or fewer.', icon: 'broom', earned: (_, e) => e.mode === 'quad' && e.won && e.guesses <= 6 },
+  { id: 'fog-win', title: 'Through the fog', description: 'Win a Practice word with Fog on.', icon: 'cloud', earned: (_, e) => e.won && !!e.mods?.includes('fog') },
+  { id: 'blind-win', title: 'Blindfolded', description: 'Win a Practice word with Blind keys on.', icon: 'eyeoff', earned: (_, e) => e.won && !!e.mods?.includes('blind') },
+  { id: 'rush', title: 'Rush hour', description: 'Play a Daily Rush.', icon: 'rocket', earned: (_, e) => !!e.rush },
+  { id: 'words-100', title: 'Logophile', description: 'Play 100 words in any mode.', icon: 'book', earned: (p) => p.wordsPlayed >= 100 },
   { id: 'survival-5', title: 'Survivor', description: 'Solve 5 words in one Survival run.', icon: 'heart', earned: (_, e) => (e.survivalScore ?? 0) >= 5 },
   { id: 'survival-15', title: 'Last one standing', description: 'Solve 15 words in one Survival run.', icon: 'crown', earned: (_, e) => (e.survivalScore ?? 0) >= 15 },
   { id: 'quest-1', title: 'Quest taker', description: 'Complete a daily quest.', icon: 'scroll', earned: (p) => p.questsDone >= 1 },
@@ -94,6 +115,7 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
 
 const MAX_GUESSES = 6;
 const DUO_GUESSES = 7;
+const QUAD_GUESSES = 9;
 const APPLIED_LIMIT = 300;
 
 /** XP for one finished game or run. */
@@ -102,11 +124,13 @@ export function xpFor(e: GameEvent): number {
   if (e.mode === 'survival') return 10 + 30 * (e.survivalScore ?? 0);
   if (!e.won) return 10;
   if (e.mode === 'duo') return 70 + (DUO_GUESSES - e.guesses) * 15;
+  if (e.mode === 'quad') return 120 + (QUAD_GUESSES - e.guesses) * 20;
   let xp = 50 + (MAX_GUESSES - e.guesses) * 15;
   if (e.hardMode) xp += 25;
   if (e.mode === 'daily') xp += 40;
   xp -= 20 * e.hints;
-  return Math.max(15, xp);
+  const bonus = (e.mods ?? []).reduce((sum, m) => sum + MOD_BONUS[m], 0);
+  return Math.max(15, Math.round(xp * (1 + bonus)));
 }
 
 /** Cumulative XP needed to reach `level` (level 1 starts at 0). */
@@ -156,6 +180,8 @@ export function applyEvent(progress: Progress, e: GameEvent, now: number, day = 
     bestBlitz: Math.max(progress.bestBlitz, e.blitzScore ?? 0),
     bestSurvival: Math.max(progress.bestSurvival, e.survivalScore ?? 0),
     duoWins: progress.duoWins + (e.won && e.mode === 'duo' ? 1 : 0),
+    quadWins: progress.quadWins + (e.won && e.mode === 'quad' ? 1 : 0),
+    wordsPlayed: progress.wordsPlayed + (e.words?.length ?? 0),
     questsDone: progress.questsDone + quests.completed.length,
     quests: quests.state,
     applied: [...progress.applied, e.id].slice(-APPLIED_LIMIT),

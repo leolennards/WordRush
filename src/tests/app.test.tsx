@@ -5,7 +5,7 @@ import { App } from '@/app/App';
 import type { Services } from '@/app/services';
 import { dictionary } from '@/data/words';
 import { ANSWERS } from '@/data/words/answers';
-import { BLITZ, dailyAnswer, pickPracticeAnswer } from '@/engine';
+import { BLITZ, dailyAnswer, pickPracticeAnswer, rushSeed, seededRandom } from '@/engine';
 import { createMemoryStore, type KeyValueStore } from '@/lib/storage/store';
 import { DEFAULT_SETTINGS, KEYS } from '@/lib/storage/schemas';
 import { HELP_EXAMPLES } from '@/components/dialogs/helpExamples';
@@ -124,7 +124,7 @@ describe('Wordskiis app', () => {
     await screen.findByRole('dialog', {}, { timeout: 3000 });
     first.unmount();
     const second = setup(store);
-    expect(screen.getByText('Solved in 1! 🎉')).toBeInTheDocument();
+    expect(screen.getByText('Solved in 1!')).toBeInTheDocument();
     await guess(second.user, WRONG[0]!);
     expect(rowText(1)).toBe('');
     expect(JSON.parse(store.get(KEYS.dailyStats)!).data.played).toBe(1);
@@ -290,7 +290,7 @@ describe('home dashboard and end of game', () => {
     await screen.findByRole('dialog', {}, { timeout: 3000 });
     await user.keyboard('{Escape}');
     const panel = screen.getByRole('region', { name: 'Game over' });
-    expect(within(panel).getByText('Solved in 1! 🎉')).toBeInTheDocument();
+    expect(within(panel).getByText('Solved in 1!')).toBeInTheDocument();
     expect(screen.queryByRole('group', { name: 'Keyboard' })).not.toBeInTheDocument();
     await user.click(within(panel).getByRole('button', { name: /Home/ }));
     expect(screen.getByText('You found it in 1 guess.')).toBeInTheDocument();
@@ -316,8 +316,11 @@ describe('levels, achievements and hints', () => {
     await guess(user, ANSWER);
     const dialog = await screen.findByRole('dialog', {}, { timeout: 3000 });
     expect(within(dialog).getByText(/^\+\d+ XP$/)).toBeInTheDocument();
-    expect((await screen.findAllByText(/^🏆 Achievements: .*First word.*Hole in one/)).length).toBeGreaterThan(0);
-    expect(screen.getAllByText('⭐ Level 2 reached!').length).toBeGreaterThan(0);
+    // Reward cards, not emoji text.
+    expect(await screen.findByText('Hole in one', {}, { timeout: 6000 })).toBeInTheDocument();
+    expect(screen.getAllByText('Achievement unlocked').length).toBeGreaterThan(0);
+    expect(screen.getByText('Level up')).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/[🏆⭐✅🎉]/u);
     const progress = JSON.parse(store.get(KEYS.progress)!).data;
     expect(progress.unlocked).toHaveProperty('ace');
     expect(progress.xp).toBeGreaterThan(0);
@@ -343,7 +346,7 @@ describe('levels, achievements and hints', () => {
     expect(JSON.parse(store.get(KEYS.practice)!).data.game.hints).toEqual([0, 1]);
     await guess(user, answer);
     const dialog = await screen.findByRole('dialog', {}, { timeout: 3000 });
-    expect(within(dialog).getByText('💡 2 hints')).toBeInTheDocument();
+    expect(within(dialog).getByText('2 hints')).toBeInTheDocument();
   });
 
   it('has no hints in the Daily Challenge', () => {
@@ -400,11 +403,11 @@ describe('duo and survival', () => {
     expect(screen.getByText('7 guesses left')).toBeInTheDocument();
     await guess(user, first);
     const word1 = screen.getByRole('region', { name: 'Word 1' });
-    expect(within(word1).getByText('Solved')).toBeInTheDocument();
+    expect(await within(word1).findByText('Solved')).toBeInTheDocument();
     expect(screen.getByText('6 guesses left')).toBeInTheDocument();
     await guess(user, second);
     const result = await screen.findByRole('region', { name: 'Duo result' }, { timeout: 3000 });
-    expect(within(result).getByText(/Both solved in 2/)).toBeInTheDocument();
+    expect(within(result).getByText(/All solved in 2/)).toBeInTheDocument();
     expect(JSON.parse(store.get(KEYS.progress)!).data.duoWins).toBe(1);
     await user.click(within(result).getByRole('button', { name: /New Duo/ }));
     expect(screen.getByText('7 guesses left')).toBeInTheDocument();
@@ -452,5 +455,102 @@ describe('duo and survival', () => {
     const quests = screen.getByRole('region', { name: 'Daily quests' });
     expect(within(quests).getAllByRole('listitem')).toHaveLength(3);
     expect(within(quests).getByText('0/3 done')).toBeInTheDocument();
+  });
+});
+
+describe('quad, daily rush, mods and words', () => {
+  const pick = (avoid: string[], random: () => number = () => 0.5) => pickPracticeAnswer(ANSWERS, avoid, random);
+
+  it('plays Quad: four boards, nine guesses', async () => {
+    window.history.replaceState(null, '', '/#quad');
+    const { user } = setup();
+    expect(screen.getByRole('heading', { name: 'Quad' })).toBeInTheDocument();
+    expect(screen.getAllByRole('grid')).toHaveLength(4);
+    expect(screen.getByText('9 guesses left')).toBeInTheDocument();
+    const answers: string[] = [];
+    for (let i = 0; i < 4; i++) answers.push(pick([ANSWER, ...answers]));
+    for (const a of answers) await guess(user, a);
+    const result = await screen.findByRole('region', { name: 'Quad result' }, { timeout: 3000 });
+    expect(within(result).getByText(/All solved in 4/)).toBeInTheDocument();
+  });
+
+  it('gives one Daily Rush per day, with the same words for everyone', async () => {
+    window.history.replaceState(null, '', '/#rush');
+    let t = NOW.getTime();
+    const store = seededStore();
+    const services: Services = { store, dictionary, now: () => new Date(t), random: Math.random };
+    const user = userEvent.setup();
+    const view = render(<App services={services} />);
+    expect(screen.getByRole('heading', { name: 'Daily Rush #1' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Start/ }));
+    // The first word comes from the day's seed, not from the device's randomness.
+    const first = pick([ANSWER], seededRandom(rushSeed(0)));
+    await guess(user, first);
+    expect(await screen.findByLabelText('1 words solved')).toBeInTheDocument();
+    t += 10 * 60_000;
+    await screen.findByRole('region', { name: 'Blitz result' }, { timeout: 3000 });
+    view.unmount();
+
+    render(<App services={services} />);
+    expect(screen.queryByRole('button', { name: /Start/ })).not.toBeInTheDocument();
+    expect(screen.getByText('You’ve played today’s Rush')).toBeInTheDocument();
+    expect(screen.getByText(/1 word solved/)).toBeInTheDocument();
+  });
+
+  it('hides earlier guesses with Fog and keyboard colours with Blind keys', async () => {
+    window.history.replaceState(null, '', '/#practice');
+    const { user, store } = setup(seededStore({ modFog: true, modBlind: true }));
+    expect(screen.getByRole('button', { name: 'Mods, 2 on' })).toBeInTheDocument();
+    const answer = JSON.parse(store.get(KEYS.practice)!).data.game.answer as string;
+    const wrong = ANSWERS.filter((w) => w !== answer && ![...w].some((l) => answer.includes(l))).slice(0, 2);
+    await guess(user, wrong[0]!);
+    await guess(user, wrong[1]!);
+    expect(rows()[0]).toHaveAttribute('aria-label', 'Row 1: hidden by fog');
+    expect(rows()[1]).toHaveAttribute('aria-label', expect.stringContaining('not in the word'));
+    const kb = screen.getByRole('group', { name: 'Keyboard' });
+    expect(within(kb).getByRole('button', { name: wrong[0]![0]!.toUpperCase() })).not.toHaveAttribute('data-state');
+    // The fog lifts and the XP bonus applies once the game ends.
+    await guess(user, answer);
+    await screen.findByRole('dialog', {}, { timeout: 3000 });
+    expect(rows()[0]).toHaveAttribute('aria-label', expect.stringContaining('not in the word'));
+  });
+
+  it('shows a word’s full meaning and collects it in the Word Book', async () => {
+    window.history.replaceState(null, '', '/#daily');
+    const define = async (word: string) => ({
+      word,
+      partOfSpeech: 'noun',
+      definition: 'A test meaning.',
+      phonetic: '/test/',
+      senses: [{ partOfSpeech: 'noun', definitions: [{ definition: 'A test meaning.', example: 'an example' }], synonyms: ['trial'] }],
+    });
+    const store = seededStore();
+    const services: Services = { store, dictionary, now: () => NOW, random: () => 0.5, define };
+    const user = userEvent.setup();
+    render(<App services={services} />);
+    await guess(user, ANSWER);
+    const result = await screen.findByRole('dialog', {}, { timeout: 3000 });
+    expect(await within(result).findByText('A test meaning.')).toBeInTheDocument();
+    await user.click(within(result).getByRole('button', { name: /Full meaning/ }));
+    const sheet = await screen.findByRole('dialog', { name: `Meaning of ${ANSWER.toUpperCase()}` });
+    expect(within(sheet).getByText('/test/')).toBeInTheDocument();
+    expect(within(sheet).getByText('trial')).toBeInTheDocument();
+    // Escape closes only the top sheet.
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /Meaning of/ })).not.toBeInTheDocument());
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(JSON.parse(store.get(KEYS.wordbook)!).data).toEqual([expect.objectContaining({ word: ANSWER, mode: 'daily', won: true })]);
+  });
+
+  it('lists collected words in the Word Book', async () => {
+    window.history.replaceState(null, '', '/');
+    const store = seededStore();
+    store.set(KEYS.wordbook, JSON.stringify({ v: 1, data: [{ word: 'crane', mode: 'practice', won: true, at: 1 }] }));
+    const { user } = setup(store);
+    await user.click(screen.getByRole('button', { name: 'Word Book' }));
+    const book = await screen.findByRole('dialog', { name: 'Word Book' });
+    expect(within(book).getByText('1 word collected · 1 solved')).toBeInTheDocument();
+    await user.click(within(book).getByRole('button', { name: /CRANE, solved in Practice/ }));
+    expect(await screen.findByRole('dialog', { name: 'Meaning of CRANE' })).toBeInTheDocument();
   });
 });

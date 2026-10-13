@@ -135,7 +135,7 @@ function ChallengeResult({
 }) {
   const mine = { status: game.status as 'won' | 'lost', guesses: game.guesses.length };
   const outcome = theirs ? compareChallenge(mine, { status: theirs.status, guesses: theirs.rows.length }) : null;
-  const headline = !outcome ? 'Your score is in.' : outcome === 'a' ? 'You win! 🏆' : outcome === 'b' ? `${otherName} wins.` : 'It’s a tie.';
+  const headline = !outcome ? 'Your score is in.' : outcome === 'a' ? 'You win!' : outcome === 'b' ? `${otherName} wins.` : 'It’s a tie.';
   const theirBoard: GameState | null = theirs
     ? { ...game, guesses: theirs.rows.map(() => 'xxxxx'), evaluations: decodeRows(theirs.rows), status: theirs.status }
     : null;

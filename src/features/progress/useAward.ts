@@ -1,24 +1,53 @@
 import { useCallback } from 'react';
-import type { GameEvent } from '@/engine';
-import { useToast } from '@/components/layout/Toasts';
+import { levelFor, type GameEvent } from '@/engine';
+import { useToast, type Reward } from '@/components/layout/Toasts';
+import { ACHIEVEMENT_ICONS } from '@/components/progress/achievementIcons';
+import { useWords } from '@/features/words/WordsContext';
 import { useProgress } from './ProgressContext';
 
-/** Records a finished game and celebrates new achievements and level-ups. */
+/** Delay between reward cards when several arrive together. */
+const STAGGER_MS = 1000;
+
+/** Records a finished game and celebrates new achievements, quests and level-ups. */
 export function useAward() {
   const { record } = useProgress();
   const { toast } = useToast();
+  const { collect } = useWords();
   return useCallback(
     (event: GameEvent) => {
       const result = record(event);
-      // One toast for all new achievements so they don't push each other away.
-      if (result.unlocked.length > 0) {
-        const names = result.unlocked.map((a) => a.title).join(', ');
-        toast(`🏆 ${result.unlocked.length === 1 ? 'Achievement' : 'Achievements'}: ${names}`, { tone: 'success', duration: 3600 });
+      if (event.words && result.xpGained > 0) collect(event.id.startsWith('rush-') ? 'rush' : event.mode, event.words);
+      const rewards: Reward[] = [];
+      if (result.levelUp) {
+        rewards.push({
+          kind: 'level',
+          eyebrow: 'Level up',
+          title: `Level ${result.levelUp}`,
+          detail: levelFor(result.progress.xp).title,
+          level: result.levelUp,
+        });
       }
-      for (const q of result.questsCompleted) toast(`✅ Quest complete: ${q.title}`, { tone: 'success', duration: 3400 });
-      if (result.levelUp) toast(`⭐ Level ${result.levelUp} reached!`, { tone: 'success', duration: 3400 });
+      for (const a of result.unlocked) {
+        rewards.push({
+          kind: 'achievement',
+          eyebrow: 'Achievement unlocked',
+          title: a.title,
+          detail: a.description,
+          icon: ACHIEVEMENT_ICONS[a.icon],
+        });
+      }
+      for (const q of result.questsCompleted) {
+        rewards.push({ kind: 'quest', eyebrow: 'Quest complete', title: q.title, detail: '+60 XP' });
+      }
+
+      // One after another, so each card gets its moment.
+      rewards.forEach((reward, i) => {
+        const show = () => toast(`${reward.eyebrow}: ${reward.title}`, { reward });
+        if (i === 0) show();
+        else window.setTimeout(show, i * STAGGER_MS);
+      });
       return result;
     },
-    [record, toast],
+    [record, toast, collect],
   );
 }

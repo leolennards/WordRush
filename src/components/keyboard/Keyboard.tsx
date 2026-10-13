@@ -13,8 +13,8 @@ const STATE_LABEL: Record<LetterState, string> = {
 
 interface KeyboardProps {
   letterStates: Record<string, LetterState>;
-  /** Duo: a state per word; overrides letterStates. */
-  splitStates?: Record<string, [LetterState | undefined, LetterState | undefined]>;
+  /** Duo/Quad: a state per word; overrides letterStates. */
+  splitStates?: Record<string, (LetterState | undefined)[]>;
   onLetter: (letter: string) => void;
   onDelete: () => void;
   onEnter: () => void;
@@ -73,7 +73,7 @@ function Key(props: {
   onClick: () => void;
   label: string;
   state?: LetterState;
-  split?: [LetterState | undefined, LetterState | undefined];
+  split?: (LetterState | undefined)[];
   wide?: boolean;
   disabled?: boolean;
 }) {
@@ -84,8 +84,12 @@ function Key(props: {
         props.wide ? 'flex-[1.55]' : 'flex-1'
       } min-w-0`}
       data-state={props.state}
-      data-left={props.split ? (props.split[0] ?? 'none') : undefined}
-      data-right={props.split ? (props.split[1] ?? 'none') : undefined}
+      data-split={props.split?.length}
+      data-k0={props.split?.[0]}
+      data-k1={props.split?.[1]}
+      data-k2={props.split?.[2]}
+      data-k3={props.split?.[3]}
+      data-dead={props.split && props.split.every((s) => s === 'absent' || s === undefined) && props.split.some(Boolean) ? true : undefined}
       aria-label={props.label}
       aria-disabled={props.disabled || undefined}
       onMouseDown={keepFocus}

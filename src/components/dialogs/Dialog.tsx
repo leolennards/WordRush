@@ -42,6 +42,9 @@ function DialogPanel({ onClose, title, hideTitle, children, footer }: Omit<Dialo
     node?.focus();
 
     const onKeyDown = (e: KeyboardEvent) => {
+      // With stacked dialogs only the topmost one reacts.
+      const dialogs = document.querySelectorAll('[role="dialog"]');
+      if (node && dialogs[dialogs.length - 1] !== node) return;
       if (e.key === 'Escape') {
         e.preventDefault();
         onCloseRef.current();

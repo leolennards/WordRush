@@ -112,7 +112,12 @@ export function useGameScreen(
   const shakeKey =
     rejection && rejection.error.kind !== 'game-over' && rejection.row === game.guesses.length ? rejection.nonce : 0;
   const celebrating = justCompleted && revealingRow === null && game.status === 'won';
-  const letterStates = useMemo(() => letterStatesFor(game.guesses, game.evaluations), [game.guesses, game.evaluations]);
+  // Blind keys mod: no keyboard colours until the game ends.
+  const blind = !!game.mods?.includes('blind') && game.status === 'playing';
+  const letterStates = useMemo(
+    () => (blind ? {} : letterStatesFor(game.guesses, game.evaluations)),
+    [blind, game.guesses, game.evaluations],
+  );
 
   return { onLetter, shakeKey, celebrating, letterStates };
 }
