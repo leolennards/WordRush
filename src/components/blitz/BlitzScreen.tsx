@@ -92,6 +92,9 @@ function BlitzGame({ avoidAnswer, inputEnabled, onHome, rushDay }: BlitzScreenPr
   const low = playing && remaining <= 10_000;
   const fill = Math.min(1, remaining / BLITZ.startMs);
   const lastWord = run?.words.at(-1);
+  // Solves in a row, for the combo callout.
+  let combo = 0;
+  for (let i = (run?.words.length ?? 0) - 1; i >= 0 && run!.words[i]!.won; i--) combo++;
 
   let overlay = null;
   if (phase === 'ready') {
@@ -178,6 +181,23 @@ function BlitzGame({ avoidAnswer, inputEnabled, onHome, rushDay }: BlitzScreenPr
             )}
           </AnimatePresence>
         </div>
+      </div>
+
+      <div className="pointer-events-none relative z-20 mx-auto h-0 w-full max-w-[26rem]">
+        <AnimatePresence>
+          {playing && combo >= 2 && (
+            <m.p
+              key={`combo-${combo}`}
+              initial={{ scale: 0.4, opacity: 0, rotate: -8 }}
+              animate={{ scale: [0.4, 1.25, 1], opacity: [0, 1, 1, 0], rotate: [-8, 4, 0] }}
+              transition={{ duration: 1.6, times: [0, 0.25, 0.4, 1] }}
+              className="combo-callout absolute inset-x-0 top-3 text-center text-2xl font-black whitespace-nowrap"
+              aria-live="polite"
+            >
+              {combo} in a row!
+            </m.p>
+          )}
+        </AnimatePresence>
       </div>
 
       <PlayArea

@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
+import { fibPosition, fibRows } from '@/engine';
 import type { GameSession } from '@/features/game/useGameSession';
 import { useSettings } from '@/features/settings/SettingsContext';
 import { Celebration } from '@/components/layout/Celebration';
@@ -34,8 +35,25 @@ export function PlayArea({
   forceEnd = false,
 }: PlayAreaProps) {
   const { reducedMotion } = useSettings();
-  const { game, input, revealingRow } = active.session;
-  const over = (game.status !== 'playing' && revealingRow === null) || forceEnd;
+  const { game: truth, input, revealingRow } = active.session;
+  const over = (truth.status !== 'playing' && revealingRow === null) || forceEnd;
+  // Fibber: show the lying rows while playing; once over, show the truth and mark the lies.
+  const liar = !!truth.mods?.includes('liar');
+  const game = useMemo(
+    () => (liar && truth.status === 'playing' ? { ...truth, evaluations: fibRows(truth.id, truth.evaluations) } : truth),
+    [liar, truth],
+  );
+  const lies = useMemo(
+    () =>
+      liar && truth.status !== 'playing'
+        ? truth.evaluations
+            .map((e, r) => fibPosition(truth.id, r, e))
+            .map((p, r) => (p === null ? '' : `${r}:${p}`))
+            .filter(Boolean)
+            .join(',')
+        : '',
+    [liar, truth],
+  );
 
   return (
     <>
@@ -48,6 +66,7 @@ export function PlayArea({
             revealingRow={revealingRow}
             shakeKey={screen.shakeKey}
             celebrate={screen.celebrating}
+            lies={lies}
           />
         </div>
         {screen.celebrating && !reducedMotion && <Celebration seed={celebrationSeed} />}

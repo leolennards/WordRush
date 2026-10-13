@@ -137,6 +137,36 @@ the next game. Hard-mode results are marked with `*` when shared.
   next word on a shortest path from where you are.
 - A win earns 50 + 30 × stars XP.
 
+## The Tower
+
+- Start with 3 hearts on floor 1. Each floor is one word (6 guesses) with twists: none on floor 1, one from
+  floor 2 (Fibber joins from floor 4), two from floor 6. Fibber and Hard mode never appear together.
+- Clear a floor: choose one of two perks — Heal (+1 heart, max 3), Lantern (one letter revealed next floor),
+  Shield (the next missed floor costs no heart) or Clear skies (no twist next floor).
+- Miss a floor: lose a heart (or your shield) and move up anyway. The run ends at 0 hearts.
+- Saved after every guess and choice. A run earns 10 + 45 XP per floor cleared.
+
+## Bot Duel
+
+- Pick Pip (easy), Byte (medium) or Oracle (hard), then a 3-2-1 countdown. Both of you play the same word.
+- The bot guesses every few seconds (Pip 13–18 s, Byte 9–13 s, Oracle 6–9 s) using only words consistent
+  with its own feedback; easier bots sometimes make loose early guesses.
+- First to solve wins. If you run out of guesses the bot wins; if neither solves, nobody does.
+- A win earns 60 XP + 0/30/70 for the bot's difficulty + 10 × (6 − guesses).
+
+## Reverse
+
+- 5 rounds and 3 lives. Each round shows an answer and a colour pattern; type any accepted word (other than
+  the answer) that would produce exactly that pattern.
+- A valid word with the wrong pattern costs a life and shows the pattern it actually made.
+- 10 XP + 30 per round, +50 for a flawless game.
+
+## Fibber (Practice mod)
+
+- In every submitted row, exactly one tile shows a wrong colour (the winning row never lies). The keyboard is
+  built from the same lying rows. When the game ends, the truth is shown and the liars are marked.
+- +40% XP on a win. Turns off Hard mode, which would otherwise enforce hidden truths.
+
 ## Ranks and tile themes
 
 - Ranks by level: Rookie (1), Apprentice (5), Wordsmith (10), Lexicon (20), Scholar (30), Sage (40),
@@ -151,7 +181,7 @@ the next game. Hard-mode results are marked with `*` when shared.
 - Level *n* starts at 20 × n × (n − 1) + 60 × (n − 1) XP (level 2 at 100, level 3 at 240, level 100 at
   about 204,000), so each level costs 40 XP more than the one before.
 - Each finished game is counted once by its id, so refreshes never award XP twice.
-- 35 achievements, including Word Ladder and rank ones, Duo, Quad, Survival, mods, Daily Rush and daily-quest ones (first win, solving in 1/2/6 guesses, streaks of 3/7/30, hard mode, under 60 s,
+- 40 achievements, including Tower, Bot Duel, Reverse and Fibber ones, Word Ladder and rank ones, Duo, Quad, Survival, mods, Daily Rush and daily-quest ones (first win, solving in 1/2/6 guesses, streaks of 3/7/30, hard mode, under 60 s,
   Practice and total wins, Blitz scores, level 5). Solve time runs from the first letter typed.
 
 ## Statistics

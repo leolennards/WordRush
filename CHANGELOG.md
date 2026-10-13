@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.9.0 — 2026-10-13 (Tower, Bot Duel, Reverse, Fibber)
+
+- **The Tower:** a roguelike climb — each floor is a word with stacking twists, perks between floors, and
+  three hearts. Animated floor intros and perk choices; runs survive a refresh.
+- **Bot Duel:** race Pip, Byte or Oracle live on the same word, with a 3-2-1 start, the bot's board, a
+  thinking animation and its reactions.
+- **Reverse:** see the answer, make the pattern. Wrong tries show the pattern they actually made.
+- **Fibber mod:** one lie per row, unmasked with "LIE" tags when the game ends.
+- Home: big animated cards for The Tower and Bot Duel, and modes grouped into Quick play and Puzzles.
+- Smooth screen transitions, XP that counts up, and "in a row" combo callouts in Blitz.
+- End-of-game buttons stack icon over label on narrow phones.
+- 5 new achievements (40 in total) and 3 new daily quests.
+- **Android app 1.9.0** (versionCode 6).
+
 ## 1.8.0 — 2026-10-13 (ranks, themes and Word Ladder)
 
 - **Ranks:** ten tiers from Rookie to Wordskiis Legend at level 100, each with a bevelled emblem in its own

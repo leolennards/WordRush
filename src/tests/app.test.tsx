@@ -11,6 +11,7 @@ import {
   LadderGraph,
   dailyAnswer,
   emptyProgress,
+  evaluateGuess,
   pickPracticeAnswer,
   rushSeed,
   seededRandom,
@@ -605,5 +606,71 @@ describe('ranks, themes and word ladder', () => {
     expect(within(dialog).getByText('Wordskiis Legend')).toBeInTheDocument();
     expect(within(dialog).getByRole('radio', { name: 'Classic tiles' })).toHaveAttribute('aria-checked', 'true');
     expect(within(dialog).getByRole('radio', { name: /Prism tiles, unlocks at level 100/ })).toBeDisabled();
+  });
+});
+
+describe('bot duel, tower, reverse and fibber', () => {
+  it('races a bot: count down, then solving first wins', async () => {
+    window.history.replaceState(null, '', '/#duel');
+    const { user } = setup();
+    await user.click(await screen.findByRole('button', { name: /^Duel Pip/ }));
+    expect(await screen.findByRole('group', { name: "Pip's progress" })).toBeInTheDocument();
+    // Typing is ignored during the countdown.
+    await user.keyboard('abc');
+    expect(rowText(0)).toBe('');
+    await waitFor(() => expect(screen.getByRole('group', { name: 'Keyboard' }).querySelector('[aria-disabled]')).toBeNull(), {
+      timeout: 5000,
+    });
+    const answer = pickPracticeAnswer(ANSWERS, [ANSWER], () => 0.5);
+    await guess(user, answer);
+    const result = await screen.findByRole('region', { name: 'Duel result' }, { timeout: 4000 });
+    expect(within(result).getByText('You beat Pip!')).toBeInTheDocument();
+  }, 15000);
+
+  it('climbs the Tower: clear a floor, pick a perk, face the next floor', async () => {
+    window.history.replaceState(null, '', '/#tower');
+    const { user, store } = setup();
+    await user.click(await screen.findByRole('button', { name: /Begin the climb/ }));
+    await user.click(screen.getByRole('button', { name: 'Enter floor 1' }));
+    const answer = JSON.parse(store.get(KEYS.tower)!).data.game.answer as string;
+    await guess(user, answer);
+    expect(await screen.findByText('Choose a perk', {}, { timeout: 4000 })).toBeInTheDocument();
+    const perks = screen.getAllByRole('button').filter((b) => /Heal|Lantern|Shield|Clear skies/.test(b.textContent ?? ''));
+    expect(perks).toHaveLength(2);
+    await user.click(perks[0]!);
+    expect(screen.getByRole('button', { name: 'Enter floor 2' })).toBeInTheDocument();
+    expect(JSON.parse(store.get(KEYS.tower)!).data.run.floor).toBe(2);
+  });
+
+  it('plays Reverse: a word that makes the pattern scores; a wrong one costs a life', async () => {
+    window.history.replaceState(null, '', '/#reverse');
+    const { user } = setup();
+    await user.click(await screen.findByRole('button', { name: /Start/ }));
+    const answer = screen.getByRole('group', { name: /^The answer is / }).getAttribute('aria-label')!.slice(-5).toLowerCase();
+    const pattern = screen.getByRole('group', { name: /^Target pattern/ }).getAttribute('aria-label')!.match(/pattern: ([a-z, ]+)\./)![1]!;
+    const fits = ANSWERS.find((w) => w !== answer && evaluateGuess(w, answer).join(', ') === pattern)!;
+    const wrong = ANSWERS.find((w) => w !== answer && evaluateGuess(w, answer).join(', ') !== pattern)!;
+    await guess(user, wrong);
+    expect(screen.getByRole('img', { name: '2 lives left' })).toBeInTheDocument();
+    expect(screen.getByText('Your tries made')).toBeInTheDocument();
+    await guess(user, fits);
+    expect(await screen.findByText(/Round 2 of 5 · 1 solved/, {}, { timeout: 3000 })).toBeInTheDocument();
+  });
+
+  it('Fibber shows one lie per row and unmasks the lies at the end', async () => {
+    window.history.replaceState(null, '', '/#practice');
+    const { user, store } = setup(seededStore({ modLiar: true }));
+    const game = JSON.parse(store.get(KEYS.practice)!).data.game as { answer: string; id: string };
+    const wrong = ANSWERS.filter((w) => w !== game.answer).slice(0, 2);
+    await guess(user, wrong[0]!);
+    const truth = evaluateGuess(wrong[0]!, game.answer);
+    const shown = within(rows()[0]!)
+      .getAllByRole('gridcell')
+      .map((c) => c.getAttribute('data-state'));
+    expect(shown.filter((s, i) => s !== truth[i])).toHaveLength(1);
+    await guess(user, game.answer);
+    await screen.findByRole('dialog', {}, { timeout: 3000 });
+    expect(within(rows()[0]!).getAllByRole('gridcell').map((c) => c.getAttribute('data-state'))).toEqual(truth);
+    expect(within(rows()[0]!).getByLabelText(/this tile lied/)).toBeInTheDocument();
   });
 });

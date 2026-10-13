@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-export type View = 'home' | 'daily' | 'practice' | 'blitz' | 'duo' | 'quad' | 'rush' | 'ladder' | 'survival' | 'friends' | 'challenge' | 'race';
+export type View = 'home' | 'daily' | 'practice' | 'blitz' | 'duo' | 'quad' | 'rush' | 'ladder' | 'duel' | 'tower' | 'reverse' | 'survival' | 'friends' | 'challenge' | 'race';
 
 export interface Route {
   view: View;
@@ -20,6 +20,9 @@ export function parseHash(hash: string): Route {
     case 'quad':
     case 'rush':
     case 'ladder':
+    case 'duel':
+    case 'tower':
+    case 'reverse':
     case 'survival':
     case 'friends':
       return { view: name, id: null };

@@ -652,6 +652,73 @@ button {
   to { filter: blur(0); opacity: 1; }
 }
 
+.combo-callout {
+  background: linear-gradient(90deg, var(--c-present), var(--c-danger), var(--c-present));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 6px rgb(0 0 0 / 0.2));
+}
+
+/* Home: headline mode cards. */
+.feature-card[data-tone='tower'] {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgb(255 255 255 / 0.18), transparent 50%),
+    linear-gradient(150deg, #3b2a78, #1d1640 70%);
+}
+.feature-card[data-tone='duel'] {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgb(255 255 255 / 0.2), transparent 50%),
+    linear-gradient(150deg, #e0533f, #8f1d3b 75%);
+}
+.feature-card-shine {
+  position: absolute;
+  inset: -40% auto -40% -60%;
+  width: 40%;
+  transform: rotate(20deg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.22), transparent);
+  animation: feature-shine 5s ease-in-out infinite;
+}
+@keyframes feature-shine {
+  0%, 60% { left: -60%; }
+  100% { left: 140%; }
+}
+[data-reduce-motion='true'] .feature-card-shine {
+  display: none;
+}
+
+/* Bot Duel: "thinking" dots and a gently bobbing bot. */
+.typing-dots {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+.typing-dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+  animation: typing 1.2s ease-in-out infinite;
+}
+.typing-dots i:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+.bot-think {
+  animation: bot-bob 1.6s ease-in-out infinite;
+}
+@keyframes bot-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-2px) rotate(-6deg); }
+}
+[data-reduce-motion='true'] .typing-dots i,
+[data-reduce-motion='true'] .bot-think {
+  animation: none !important;
+}
+
 /* Word Ladder: two faint rails run down the climb. */
 .ladder-rails {
   background:
@@ -688,6 +755,31 @@ button {
 }
 .ladder-tile[data-changed] {
   box-shadow: 0 0 0 2.5px var(--c-accent);
+}
+
+/* Fibber: after the game, the tiles that lied are marked. */
+.tile[data-lie]::after {
+  content: 'LIE';
+  position: absolute;
+  top: -0.55em;
+  right: -0.4em;
+  padding: 0.1em 0.35em;
+  border-radius: 0.4em;
+  background: var(--c-danger);
+  color: #fff;
+  font-size: max(0.5rem, 0.32em);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  animation: lie-pop 420ms var(--ease-out) both;
+  animation-delay: calc(var(--lie-delay, 0) * 1ms);
+}
+.tile[data-lie] {
+  outline: 2px dashed var(--c-danger);
+  outline-offset: 2px;
+}
+@keyframes lie-pop {
+  from { transform: scale(0) rotate(-20deg); opacity: 0; }
+  to { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
 /* Small boards (Quad). */

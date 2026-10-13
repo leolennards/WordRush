@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useState, type ReactNode } from 'react';
-import { LazyMotion, MotionConfig, domAnimation } from 'motion/react';
+import { LazyMotion, MotionConfig, domAnimation, m } from 'motion/react';
 import { BRAND, GAME } from '@/config/game';
 import {
   MAX_HINTS,
@@ -56,6 +56,9 @@ import { RanksDialog } from '@/components/progress/RanksDialog';
 const BlitzScreen = lazy(() => import('@/components/blitz/BlitzScreen').then((m) => ({ default: m.BlitzScreen })));
 const MultiScreen = lazy(() => import('@/components/multi/MultiScreen').then((m) => ({ default: m.MultiScreen })));
 const LadderScreen = lazy(() => import('@/components/ladder/LadderScreen').then((m) => ({ default: m.LadderScreen })));
+const DuelScreen = lazy(() => import('@/components/duel/DuelScreen').then((m) => ({ default: m.DuelScreen })));
+const TowerScreen = lazy(() => import('@/components/tower/TowerScreen').then((m) => ({ default: m.TowerScreen })));
+const ReverseScreen = lazy(() => import('@/components/reverse/ReverseScreen').then((m) => ({ default: m.ReverseScreen })));
 const SurvivalScreen = lazy(() => import('@/components/survival/SurvivalScreen').then((m) => ({ default: m.SurvivalScreen })));
 
 export function App({ services }: { services: Services }) {
@@ -174,7 +177,7 @@ function Wordskiis() {
   }, [friendsStatus, publishDaily, dailyGame.dayIndex, dailyGame.status, dailyGame.evaluations, dailyStreak]);
 
   // ----- Sharing -----
-  const modNames = (game.mods ?? []).map((m) => (m === 'fog' ? 'Fog' : 'Blind keys'));
+  const modNames = (game.mods ?? []).map((m) => ({ fog: 'Fog', blind: 'Blind keys', liar: 'Fibber' })[m]);
   const shareLabel =
     mode === 'daily' && game.dayIndex !== null
       ? `#${challengeNumber(game.dayIndex)}`
@@ -222,6 +225,9 @@ function Wordskiis() {
   const goQuad = useCallback(() => go('quad'), [go]);
   const goRush = useCallback(() => go('rush'), [go]);
   const goLadder = useCallback(() => go('ladder'), [go]);
+  const goDuel = useCallback(() => go('duel'), [go]);
+  const goTower = useCallback(() => go('tower'), [go]);
+  const goReverse = useCallback(() => go('reverse'), [go]);
   const goSurvival = useCallback(() => go('survival'), [go]);
   const openChallenge = useCallback((id: string) => go('challenge', id), [go]);
   const openRace = useCallback((id: string) => go('race', id), [go]);
@@ -289,6 +295,9 @@ function Wordskiis() {
           onQuad={goQuad}
           onRush={goRush}
           onLadder={goLadder}
+          onDuel={goDuel}
+          onTower={goTower}
+          onReverse={goReverse}
           rushScore={(() => {
             const r = readVersioned(services.store, KEYS.rush, rushSchema);
             return r && r.day === todayIndex ? r.solved : null;
@@ -319,6 +328,12 @@ function Wordskiis() {
     content = (
       <MultiScreen key={view} mode={view} avoidAnswer={dailyGame.answer} inputEnabled={dialog === null} onHome={goHome} />
     );
+  } else if (view === 'duel') {
+    content = <DuelScreen avoidAnswer={dailyGame.answer} inputEnabled={dialog === null} onHome={goHome} />;
+  } else if (view === 'tower') {
+    content = <TowerScreen avoidAnswer={dailyGame.answer} inputEnabled={dialog === null} onHome={goHome} />;
+  } else if (view === 'reverse') {
+    content = <ReverseScreen inputEnabled={dialog === null} onHome={goHome} />;
   } else if (view === 'ladder') {
     content = <LadderScreen inputEnabled={dialog === null} onHome={goHome} />;
   } else if (view === 'rush') {
@@ -405,7 +420,18 @@ function Wordskiis() {
           {BRAND.name} — {BRAND.tagline}
         </h1>
 
-        <Suspense fallback={<main id="game" className="flex-1" aria-busy="true" />}>{content}</Suspense>
+        <Suspense fallback={<main id="game" className="flex-1" aria-busy="true" />}>
+          {/* Each screen eases in when you switch to it. */}
+          <m.div
+            key={`${view}/${route.id ?? ''}`}
+            className="flex min-h-0 flex-1 flex-col"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {content}
+          </m.div>
+        </Suspense>
 
         <HelpDialog open={dialog === 'help'} onClose={closeDialog} />
         <GetAppDialog open={dialog === 'get-app'} onClose={closeDialog} />

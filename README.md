@@ -24,11 +24,16 @@ paid API or database — and keeps preferences, progress and statistics in `loca
 - Reward cards for achievements, quests and level-ups (with a confetti burst on level-up).
 - Word Ladder: change one letter at a time from the start word to the target, scored in stars against the
   shortest path, with hints that reveal the next step.
+- The Tower: a roguelike climb. Every floor is a word with twists (Fog, Blind keys, Fibber, Hard mode) that
+  stack as you rise; clear a floor to pick a perk (Heal, Lantern, Shield, Clear skies); three hearts.
+- Bot Duel: race a live AI opponent (Pip, Byte or Oracle) to the same word, with its board and reactions on screen.
+- Reverse: Wordle flipped — you see the answer and must find a word that produces the shown colour pattern.
+- Fibber mod: every row tells exactly one lie; the liars are unmasked when the game ends.
 - Ranks: ten tiers from Rookie to Wordskiis Legend (level 100), each with its own emblem; higher ranks add a
   sheen, glowing aura, rotating ring, orbiting sparks and finally a prismatic, animated Legend emblem.
   A full-screen moment celebrates each new rank.
 - Tile themes unlocked by rank: Ocean, Sunset, Forest, Neon, Royal, Ember and the animated Aurora and Prism.
-- Levels, XP and 35 achievements; XP rewards fewer guesses, hard mode and the Daily Challenge.
+- Levels, XP and 40 achievements; XP rewards fewer guesses, hard mode and the Daily Challenge.
 - Decorative tile backdrop in both themes; optional vibration on supported phones.
 - Correct duplicate-letter feedback, local dictionary (12,675 accepted guesses, 1,922 curated answers).
 - Physical and on-screen keyboards, invalid-word shake, flip reveals, win celebration.

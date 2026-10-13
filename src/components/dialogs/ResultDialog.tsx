@@ -8,6 +8,7 @@ import { Button } from '@/components/ui';
 import { useSettings } from '@/features/settings/SettingsContext';
 import { Dialog } from './Dialog';
 import { WordMeaning } from './WordMeaning';
+import { CountUp } from '@/components/progress/CountUp';
 
 const PRAISE = ['Genius!', 'Magnificent!', 'Impressive!', 'Splendid!', 'Great job!', 'Phew — got it!'];
 
@@ -64,7 +65,11 @@ export function ResultDialog(props: ResultDialogProps) {
             )}
             {(xp || (game.hints?.length ?? 0) > 0) && (
               <p className="mt-2 flex flex-wrap gap-1.5 text-xs font-bold">
-                {xp ? <span className="tabular rounded-full bg-accent/15 px-2 py-0.5 text-accent">+{xp} XP</span> : null}
+                {xp ? (
+                  <span className="rounded-full bg-accent/15 px-2 py-0.5 text-accent">
+                    <CountUp value={xp} prefix="+" suffix=" XP" />
+                  </span>
+                ) : null}
                 {game.hints?.length ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-present/15 px-2 py-0.5 text-text">
                     <Lightbulb className="size-3 text-present" aria-hidden />

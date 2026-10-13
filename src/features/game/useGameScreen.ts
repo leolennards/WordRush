@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { GAME, TIMING } from '@/config/game';
-import { letterStatesFor } from '@/engine';
+import { fibRows, letterStatesFor } from '@/engine';
 import { useSettings } from '@/features/settings/SettingsContext';
 import { useToast } from '@/components/layout/Toasts';
 import { usePhysicalKeyboard } from '@/hooks/usePhysicalKeyboard';
@@ -114,10 +114,12 @@ export function useGameScreen(
   const celebrating = justCompleted && revealingRow === null && game.status === 'won';
   // Blind keys mod: no keyboard colours until the game ends.
   const blind = !!game.mods?.includes('blind') && game.status === 'playing';
-  const letterStates = useMemo(
-    () => (blind ? {} : letterStatesFor(game.guesses, game.evaluations)),
-    [blind, game.guesses, game.evaluations],
-  );
+  const liar = !!game.mods?.includes('liar') && game.status === 'playing';
+  const letterStates = useMemo(() => {
+    if (blind) return {};
+    // Fibber: the keyboard is built from the same lying rows the player sees.
+    return letterStatesFor(game.guesses, liar ? fibRows(game.id, game.evaluations) : game.evaluations);
+  }, [blind, liar, game.id, game.guesses, game.evaluations]);
 
   return { onLetter, shakeKey, celebrating, letterStates };
 }

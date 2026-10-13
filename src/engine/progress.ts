@@ -8,9 +8,9 @@ import type { Mod } from './types';
 import { rankFor, type Rank } from './ranks';
 
 /** XP multiplier for each mod on a won game. */
-export const MOD_BONUS: Record<Mod, number> = { fog: 0.3, blind: 0.25 };
+export const MOD_BONUS: Record<Mod, number> = { fog: 0.3, blind: 0.25, liar: 0.4 };
 
-export type ProgressMode = 'daily' | 'practice' | 'blitz' | 'duo' | 'quad' | 'survival' | 'ladder';
+export type ProgressMode = 'daily' | 'practice' | 'blitz' | 'duo' | 'quad' | 'survival' | 'ladder' | 'duel' | 'reverse' | 'tower';
 
 export interface GameEvent {
   /** Unique per game or run: `daily-12`, `practice-40`, `blitz-<start ms>`. */
@@ -37,6 +37,13 @@ export interface GameEvent {
   rush?: boolean;
   /** Word Ladder: stars earned (0–3). */
   stars?: number;
+  /** Bot Duel: the bot's difficulty. */
+  bot?: 'easy' | 'medium' | 'hard';
+  /** Reverse: rounds solved, and whether no life was lost. */
+  reverseScore?: number;
+  flawless?: boolean;
+  /** Tower: floors cleared in the run. */
+  towerFloors?: number;
 }
 
 export interface Progress {
@@ -49,6 +56,9 @@ export interface Progress {
   bestSurvival: number;
   duoWins: number;
   quadWins: number;
+  duelWins: number;
+  bestTower: number;
+  bestReverse: number;
   /** Answers played in all modes (counted per game). */
   wordsPlayed: number;
   /** Total daily quests completed. */
@@ -68,6 +78,9 @@ export const emptyProgress = (): Progress => ({
   bestSurvival: 0,
   duoWins: 0,
   quadWins: 0,
+  duelWins: 0,
+  bestTower: 0,
+  bestReverse: 0,
   wordsPlayed: 0,
   questsDone: 0,
   quests: null,
@@ -79,7 +92,7 @@ export interface Achievement {
   title: string;
   description: string;
   /** Lucide icon name used by the UI. */
-  icon: 'sparkles' | 'target' | 'crosshair' | 'shield' | 'flame' | 'calendar' | 'crown' | 'skull' | 'dumbbell' | 'medal' | 'timer' | 'zap' | 'bolt' | 'star' | 'brain' | 'scroll' | 'list' | 'map' | 'columns' | 'heart' | 'swords' | 'grid' | 'broom' | 'cloud' | 'eyeoff' | 'rocket' | 'book' | 'gem' | 'trophy' | 'ladder' | 'stairs';
+  icon: 'sparkles' | 'target' | 'crosshair' | 'shield' | 'flame' | 'calendar' | 'crown' | 'skull' | 'dumbbell' | 'medal' | 'timer' | 'zap' | 'bolt' | 'star' | 'brain' | 'scroll' | 'list' | 'map' | 'columns' | 'heart' | 'swords' | 'grid' | 'broom' | 'cloud' | 'eyeoff' | 'rocket' | 'book' | 'gem' | 'trophy' | 'ladder' | 'stairs' | 'bot' | 'castle' | 'reverse' | 'mask';
   /** True once this event (with the updated progress) earns it. */
   earned: (p: Progress, e: GameEvent) => boolean;
 }
@@ -105,6 +118,12 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
   { id: 'quad-quick', title: 'Clean sweep', description: 'Win a Quad game in 6 guesses or fewer.', icon: 'broom', earned: (_, e) => e.mode === 'quad' && e.won && e.guesses <= 6 },
   { id: 'ladder-win', title: 'Climber', description: 'Finish a Word Ladder.', icon: 'ladder', earned: (_, e) => e.mode === 'ladder' && e.won },
   { id: 'ladder-perfect', title: 'Perfect climb', description: 'Finish a Word Ladder in par for 3 stars.', icon: 'stairs', earned: (_, e) => e.mode === 'ladder' && (e.stars ?? 0) >= 3 },
+  { id: 'duel-win', title: 'Beat the bot', description: 'Win a Bot Duel.', icon: 'bot', earned: (_, e) => e.mode === 'duel' && e.won },
+  { id: 'duel-hard', title: 'Machine breaker', description: 'Beat Oracle, the hardest bot.', icon: 'swords', earned: (_, e) => e.mode === 'duel' && e.won && e.bot === 'hard' },
+  { id: 'tower-5', title: 'Climber of towers', description: 'Clear 5 floors in one Tower run.', icon: 'castle', earned: (_, e) => (e.towerFloors ?? 0) >= 5 },
+  { id: 'tower-15', title: 'Sky high', description: 'Clear 15 floors in one Tower run.', icon: 'crown', earned: (_, e) => (e.towerFloors ?? 0) >= 15 },
+  { id: 'reverse-flawless', title: 'Mind reader', description: 'Solve all 5 Reverse rounds without losing a life.', icon: 'reverse', earned: (_, e) => e.mode === 'reverse' && !!e.flawless && (e.reverseScore ?? 0) >= 5 },
+  { id: 'liar-win', title: 'Lie detector', description: 'Win a Practice word with Fibber on.', icon: 'mask', earned: (_, e) => e.won && !!e.mods?.includes('liar') },
   { id: 'fog-win', title: 'Through the fog', description: 'Win a Practice word with Fog on.', icon: 'cloud', earned: (_, e) => e.won && !!e.mods?.includes('fog') },
   { id: 'blind-win', title: 'Blindfolded', description: 'Win a Practice word with Blind keys on.', icon: 'eyeoff', earned: (_, e) => e.won && !!e.mods?.includes('blind') },
   { id: 'rush', title: 'Rush hour', description: 'Play a Daily Rush.', icon: 'rocket', earned: (_, e) => !!e.rush },
@@ -131,6 +150,12 @@ export function xpFor(e: GameEvent): number {
   if (e.mode === 'blitz') return 10 + 25 * (e.blitzScore ?? 0);
   if (e.mode === 'survival') return 10 + 30 * (e.survivalScore ?? 0);
   if (e.mode === 'ladder') return e.won ? 50 + 30 * (e.stars ?? 1) : 10;
+  if (e.mode === 'tower') return 10 + 45 * (e.towerFloors ?? 0);
+  if (e.mode === 'reverse') return 10 + 30 * (e.reverseScore ?? 0) + (e.flawless ? 50 : 0);
+  if (e.mode === 'duel') {
+    if (!e.won) return 10;
+    return 60 + { easy: 0, medium: 30, hard: 70 }[e.bot ?? 'easy'] + (MAX_GUESSES - e.guesses) * 10;
+  }
   if (!e.won) return 10;
   if (e.mode === 'duo') return 70 + (DUO_GUESSES - e.guesses) * 15;
   if (e.mode === 'quad') return 120 + (QUAD_GUESSES - e.guesses) * 20;
@@ -174,7 +199,7 @@ export interface ApplyResult {
 }
 
 /** A run-based mode (Blitz, Survival) has no single win; everything else does. */
-const isRun = (e: GameEvent) => e.mode === 'blitz' || e.mode === 'survival';
+const isRun = (e: GameEvent) => e.mode === 'blitz' || e.mode === 'survival' || e.mode === 'tower' || e.mode === 'reverse';
 
 /**
  * Applies a finished game once. `day` is today's daily-challenge index, used
@@ -196,6 +221,9 @@ export function applyEvent(progress: Progress, e: GameEvent, now: number, day = 
     bestSurvival: Math.max(progress.bestSurvival, e.survivalScore ?? 0),
     duoWins: progress.duoWins + (e.won && e.mode === 'duo' ? 1 : 0),
     quadWins: progress.quadWins + (e.won && e.mode === 'quad' ? 1 : 0),
+    duelWins: progress.duelWins + (e.won && e.mode === 'duel' ? 1 : 0),
+    bestTower: Math.max(progress.bestTower, e.towerFloors ?? 0),
+    bestReverse: Math.max(progress.bestReverse, e.reverseScore ?? 0),
     wordsPlayed: progress.wordsPlayed + (e.words?.length ?? 0),
     questsDone: progress.questsDone + quests.completed.length,
     quests: quests.state,

@@ -1,6 +1,9 @@
 import { m } from 'motion/react';
 import {
+  ArrowDownUp,
   ArrowRight,
+  Bot,
+  Castle,
   Award,
   Palette,
   BookOpen,
@@ -45,6 +48,9 @@ interface HomeProps {
   onQuad: () => void;
   onRush: () => void;
   onLadder: () => void;
+  onDuel: () => void;
+  onTower: () => void;
+  onReverse: () => void;
   /** Today's Daily Rush score, or null if not played yet. */
   rushScore: number | null;
   onSurvival: () => void;
@@ -105,18 +111,8 @@ export function Home(props: HomeProps) {
   const bestSurvival = props.progress.bestSurvival;
   const modes = [
     {
-      name: 'Word Ladder',
-      label: 'Play Word Ladder',
-      icon: Footprints,
-      tint: 'bg-accent/15',
-      iconClass: 'text-accent',
-      onClick: props.onLadder,
-      detail: 'Change one letter at a time.',
-      isNew: true,
-      featured: true,
-    },
-    {
       name: 'Practice',
+      group: 'quick' as const,
       label: `${practiceInProgress ? 'Continue' : 'Play'} Practice`,
       icon: Shuffle,
       tint: 'bg-surface-2',
@@ -128,10 +124,10 @@ export function Home(props: HomeProps) {
           ? 'Unlimited words, with hints.'
           : `${practiceStats.wins} of ${practiceStats.played} solved`,
       isNew: false,
-      featured: false,
     },
     {
       name: 'Blitz',
+      group: 'quick' as const,
       label: 'Play Blitz',
       icon: Zap,
       tint: 'bg-present/20',
@@ -139,10 +135,10 @@ export function Home(props: HomeProps) {
       onClick: props.onBlitz,
       detail: best > 0 ? `Best: ${best} ${best === 1 ? 'word' : 'words'}` : 'Race the clock.',
       isNew: false,
-      featured: false,
     },
     {
       name: 'Daily Rush',
+      group: 'quick' as const,
       label: props.rushScore === null ? 'Play Daily Rush' : 'Daily Rush result',
       icon: CalendarClock,
       tint: 'bg-accent/15',
@@ -153,10 +149,10 @@ export function Home(props: HomeProps) {
           ? 'Same words for all. One try.'
           : `Today: ${props.rushScore} ${props.rushScore === 1 ? 'word' : 'words'}`,
       isNew: false,
-      featured: false,
     },
     {
       name: 'Duo',
+      group: 'puzzle' as const,
       label: 'Play Duo',
       icon: Columns2,
       tint: 'bg-correct/15',
@@ -164,10 +160,10 @@ export function Home(props: HomeProps) {
       onClick: props.onDuo,
       detail: props.progress.duoWins > 0 ? `${props.progress.duoWins} won` : 'Two words at once.',
       isNew: false,
-      featured: false,
     },
     {
       name: 'Quad',
+      group: 'puzzle' as const,
       label: 'Play Quad',
       icon: Grid2x2,
       tint: 'bg-present/15',
@@ -175,10 +171,10 @@ export function Home(props: HomeProps) {
       onClick: props.onQuad,
       detail: props.progress.quadWins > 0 ? `${props.progress.quadWins} won` : 'Four words, nine guesses.',
       isNew: false,
-      featured: false,
     },
     {
       name: 'Survival',
+      group: 'quick' as const,
       label: 'Play Survival',
       icon: Heart,
       tint: 'bg-danger/12',
@@ -186,9 +182,34 @@ export function Home(props: HomeProps) {
       onClick: props.onSurvival,
       detail: bestSurvival > 0 ? `Best: ${bestSurvival} ${bestSurvival === 1 ? 'word' : 'words'}` : 'Three lives. How far?',
       isNew: false,
-      featured: false,
+    },
+    {
+      name: 'Word Ladder',
+      group: 'puzzle' as const,
+      label: 'Play Word Ladder',
+      icon: Footprints,
+      tint: 'bg-accent/15',
+      iconClass: 'text-accent',
+      onClick: props.onLadder,
+      detail: 'One letter at a time.',
+      isNew: false,
+    },
+    {
+      name: 'Reverse',
+      group: 'puzzle' as const,
+      label: 'Play Reverse',
+      icon: ArrowDownUp,
+      tint: 'bg-accent/15',
+      iconClass: 'text-accent',
+      onClick: props.onReverse,
+      detail: props.progress.bestReverse > 0 ? `Best: ${props.progress.bestReverse}/5` : 'Make the colour pattern.',
+      isNew: true,
     },
   ];
+  const groups = [
+    { id: 'quick', title: 'Quick play' },
+    { id: 'puzzle', title: 'Puzzles' },
+  ] as const;
 
   return (
     <div className="mx-auto w-full max-w-[30rem] px-4 pt-5 pb-8 sm:pt-10 lg:max-w-[60rem]">
@@ -327,41 +348,60 @@ export function Home(props: HomeProps) {
           </m.section>
 
           {/* Ways to play */}
-          <m.section {...rise(5)} aria-labelledby="home-modes">
-            <h3 id="home-modes" className="mb-2 px-1 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
+          <m.section {...rise(5)} aria-labelledby="home-modes" className="space-y-4">
+            <h3 id="home-modes" className="sr-only">
               Ways to play
             </h3>
+            {/* The two headline modes */}
             <div className="grid grid-cols-2 gap-3">
-              {modes.map((mode) => (
-                <button
-                  key={mode.name}
-                  type="button"
-                  onClick={mode.onClick}
-                  aria-label={mode.label}
-                  className={`group flex rounded-[var(--radius-card)] border border-border bg-surface p-4 text-left transition hover:border-border-strong active:scale-[0.99] ${
-                    mode.featured ? 'col-span-2 items-center gap-4' : 'min-h-[7.5rem] flex-col items-start'
-                  }`}
-                >
-                  <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${mode.tint}`}>
-                    <mode.icon className={`size-5 ${mode.iconClass}`} aria-hidden />
-                  </span>
-                  <span className={mode.featured ? 'min-w-0 flex-1' : 'contents'}>
-                    <span className={`flex items-center gap-1.5 font-bold ${mode.featured ? '' : 'mt-3'}`}>
-                      {mode.name}
-                      {mode.isNew && (
-                        <span className="rounded-full bg-present/20 px-1.5 py-px text-[0.6rem] font-bold tracking-wide uppercase">
-                          New
-                        </span>
-                      )}
-                    </span>
-                    <span className="mt-0.5 block text-[0.8rem] leading-snug text-muted">{mode.detail}</span>
-                  </span>
-                  {mode.featured && (
-                    <ChevronRight className="size-5 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
-                  )}
-                </button>
-              ))}
+              <FeatureCard
+                title="The Tower"
+                detail={props.progress.bestTower > 0 ? `Best: floor ${props.progress.bestTower}` : 'Climb. Survive the twists.'}
+                icon={Castle}
+                tone="tower"
+                label="Play The Tower"
+                onClick={props.onTower}
+              />
+              <FeatureCard
+                title="Bot Duel"
+                detail={props.progress.duelWins > 0 ? `${props.progress.duelWins} bots beaten` : 'Race an AI to the word.'}
+                icon={Bot}
+                tone="duel"
+                label="Play Bot Duel"
+                onClick={props.onDuel}
+              />
             </div>
+            {groups.map((g) => (
+              <div key={g.id}>
+                <h4 className="mb-2 px-1 text-xs font-semibold tracking-[0.08em] text-muted uppercase">{g.title}</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {modes
+                    .filter((mode) => mode.group === g.id)
+                    .map((mode) => (
+                      <button
+                        key={mode.name}
+                        type="button"
+                        onClick={mode.onClick}
+                        aria-label={mode.label}
+                        className="group flex min-h-[6.75rem] flex-col items-start rounded-[var(--radius-card)] border border-border bg-surface p-3.5 text-left transition hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md active:translate-y-0 active:scale-[0.99]"
+                      >
+                        <span className={`grid size-9 shrink-0 place-items-center rounded-xl transition-transform group-hover:scale-110 ${mode.tint}`}>
+                          <mode.icon className={`size-[1.15rem] ${mode.iconClass}`} aria-hidden />
+                        </span>
+                        <span className="mt-2.5 flex items-center gap-1.5 font-bold">
+                          {mode.name}
+                          {mode.isNew && (
+                            <span className="rounded-full bg-present/20 px-1.5 py-px text-[0.6rem] font-bold tracking-wide uppercase">
+                              New
+                            </span>
+                          )}
+                        </span>
+                        <span className="mt-0.5 block text-[0.78rem] leading-snug text-muted">{mode.detail}</span>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            ))}
           </m.section>
 
           {props.friendsAvailable && (
@@ -416,5 +456,44 @@ export function Home(props: HomeProps) {
         {BRAND.tagline} New puzzle every day at 00:00 UTC.
       </p>
     </div>
+  );
+}
+
+/** A large, animated card for a headline mode. */
+function FeatureCard({
+  title,
+  detail,
+  icon: Icon,
+  tone,
+  label,
+  onClick,
+}: {
+  title: string;
+  detail: string;
+  icon: typeof Bot;
+  tone: 'tower' | 'duel';
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className="feature-card group relative flex min-h-[9rem] flex-col justify-between overflow-hidden rounded-[var(--radius-card)] p-4 text-left text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.99]"
+      data-tone={tone}
+    >
+      <span className="feature-card-shine" aria-hidden />
+      <span className="relative flex items-start justify-between">
+        <span className="grid size-11 place-items-center rounded-2xl bg-white/15 backdrop-blur-sm transition-transform group-hover:scale-110 group-hover:-rotate-6">
+          <Icon className="size-6" aria-hidden />
+        </span>
+        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[0.6rem] font-bold tracking-wide uppercase">New</span>
+      </span>
+      <span className="relative">
+        <span className="block text-lg leading-tight font-extrabold">{title}</span>
+        <span className="block text-[0.78rem] leading-snug text-white/80">{detail}</span>
+      </span>
+    </button>
   );
 }

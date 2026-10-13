@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Award, BookOpen, Footprints, CalendarClock, CalendarDays, Columns2, Heart, ScrollText, Share2, Shuffle, SlidersHorizontal, Zap } from 'lucide-react';
+import { ArrowDownUp, Award, BookOpen, Bot, Castle, Footprints, CalendarClock, CalendarDays, Columns2, Heart, ScrollText, Share2, Shuffle, SlidersHorizontal, Zap } from 'lucide-react';
 import type { LetterState } from '@/engine';
 import { BRAND, GAME } from '@/config/game';
 import { Dialog } from './Dialog';
@@ -88,6 +88,25 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
             </span>
           </li>
           <li className="flex gap-3">
+            <Castle className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <span>
+              <strong>The Tower</strong> — climb floor by floor; every word has a twist (Fog, Blind keys, Fibber, Hard
+              mode). Clear a floor to pick a perk; miss one and lose a heart.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <Bot className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <span>
+              <strong>Bot Duel</strong> — race Pip, Byte or Oracle to the same word, live. First to solve wins.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <ArrowDownUp className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <span>
+              <strong>Reverse</strong> — you see the answer; find a word that makes the colour pattern shown.
+            </span>
+          </li>
+          <li className="flex gap-3">
             <Footprints className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
             <span>
               <strong>Word Ladder</strong> — turn the start word into the target by changing one letter at a time.
@@ -104,8 +123,8 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
           <li className="flex gap-3">
             <SlidersHorizontal className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
             <span>
-              <strong>Mods</strong> — in Practice, try Fog (only your latest guess stays visible) or Blind keys (no
-              keyboard colours) for bonus XP.
+              <strong>Mods</strong> — in Practice, try Fog (only your latest guess stays visible), Blind keys (no
+              keyboard colours) or Fibber (every row tells one lie) for bonus XP.
             </span>
           </li>
           <li className="flex gap-3">

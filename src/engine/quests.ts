@@ -30,6 +30,9 @@ export const QUESTS: readonly Quest[] = [
   { id: 'rush', title: 'Play today’s Daily Rush', target: 1, count: (e) => (e.rush ? 1 : 0) },
   { id: 'words-10', title: 'Play 10 words in any mode', target: 10, count: (e) => e.words?.length ?? 0 },
   { id: 'ladder', title: 'Finish a Word Ladder', target: 1, count: (e) => (e.mode === 'ladder' && e.won ? 1 : 0) },
+  { id: 'duel-win', title: 'Beat a bot in Bot Duel', target: 1, count: (e) => (e.mode === 'duel' && e.won ? 1 : 0) },
+  { id: 'tower-3', title: 'Clear 3 floors in one Tower run', target: 1, count: (e) => ((e.towerFloors ?? 0) >= 3 ? 1 : 0) },
+  { id: 'reverse-3', title: 'Solve 3 rounds in one Reverse game', target: 1, count: (e) => ((e.reverseScore ?? 0) >= 3 ? 1 : 0) },
   { id: 'wins-5', title: 'Win 5 games of any kind', target: 5, count: (e) => ((word(e) || e.mode === 'duo' || e.mode === 'quad') && e.won ? 1 : 0) },
 ];
 

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CloudFog, EyeOff, Skull } from 'lucide-react';
+import { CloudFog, EyeOff, Skull, VenetianMask } from 'lucide-react';
 import { MOD_BONUS } from '@/engine';
 import { useSettings } from '@/features/settings/SettingsContext';
 import { Dialog } from './Dialog';
@@ -39,6 +39,15 @@ export function ModsDialog({ open, onClose, locked }: ModsDialogProps) {
           description="The keyboard shows no colours. Keep track of letters yourself."
           checked={settings.modBlind}
           onChange={(modBlind) => update({ modBlind })}
+        />
+        <ModCard
+          icon={<VenetianMask className="size-5" aria-hidden />}
+          tint="bg-present/20 text-present"
+          name="Fibber"
+          bonus={pct(MOD_BONUS.liar)}
+          description="Every row tells exactly one lie. The liars are unmasked when the game ends. Turns off Hard mode."
+          checked={settings.modLiar}
+          onChange={(modLiar) => update({ modLiar })}
         />
         <ModCard
           icon={<Skull className="size-5" aria-hidden />}

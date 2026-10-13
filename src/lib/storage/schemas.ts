@@ -1,5 +1,5 @@
 import { GAME, STORAGE_PREFIX } from '@/config/game';
-import { MODS, type GameState, type LetterState, type Mod } from '@/engine/types';
+import { MODS, type GameMode, type GameState, type LetterState, type Mod } from '@/engine/types';
 import type { Stats } from '@/engine/stats';
 import { emptyProgress, type Progress } from '@/engine/progress';
 import type { QuestState } from '@/engine/quests';
@@ -7,6 +7,7 @@ import { SKINS, type SkinId } from '@/engine/ranks';
 import type { SurvivalRun } from '@/engine/survival';
 import type { MultiState } from '@/engine/multi';
 import type { LadderState } from '@/engine/ladder';
+import type { Perk, TowerRun, Twist } from '@/engine/tower';
 import { isRecord, type Schema } from './versioned';
 
 export const KEYS = {
@@ -20,6 +21,7 @@ export const KEYS = {
   quad: `${STORAGE_PREFIX}:quad`,
   rush: `${STORAGE_PREFIX}:rush`,
   ladder: `${STORAGE_PREFIX}:ladder`,
+  tower: `${STORAGE_PREFIX}:tower`,
   wordbook: `${STORAGE_PREFIX}:wordbook`,
   survival: `${STORAGE_PREFIX}:survival`,
   timers: `${STORAGE_PREFIX}:timers`,
@@ -41,6 +43,7 @@ export interface Settings {
   /** Practice mods. */
   modFog: boolean;
   modBlind: boolean;
+  modLiar: boolean;
   /** Tile theme (unlocked by rank). */
   skin: SkinId;
   /** Whether the first-visit help has been shown. */
@@ -56,6 +59,7 @@ export const DEFAULT_SETTINGS: Settings = {
   haptics: true,
   modFog: false,
   modBlind: false,
+  modLiar: false,
   skin: 'classic',
   seenHelp: false,
 };
@@ -76,6 +80,7 @@ export const settingsSchema: Schema<Settings> = {
       haptics: bool('haptics'),
       modFog: bool('modFog'),
       modBlind: bool('modBlind'),
+      modLiar: bool('modLiar'),
       skin: SKINS.some((x) => x.id === d.skin) ? (d.skin as SkinId) : 'classic',
       seenHelp: bool('seenHelp'),
     };
@@ -90,7 +95,7 @@ const WORD = new RegExp(`^[a-z]{${GAME.wordLength}}$`);
 export function validateGameState(d: unknown): GameState | null {
   if (!isRecord(d)) return null;
   const { mode, id, answer, guesses, evaluations, status, hardMode, dayIndex, hints, mods } = d;
-  if (mode !== 'daily' && mode !== 'practice' && mode !== 'challenge' && mode !== 'race' && mode !== 'survival') return null;
+  if (!['daily', 'practice', 'challenge', 'race', 'survival', 'duel', 'tower'].includes(mode as string)) return null;
   if (typeof id !== 'string' || typeof answer !== 'string' || !WORD.test(answer)) return null;
   if (!Array.isArray(guesses) || !Array.isArray(evaluations)) return null;
   if (guesses.length > GAME.maxGuesses || guesses.length !== evaluations.length) return null;
@@ -117,7 +122,7 @@ export function validateGameState(d: unknown): GameState | null {
   )
     return null;
   return {
-    mode,
+    mode: mode as GameMode,
     id,
     answer,
     guesses: guesses as string[],
@@ -237,6 +242,9 @@ export const progressSchema: Schema<Progress> = {
       bestSurvival: nonNegInt(d.bestSurvival) ? d.bestSurvival : 0,
       duoWins: nonNegInt(d.duoWins) ? d.duoWins : 0,
       quadWins: nonNegInt(d.quadWins) ? d.quadWins : 0,
+      duelWins: nonNegInt(d.duelWins) ? d.duelWins : 0,
+      bestTower: nonNegInt(d.bestTower) ? d.bestTower : 0,
+      bestReverse: nonNegInt(d.bestReverse) ? d.bestReverse : 0,
       wordsPlayed: nonNegInt(d.wordsPlayed) ? d.wordsPlayed : 0,
       questsDone: nonNegInt(d.questsDone) ? d.questsDone : 0,
       quests: validateQuests(d.quests),
@@ -376,5 +384,36 @@ export const ladderSchema: Schema<LadderSession> = {
     if (steps.length > maxMoves) return null;
     if (status !== 'playing' && status !== 'won' && status !== 'lost') return null;
     return { number: d.number, game: { id, start, target, steps, par, maxMoves, status, hints } };
+  },
+};
+
+// ---------- Tower ----------
+
+export interface TowerSession {
+  run: TowerRun;
+  game: GameState;
+}
+
+const TWIST_IDS: readonly Twist[] = ['none', 'fog', 'blind', 'liar', 'hard'];
+const PERK_IDS: readonly Perk[] = ['heal', 'lantern', 'shield', 'calm'];
+const PHASES: readonly TowerRun['phase'][] = ['intro', 'playing', 'perk', 'over'];
+
+export const towerSchema: Schema<TowerSession> = {
+  version: 1,
+  validate(d) {
+    if (!isRecord(d) || !isRecord(d.run)) return null;
+    const game = validateGameState(d.game);
+    if (!game || game.mode !== 'tower') return null;
+    const r = d.run;
+    if (!Number.isInteger(r.id) || !nonNegInt(r.floor) || !Number.isInteger(r.hearts)) return null;
+    if (typeof r.shield !== 'boolean' || typeof r.lantern !== 'boolean' || typeof r.calm !== 'boolean') return null;
+    if (!PHASES.includes(r.phase as TowerRun['phase'])) return null;
+    if (!Array.isArray(r.twists) || !r.twists.every((t) => TWIST_IDS.includes(t as Twist))) return null;
+    if (!Array.isArray(r.offer) || !r.offer.every((p) => PERK_IDS.includes(p as Perk))) return null;
+    if (!(r.lastGameId === null || typeof r.lastGameId === 'string') || !Array.isArray(r.log)) return null;
+    const log = r.log.filter(
+      (l): l is TowerRun['log'][number] => isRecord(l) && isWord(l.answer) && typeof l.won === 'boolean' && Array.isArray(l.twists),
+    );
+    return { game, run: { ...(r as unknown as TowerRun), log } };
   },
 };

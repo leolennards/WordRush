@@ -29,6 +29,8 @@ interface BoardProps {
   label?: string;
   /** Smaller letters and gaps for small boards (Quad). */
   compact?: boolean;
+  /** Fibber, after the game: "row:pos" pairs of tiles that lied. */
+  lies?: string;
 }
 
 export function Board({
@@ -40,7 +42,9 @@ export function Board({
   rowCount = GAME.maxGuesses,
   label = 'Game board',
   compact = false,
+  lies = '',
 }: BoardProps) {
+  const lieAt = new Map(lies ? lies.split(',').map((p) => p.split(':').map(Number) as [number, number]) : []);
   const rows = Array.from({ length: rowCount }, (_, r) => r);
   const currentRow = game.status === 'playing' ? game.guesses.length : -1;
   const winningRow = game.status === 'won' ? game.guesses.length - 1 : -1;
@@ -76,6 +80,7 @@ export function Board({
             active={r === currentRow}
             hints={r === currentRow ? hintKey : ''}
             fogged={r < fogBefore && r !== revealingRow}
+            lie={lieAt.get(r) ?? -1}
           />
         );
       })}
@@ -93,9 +98,11 @@ interface RowProps {
   /** Pairs of position + letter, e.g. "0s3e" (a string so memo can compare it). */
   hints: string;
   fogged: boolean;
+  /** Position of the tile that lied in this row, or -1. */
+  lie: number;
 }
 
-const Row = memo(function Row({ index, letters, evaluation, mode, shake, active, hints, fogged }: RowProps) {
+const Row = memo(function Row({ index, letters, evaluation, mode, shake, active, hints, fogged, lie }: RowProps) {
   const ghosts = new Map<number, string>();
   for (let k = 0; k + 1 < hints.length; k += 2) ghosts.set(Number(hints[k]), hints[k + 1]!);
   const cells = Array.from({ length: GAME.wordLength }, (_, i) => i);
@@ -139,8 +146,15 @@ const Row = memo(function Row({ index, letters, evaluation, mode, shake, active,
             className="tile"
             data-state={state}
             data-anim={anim}
+            data-lie={i === lie || undefined}
             style={delay ? { animationDelay: `${delay}ms` } : undefined}
-            aria-label={fogged ? 'hidden by fog' : letter ? `${letter.toUpperCase()}, ${STATE_LABEL[state]}` : 'empty'}
+            aria-label={
+              fogged
+                ? 'hidden by fog'
+                : letter
+                  ? `${letter.toUpperCase()}, ${STATE_LABEL[state]}${i === lie ? ' (this tile lied)' : ''}`
+                  : 'empty'
+            }
           >
             {fogged ? '' : letter}
           </div>

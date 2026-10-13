@@ -5,7 +5,7 @@ export type LetterState = 'correct' | 'present' | 'absent';
 export type GameStatus = 'playing' | 'won' | 'lost';
 
 /** daily/practice are solo; challenge/race are played against a friend. */
-export type GameMode = 'daily' | 'practice' | 'challenge' | 'race' | 'blitz' | 'survival';
+export type GameMode = 'daily' | 'practice' | 'challenge' | 'race' | 'blitz' | 'survival' | 'duel' | 'tower';
 
 /** The two single-player modes, which have their own statistics. */
 export type SoloMode = 'daily' | 'practice';
@@ -30,9 +30,12 @@ export interface GameState {
   mods?: Mod[];
 }
 
-/** Fog: only the latest guess stays visible. Blind: the keyboard shows no colours. */
-export type Mod = 'fog' | 'blind';
-export const MODS: readonly Mod[] = ['fog', 'blind'];
+/**
+ * Fog: only the latest guess stays visible. Blind: the keyboard shows no
+ * colours. Liar (Fibber): every row tells one lie.
+ */
+export type Mod = 'fog' | 'blind' | 'liar';
+export const MODS: readonly Mod[] = ['fog', 'blind', 'liar'];
 
 export type GuessError =
   | { kind: 'game-over' }

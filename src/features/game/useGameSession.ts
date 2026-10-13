@@ -57,16 +57,22 @@ export function useGameSession(params: {
   // Keep the current game's hard mode in sync with the setting while allowed.
   const followHardMode = params.followHardMode ?? true;
   useEffect(() => {
-    if (followHardMode) dispatch({ type: 'set-hard-mode', enabled: settings.hardMode });
-  }, [settings.hardMode, game.id, followHardMode]);
+    // Hard mode would enforce the hidden truth under Fibber, so they don't mix.
+    const liar = (params.followMods ?? false) && settings.modLiar;
+    if (followHardMode) dispatch({ type: 'set-hard-mode', enabled: settings.hardMode && !liar });
+  }, [settings.hardMode, settings.modLiar, params.followMods, game.id, followHardMode]);
 
   const followMods = params.followMods ?? false;
-  const { modFog, modBlind } = settings;
+  const { modFog, modBlind, modLiar } = settings;
   useEffect(() => {
     if (!followMods) return;
-    const mods: Mod[] = [...(modFog ? (['fog'] as const) : []), ...(modBlind ? (['blind'] as const) : [])];
+    const mods: Mod[] = [
+      ...(modFog ? (['fog'] as const) : []),
+      ...(modBlind ? (['blind'] as const) : []),
+      ...(modLiar ? (['liar'] as const) : []),
+    ];
     dispatch({ type: 'set-mods', mods });
-  }, [followMods, modFog, modBlind, game.id]);
+  }, [followMods, modFog, modBlind, modLiar, game.id]);
 
   const type = useCallback((letter: string) => dispatch({ type: 'type', letter, wordLength: GAME.wordLength }), []);
   const remove = useCallback(() => dispatch({ type: 'delete' }), []);

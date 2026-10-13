@@ -1,6 +1,7 @@
 import { m } from 'motion/react';
 import { BookOpen, House, RotateCcw, Share2, Shuffle, Trophy } from 'lucide-react';
 import type { GameState } from '@/engine';
+import { CountUp } from '@/components/progress/CountUp';
 
 interface GameOverPanelProps {
   game: GameState;
@@ -18,8 +19,9 @@ interface GameOverPanelProps {
   onMeaning?: () => void;
 }
 
+// Icon over label on narrow phones (four buttons fit), side by side from 440px.
 const secondary =
-  'inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-surface-2 px-2 text-sm font-semibold transition hover:bg-surface-3 active:scale-[0.98]';
+  'inline-flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl bg-surface-2 px-1 py-1.5 text-[0.72rem] font-semibold whitespace-nowrap transition hover:bg-surface-3 active:scale-[0.98] min-[440px]:flex-row min-[440px]:gap-1.5 min-[440px]:px-2 min-[440px]:text-sm';
 
 /** Shown in place of the keyboard once a game is over, so there is always a clear next step. */
 export function GameOverPanel({ game, countdown, onResults, onShare, onHome, onPractice, onNewGame, xp, onMeaning }: GameOverPanelProps) {
@@ -45,7 +47,7 @@ export function GameOverPanel({ game, countdown, onResults, onShare, onHome, onP
                   transition={{ type: 'spring', stiffness: 400, damping: 18, delay: 0.2 }}
                   className="tabular rounded-full bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent"
                 >
-                  +{xp} XP
+                  <CountUp value={xp} prefix="+" suffix=" XP" />
                 </m.span>
               ) : null}
             </p>
