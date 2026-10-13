@@ -216,3 +216,14 @@ describe('cloud save', () => {
     await assertSucceeds(deleteDoc(doc(google('alice'), 'saves', 'alice')));
   });
 });
+
+describe('cloud save game sessions', () => {
+  const google = (uid: string) =>
+    env.authenticatedContext(uid, { firebase: { sign_in_provider: 'google.com', identities: { 'google.com': ['g-' + uid] } } }).firestore();
+  it('accepts a sessions map and rejects an oversized one', async () => {
+    const ok = { v: 1, devices: {}, sessions: { tower: '{"at":1,"data":{}}' } };
+    await assertSucceeds(setDoc(doc(google('alice'), 'saves', 'alice'), ok));
+    const many = Object.fromEntries(Array.from({ length: 17 }, (_, i) => [`s${i}`, '{}']));
+    await assertFails(setDoc(doc(google('alice'), 'saves', 'alice'), { v: 1, devices: {}, sessions: many }));
+  });
+});

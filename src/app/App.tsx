@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useState, type ReactNode } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { LazyMotion, MotionConfig, domAnimation, m } from 'motion/react';
 import { BRAND, GAME } from '@/config/game';
 import {
@@ -42,7 +42,7 @@ import { RaceScreen } from '@/components/friends/RaceScreen';
 import { GetAppDialog } from '@/components/dialogs/GetAppDialog';
 import { isNativeApp } from '@/lib/native/platform';
 import { secondsSinceStart } from '@/lib/storage/timers';
-import { KEYS, rushSchema } from '@/lib/storage/schemas';
+import { KEYS, rushSchema, type SyncSection } from '@/lib/storage/schemas';
 import { readVersioned } from '@/lib/storage/versioned';
 import { ProgressProvider, useProgress } from '@/features/progress/ProgressContext';
 import { useAward } from '@/features/progress/useAward';
@@ -112,7 +112,8 @@ const runningAsApp = () =>
 
 function Wordskiis() {
   const services = useServices();
-  const { settings, update, resolvedTheme } = useSettings();
+  const settingsCtx = useSettings();
+  const { settings, update, resolvedTheme } = settingsCtx;
   const stats = useStats();
   const friends = useFriends();
   const { toast } = useToast();
@@ -135,7 +136,23 @@ function Wordskiis() {
   const daily = useDailyGame(todayIndex);
   const practice = usePracticeGame(daily.session.game.answer);
   // Signed in with Google: progress, daily stats, today's Daily and the Word Book follow you between devices.
-  const syncStatus = useCloudSync({ game: daily.session.game, replace: daily.replace });
+  // Newer game saves from another device: Settings and Practice reload in place; an open game screen
+  // for that save restarts from it (so a stale copy can't overwrite the newer one).
+  const [syncKey, setSyncKey] = useState(0);
+  const pullTargets = useRef({ view, reloadSettings: settingsCtx.reload, practice, stats });
+  useEffect(() => {
+    pullTargets.current = { view, reloadSettings: settingsCtx.reload, practice, stats };
+  });
+  const onPulled = useCallback((sections: SyncSection[]) => {
+    const t = pullTargets.current;
+    if (sections.includes('settings')) t.reloadSettings();
+    if (sections.includes('practice')) {
+      t.practice.reload();
+      t.stats.refresh();
+    }
+    if (sections.includes(t.view as SyncSection) && t.view !== 'practice') setSyncKey((k) => k + 1);
+  }, []);
+  const syncStatus = useCloudSync({ game: daily.session.game, replace: daily.replace }, onPulled);
   const active = mode === 'daily' ? daily : practice;
   const { game } = active.session;
 
@@ -426,7 +443,7 @@ function Wordskiis() {
         <Suspense fallback={<main id="game" className="flex-1" aria-busy="true" />}>
           {/* Each screen eases in when you switch to it. */}
           <m.div
-            key={`${view}/${route.id ?? ''}`}
+            key={`${view}/${route.id ?? ''}/${syncKey}`}
             className="flex min-h-0 flex-1 flex-col"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

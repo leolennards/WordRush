@@ -133,3 +133,27 @@ export function mergeWordbook(a: readonly BookEntry[], b: readonly BookEntry[] |
   }
   return [...byWord.values()].sort((x, y) => x.at - y.at).slice(-limit);
 }
+
+/** A synced game save: the raw stored text of each of its keys (null = absent), and when it last changed. */
+export interface SectionSnapshot {
+  /** 0 when this device has no record of when it changed (saves from before sync existed). */
+  at: number;
+  data: Record<string, string | null>;
+}
+
+/**
+ * Newest change wins. When neither side knows (both unstamped, e.g. the first
+ * sync after updating), the one that's further along wins, as judged by `weigh`.
+ */
+export function decideSection(
+  local: SectionSnapshot,
+  remote: SectionSnapshot | null,
+  weigh: (s: SectionSnapshot) => number,
+): 'pull' | 'push' | 'none' {
+  const hasLocal = Object.values(local.data).some((v) => v !== null);
+  if (!remote) return hasLocal ? 'push' : 'none';
+  const keys = new Set([...Object.keys(local.data), ...Object.keys(remote.data)]);
+  if ([...keys].every((k) => (local.data[k] ?? null) === (remote.data[k] ?? null))) return 'none';
+  if (remote.at !== local.at) return remote.at > local.at ? 'pull' : 'push';
+  return weigh(local) > weigh(remote) ? 'push' : 'pull';
+}

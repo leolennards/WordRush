@@ -14,6 +14,8 @@ export interface PracticeGame extends GameSession {
   newGame: () => void;
   /** Clears practice progress and starts again from word 1 (used by "Reset statistics"). */
   reset: () => void;
+  /** Picks up the saved practice game again (after a cloud sync). */
+  reload: () => void;
 }
 
 const PREFIX = 'practice-';
@@ -82,5 +84,10 @@ export function usePracticeGame(avoidAnswer: string): PracticeGame {
     replace(nextGame(0));
   }, [store, replace, nextGame]);
 
-  return { ...session, gameNumber: practiceGameNumber(game), newGame, reset };
+  const reload = useCallback(() => {
+    const saved = readVersioned(store, KEYS.practice, practiceSchema);
+    replace(saved?.game ?? nextGame(saved?.gameNumber ?? 0));
+  }, [store, replace, nextGame]);
+
+  return { ...session, gameNumber: practiceGameNumber(game), newGame, reset, reload };
 }

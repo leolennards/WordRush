@@ -400,6 +400,8 @@ export interface SaveDoc {
   practiceStats?: string;
   daily?: string;
   wordbook?: string;
+  /** Whole game saves (Tower, Practice, settings…), newest wins: section → JSON { at, data }. */
+  sessions?: Record<string, string>;
 }
 
 export function watchSave(uid: string, cb: (save: SaveDoc | null) => void, onError?: (e: Error) => void) {

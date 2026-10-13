@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.10.3 — 2026-10-13 (games in progress sync too)
+
+- **Cloud save now covers games in progress and settings:** your Tower run, Practice game and statistics,
+  Survival run, Duo, Quad, Word Ladder, today's Daily Rush, and your settings (theme, tile theme, mods…).
+  The most recent change wins. For saves made before cloud save existed, the one that's further along wins
+  (e.g. Tower floor 5 beats floor 1), whichever device syncs first.
+- If a newer save arrives for a game you have open, that screen reloads from it.
+- Two new end-to-end tests: a Tower run continuing on another device, and old saves on two devices.
+- **Android app 1.10.3** (versionCode 10).
+
 ## 1.10.2 — 2026-10-13 (cloud save)
 
 - **Cloud save:** when signed in with Google, your level and XP, achievements, personal bests, daily quests,

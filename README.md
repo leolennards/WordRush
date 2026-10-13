@@ -40,6 +40,8 @@ paid API or database — and keeps preferences, progress and statistics in `loca
 - Physical and on-screen keyboards, invalid-word shake, flip reveals, win celebration.
 - Cloud save: signed in with Google, progress (level, XP, achievements, bests, quests, Daily stats, today's
   Daily, Word Book) syncs live across devices; XP is a per-device counter so it adds up without double counting.
+  Games in progress (Tower, Practice, Survival, Duo, Quad, Word Ladder, Daily Rush) and settings sync too,
+  newest change wins.
 - Records: personal bests across every mode (Blitz, Survival, Tower, Reverse, bots beaten, Duo/Quad wins…).
 - Statistics: played, win %, current/best streak, guess distribution, average guesses, last daily result.
 - Spoiler-free sharing via the Web Share API (touch devices) or clipboard.

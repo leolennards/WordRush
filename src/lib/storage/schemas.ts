@@ -24,6 +24,7 @@ export const KEYS = {
   ladder: `${STORAGE_PREFIX}:ladder`,
   tower: `${STORAGE_PREFIX}:tower`,
   sync: `${STORAGE_PREFIX}:sync`,
+  syncStamps: `${STORAGE_PREFIX}:sync-stamps`,
   wordbook: `${STORAGE_PREFIX}:wordbook`,
   survival: `${STORAGE_PREFIX}:survival`,
   timers: `${STORAGE_PREFIX}:timers`,
@@ -440,3 +441,21 @@ export const syncMetaSchema: Schema<SyncMeta> = {
     return { deviceId: d.deviceId, uid: typeof d.uid === 'string' ? d.uid : null, base };
   },
 };
+
+/**
+ * Game saves that sync between devices as whole units, newest change wins.
+ * Practice's game and statistics travel together (practice numbers are per save).
+ */
+export const SYNC_SECTIONS = {
+  practice: [KEYS.practice, KEYS.practiceStats],
+  tower: [KEYS.tower],
+  survival: [KEYS.survival],
+  duo: [KEYS.duo],
+  quad: [KEYS.quad],
+  ladder: [KEYS.ladder],
+  rush: [KEYS.rush],
+  settings: [KEYS.settings],
+} as const;
+
+export type SyncSection = keyof typeof SYNC_SECTIONS;
+export const SYNCED_KEYS: readonly string[] = Object.values(SYNC_SECTIONS).flat();

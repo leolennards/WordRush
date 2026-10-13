@@ -63,15 +63,15 @@ export function AccountSettings({ syncStatus = 'off' }: { syncStatus?: SyncStatu
             <span className="text-danger">Couldn’t sync right now. Your progress is safe on this device and will sync later.</span>
           ) : (
             <>
-              <Check className="size-3.5 text-correct" aria-hidden /> Level, XP, achievements, Daily stats and Word Book are
+              <Check className="size-3.5 text-correct" aria-hidden /> Your progress, games in progress and settings are
               synced across your devices.
             </>
           )}
         </p>
       ) : (
         <p className="mt-2 text-xs text-muted">
-          Sign in to sync your level, XP, achievements, Daily stats and Word Book across devices, and keep your Friends
-          profile.
+          Sign in to sync your progress, games in progress (Tower, Practice and more) and settings across devices, and
+          keep your Friends profile.
         </p>
       )}
       {f.error && !signedIn && (

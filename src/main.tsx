@@ -4,11 +4,14 @@ import '@/styles/index.css';
 import { App } from '@/app/App';
 import { dictionary } from '@/data/words';
 import { createBrowserStore } from '@/lib/storage/store';
+import { trackChanges } from '@/lib/storage/tracked';
+import { KEYS, SYNCED_KEYS } from '@/lib/storage/schemas';
 import { registerServiceWorker } from '@/lib/pwa/registerServiceWorker';
 import { defineWord } from '@/lib/dictionary/define';
 
 const services = {
-  store: createBrowserStore(),
+  // Remembers when synced game saves change, for cloud save's "newest wins".
+  store: trackChanges(createBrowserStore(), SYNCED_KEYS, KEYS.syncStamps, () => Date.now()),
   dictionary,
   now: () => new Date(),
   random: Math.random,

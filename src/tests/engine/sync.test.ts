@@ -11,6 +11,7 @@ import {
   sharedOf,
   zeroCounters,
   createGame,
+  decideSection,
   type Counters,
   type Progress,
 } from '@/engine';
@@ -96,5 +97,26 @@ describe('cloud save merging', () => {
 
   it('starts a device fresh when it has nothing to subtract', () => {
     expect(countersOf(emptyProgress())).toEqual(zeroCounters());
+  });
+});
+
+describe('game save sections', () => {
+  const weigh = (s: { data: Record<string, string | null> }) => Number(s.data.floor ?? 0);
+  const snap = (at: number, floor: string | null) => ({ at, data: { floor } });
+
+  it('takes the newest change', () => {
+    expect(decideSection(snap(10, '2'), snap(20, '1'), weigh)).toBe('pull');
+    expect(decideSection(snap(30, '1'), snap(20, '5'), weigh)).toBe('push');
+  });
+
+  it('on the first sync, keeps whichever is further along', () => {
+    expect(decideSection(snap(0, '1'), snap(0, '5'), weigh)).toBe('pull');
+    expect(decideSection(snap(0, '5'), snap(0, '1'), weigh)).toBe('push');
+  });
+
+  it('pushes when the cloud has nothing, and does nothing when both match', () => {
+    expect(decideSection(snap(5, '3'), null, weigh)).toBe('push');
+    expect(decideSection(snap(0, null), null, weigh)).toBe('none');
+    expect(decideSection(snap(5, '3'), snap(9, '3'), weigh)).toBe('none');
   });
 });

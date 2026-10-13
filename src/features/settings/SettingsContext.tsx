@@ -11,6 +11,8 @@ interface SettingsContextValue {
   resolvedTheme: 'light' | 'dark';
   /** True if either the OS or the in-app setting requests reduced motion. */
   reducedMotion: boolean;
+  /** Re-reads settings from storage (after a cloud sync). */
+  reload: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -48,9 +50,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     meta?.setAttribute('content', resolvedTheme === 'dark' ? '#0c0f15' : '#f6f3ec');
   }, [resolvedTheme, settings.highContrast, settings.reduceMotion, settings.skin]);
 
+  const reload = useCallback(
+    () => setSettings(readVersioned(store, KEYS.settings, settingsSchema) ?? DEFAULT_SETTINGS),
+    [store],
+  );
   const value = useMemo(
-    () => ({ settings, update, resolvedTheme, reducedMotion }) as const,
-    [settings, update, resolvedTheme, reducedMotion],
+    () => ({ settings, update, resolvedTheme, reducedMotion, reload }) as const,
+    [settings, update, resolvedTheme, reducedMotion, reload],
   );
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }

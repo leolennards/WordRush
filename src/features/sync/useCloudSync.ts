@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   COUNTERS,
   emptyProgress,
+  decideSection,
   mergeDaily,
   mergeStats,
   mergeWordbook,
@@ -10,6 +11,7 @@ import {
   zeroCounters,
   type Counters,
   type GameState,
+  type SectionSnapshot,
   type SharedProgress,
   type Stats,
 } from '@/engine';
@@ -27,8 +29,11 @@ import {
   syncMetaSchema,
   validateGameState,
   wordbookSchema,
+  SYNC_SECTIONS,
   type SyncMeta,
+  type SyncSection,
 } from '@/lib/storage/schemas';
+import { isTrackedStore } from '@/lib/storage/tracked';
 import { readVersioned, writeVersioned } from '@/lib/storage/versioned';
 
 export type SyncStatus = 'off' | 'syncing' | 'synced' | 'error';
@@ -60,6 +65,48 @@ function parseShared(text: string | undefined): SharedProgress | null {
   });
 }
 
+const toSection = (x: unknown): SectionSnapshot | null => {
+  if (!x || typeof x !== 'object') return null;
+  const { at, data } = x as { at?: unknown; data?: unknown };
+  if (typeof at !== 'number' || !data || typeof data !== 'object') return null;
+  const clean: Record<string, string | null> = {};
+  for (const [k, v] of Object.entries(data)) if (typeof v === 'string' || v === null) clean[k] = v;
+  return { at, data: clean };
+};
+
+/** How far along a save is, for the very first sync (when neither side has a timestamp). */
+function weigh(name: SyncSection, snap: SectionSnapshot): number {
+  const read = (key: string): Record<string, unknown> | null => {
+    try {
+      const d = (JSON.parse(snap.data[key] ?? 'null') as { data?: unknown } | null)?.data;
+      return d && typeof d === 'object' ? (d as Record<string, unknown>) : null;
+    } catch {
+      return null;
+    }
+  };
+  const num = (x: unknown) => (typeof x === 'number' ? x : 0);
+  switch (name) {
+    case 'practice':
+      return num(read(KEYS.practice)?.gameNumber) * 10 + num(read(KEYS.practiceStats)?.played);
+    case 'tower': {
+      const run = read(KEYS.tower)?.run as { floor?: unknown; log?: unknown[] } | undefined;
+      return num(run?.floor) * 100 + (run?.log?.length ?? 0);
+    }
+    case 'survival':
+      return ((read(KEYS.survival)?.run as { words?: unknown[] } | undefined)?.words?.length ?? 0) + 1;
+    case 'duo':
+      return num(read(KEYS.duo)?.number);
+    case 'quad':
+      return num(read(KEYS.quad)?.number);
+    case 'ladder':
+      return num(read(KEYS.ladder)?.number);
+    case 'rush':
+      return num(read(KEYS.rush)?.day) * 1000 + num(read(KEYS.rush)?.solved);
+    case 'settings':
+      return 0;
+  }
+}
+
 const randomId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 
 /**
@@ -67,7 +114,11 @@ const randomId = () => Math.random().toString(36).slice(2, 10) + Date.now().toSt
  * step with the signed-in Google account's cloud save. Runs only while
  * signed in with Google.
  */
-export function useCloudSync(daily: { game: GameState; replace: (game: GameState) => void }): SyncStatus {
+export function useCloudSync(
+  daily: { game: GameState; replace: (game: GameState) => void },
+  /** Called with the game saves that were just replaced by newer ones from another device. */
+  onPulled: (sections: SyncSection[]) => void,
+): SyncStatus {
   const { store } = useServices();
   const { cloud } = useFriends();
   const progressCtx = useProgress();
@@ -79,13 +130,13 @@ export function useCloudSync(daily: { game: GameState; replace: (game: GameState
   const remote = useRef<SaveDoc | null | undefined>(undefined);
   const running = useRef(false);
   const again = useRef(false);
-  const latest = useRef({ cloud, daily, progressCtx, stats, words });
+  const latest = useRef({ cloud, daily, progressCtx, stats, words, onPulled });
   useEffect(() => {
-    latest.current = { cloud, daily, progressCtx, stats, words };
+    latest.current = { cloud, daily, progressCtx, stats, words, onPulled };
   });
 
   const reconcile = useCallback(async () => {
-    const { cloud: c, daily: d, progressCtx: pc, stats: st, words: w } = latest.current;
+    const { cloud: c, daily: d, progressCtx: pc, stats: st, words: w, onPulled: pulledCb } = latest.current;
     if (!c || remote.current === undefined) return;
     if (running.current) {
       again.current = true;
@@ -147,6 +198,33 @@ export function useCloudSync(daily: { game: GameState; replace: (game: GameState
       }
       writeVersioned(store, KEYS.sync, syncMetaSchema, { deviceId: meta.deviceId, uid: c.uid, base: merged.others });
 
+      // Whole game saves (Tower run, Practice, settings…): the newest change wins.
+      const sessions: Record<string, string> = {};
+      const pulled: SyncSection[] = [];
+      if (isTrackedStore(store)) {
+        for (const [name, keys] of Object.entries(SYNC_SECTIONS) as [SyncSection, readonly string[]][]) {
+          const local: SectionSnapshot = {
+            at: Math.max(0, ...keys.map((k) => store.changedAt(k) ?? 0)),
+            data: Object.fromEntries(keys.map((k) => [k, store.get(k)])),
+          };
+          const theirs = parse(doc?.sessions?.[name], toSection);
+          const decision = decideSection(local, theirs, (snap) => weigh(name, snap));
+          if (decision === 'pull' && theirs) {
+            for (const k of keys) {
+              const value = theirs.data[k] ?? null;
+              if (value === null) store.removeQuiet(k, theirs.at);
+              else store.setQuiet(k, value, theirs.at);
+            }
+            pulled.push(name);
+          } else if (decision === 'push') {
+            // Saves from before sync existed go up unstamped (at 0), so another device's unstamped save is
+            // compared by how far along it is, whichever device syncs first. The next real change stamps it.
+            sessions[name] = JSON.stringify({ at: local.at, data: local.data });
+          }
+        }
+      }
+      if (pulled.length) pulledCb(pulled);
+
       // Push anything the cloud doesn't have yet.
       const own = JSON.stringify(merged.own);
       const sections = {
@@ -157,8 +235,9 @@ export function useCloudSync(daily: { game: GameState; replace: (game: GameState
       };
       const stale =
         doc?.devices?.[meta.deviceId] !== own ||
+        Object.keys(sessions).length > 0 ||
         (Object.keys(sections) as (keyof typeof sections)[]).some((k) => doc?.[k] !== sections[k]);
-      if (stale) await c.write(meta.deviceId, own, sections);
+      if (stale) await c.write(meta.deviceId, own, { ...sections, ...(Object.keys(sessions).length ? { sessions } : {}) });
       setStatus('synced');
     } catch {
       setStatus('error');
@@ -199,6 +278,20 @@ export function useCloudSync(daily: { game: GameState; replace: (game: GameState
     const t = window.setTimeout(() => void reconcile(), PUSH_DELAY_MS);
     return () => window.clearTimeout(t);
   }, [uid, progress, stats.daily, words.book, dailyGame, reconcile]);
+
+  // Game saves (Tower, Practice, settings…) change in many places: follow the store itself.
+  useEffect(() => {
+    if (!uid || !isTrackedStore(store)) return;
+    let t: number | undefined;
+    const off = store.onChange(() => {
+      window.clearTimeout(t);
+      t = window.setTimeout(() => void reconcileRef.current(), PUSH_DELAY_MS);
+    });
+    return () => {
+      off();
+      window.clearTimeout(t);
+    };
+  }, [uid, store]);
 
   return cloud ? status : 'off';
 }
