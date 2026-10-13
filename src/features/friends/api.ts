@@ -33,6 +33,8 @@ import {
   orderBy,
   query,
   runTransaction,
+  serverTimestamp,
+  setDoc,
   updateDoc,
   where,
   writeBatch,
@@ -134,9 +136,12 @@ export async function signInWithGoogle(): Promise<GoogleResult> {
         }
         throw err;
       }
+      // Refresh the token so it carries the new Google identity (needed for cloud save).
+      await user.getIdToken(true);
       return 'linked';
     }
     await linkWithPopup(user, provider);
+    await user.getIdToken(true);
     return 'linked';
   } catch (err) {
     const code = (err as { code?: string }).code;
@@ -180,6 +185,7 @@ export async function deleteProfile(me: string, code: string | null) {
   }
   if (code) batch.delete(doc(db, 'codes', code));
   batch.delete(doc(db, 'players', me));
+  batch.delete(doc(db, 'saves', me));
   await batch.commit();
 
   const user = auth.currentUser;
@@ -380,4 +386,37 @@ export async function pushRaceProgress(id: string, me: string, progress: RacePro
     }
     tx.update(ref, update);
   });
+}
+
+// ---------- Cloud save ----------
+
+/** The cloud save document: every section is JSON text (Firestore can't store nested arrays). */
+export interface SaveDoc {
+  v: 1;
+  /** Each device's own counters (JSON), by device id. */
+  devices: Record<string, string>;
+  shared?: string;
+  dailyStats?: string;
+  practiceStats?: string;
+  daily?: string;
+  wordbook?: string;
+}
+
+export function watchSave(uid: string, cb: (save: SaveDoc | null) => void, onError?: (e: Error) => void) {
+  const { db } = handles();
+  return onSnapshot(
+    doc(db, 'saves', uid),
+    (snap) => cb(snap.exists() ? (snap.data() as SaveDoc) : null),
+    (e) => onError?.(e),
+  );
+}
+
+/** Writes this device's share and the merged sections; other devices' shares are kept. */
+export async function writeSave(uid: string, deviceId: string, own: string, sections: Omit<SaveDoc, 'v' | 'devices'>) {
+  const { db } = handles();
+  await setDoc(
+    doc(db, 'saves', uid),
+    { v: 1, devices: { [deviceId]: own }, ...sections, updatedAt: serverTimestamp() },
+    { merge: true },
+  );
 }

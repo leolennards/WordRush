@@ -186,3 +186,33 @@ describe('races', () => {
     await assertFails(getDoc(doc(db('carol'), 'races', 'r1')));
   });
 });
+
+describe('cloud save', () => {
+  const google = (uid: string) =>
+    env.authenticatedContext(uid, { firebase: { sign_in_provider: 'google.com', identities: { 'google.com': ['g-' + uid] } } }).firestore();
+  const save = { v: 1, devices: { phone: '{"xp":10}' }, shared: '{}', wordbook: '[]' };
+
+  it('lets a Google account write and read only its own save', async () => {
+    await assertSucceeds(setDoc(doc(google('alice'), 'saves', 'alice'), save));
+    await assertSucceeds(getDoc(doc(google('alice'), 'saves', 'alice')));
+    await assertSucceeds(setDoc(doc(google('alice'), 'saves', 'alice'), { devices: { laptop: '{"xp":5}' } }, { merge: true }));
+    await assertFails(getDoc(doc(google('bob'), 'saves', 'alice')));
+    await assertFails(setDoc(doc(google('bob'), 'saves', 'alice'), save));
+  });
+
+  it('keeps guests and signed-out visitors out', async () => {
+    await assertFails(setDoc(doc(db('guest'), 'saves', 'guest'), save));
+    await assertFails(getDoc(doc(db(null), 'saves', 'alice')));
+  });
+
+  it('rejects unexpected fields and oversized sections', async () => {
+    await assertFails(setDoc(doc(google('alice'), 'saves', 'alice'), { ...save, admin: true }));
+    await assertFails(setDoc(doc(google('alice'), 'saves', 'alice'), { ...save, wordbook: 'x'.repeat(150001) }));
+    await assertFails(setDoc(doc(google('alice'), 'saves', 'alice'), { ...save, v: 2 }));
+  });
+
+  it('lets the owner delete their save (part of Delete my profile)', async () => {
+    await assertSucceeds(setDoc(doc(google('alice'), 'saves', 'alice'), save));
+    await assertSucceeds(deleteDoc(doc(google('alice'), 'saves', 'alice')));
+  });
+});

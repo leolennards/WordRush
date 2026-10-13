@@ -1,7 +1,7 @@
 {
   "name": "wordskiis",
   "private": true,
-  "version": "1.10.1",
+  "version": "1.10.2",
   "type": "module",
   "description": "Wordskiis — a little word challenge every day.",
   "scripts": {

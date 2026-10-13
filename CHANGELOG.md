@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.10.2 — 2026-10-13 (cloud save)
+
+- **Cloud save:** when signed in with Google, your level and XP, achievements, personal bests, daily quests,
+  Daily statistics and streak, today's Daily Challenge and your Word Book sync across all your devices,
+  live. XP is tracked per device, so play on several devices adds up exactly and is never counted twice,
+  even if you played on both before signing in. Practice statistics stay per device.
+- Settings → Account shows sync status.
+- Firestore rules: a private `saves/{uid}` document per Google account (guests can't write one), deleted
+  with "Delete my profile". Covered by rules tests and a two-device end-to-end test.
+- **Android app 1.10.2** (versionCode 9).
+
 ## 1.10.1 — 2026-10-13 (sign-in fix, account in Settings, App Check)
 
 - **Fixed:** Google sign-in in the Android app failed with "You CANNOT use scopes without modifying the main

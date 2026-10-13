@@ -47,6 +47,7 @@ import { readVersioned } from '@/lib/storage/versioned';
 import { ProgressProvider, useProgress } from '@/features/progress/ProgressContext';
 import { useAward } from '@/features/progress/useAward';
 import { WordsProvider, useWords } from '@/features/words/WordsContext';
+import { useCloudSync } from '@/features/sync/useCloudSync';
 import { Backdrop } from '@/components/layout/Backdrop';
 import { AchievementsDialog } from '@/components/dialogs/AchievementsDialog';
 import { ModsDialog } from '@/components/dialogs/ModsDialog';
@@ -133,6 +134,8 @@ function Wordskiis() {
   const countdown = useCountdown(services.now);
   const daily = useDailyGame(todayIndex);
   const practice = usePracticeGame(daily.session.game.answer);
+  // Signed in with Google: progress, daily stats, today's Daily and the Word Book follow you between devices.
+  const syncStatus = useCloudSync({ game: daily.session.game, replace: daily.replace });
   const active = mode === 'daily' ? daily : practice;
   const { game } = active.session;
 
@@ -442,6 +445,7 @@ function Wordskiis() {
           hardModeLocked={game.guesses.length > 0 && game.status === 'playing'}
           onReset={onReset}
         onThemes={() => setDialog('ranks')}
+        syncStatus={syncStatus}
           storagePersistent={services.store.persistent}
         />
         <ResultDialog

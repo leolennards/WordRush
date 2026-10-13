@@ -8,6 +8,7 @@ import type { SurvivalRun } from '@/engine/survival';
 import type { MultiState } from '@/engine/multi';
 import type { LadderState } from '@/engine/ladder';
 import type { Perk, TowerRun, Twist } from '@/engine/tower';
+import { COUNTERS, zeroCounters, type Counters } from '@/engine/sync';
 import { isRecord, type Schema } from './versioned';
 
 export const KEYS = {
@@ -22,6 +23,7 @@ export const KEYS = {
   rush: `${STORAGE_PREFIX}:rush`,
   ladder: `${STORAGE_PREFIX}:ladder`,
   tower: `${STORAGE_PREFIX}:tower`,
+  sync: `${STORAGE_PREFIX}:sync`,
   wordbook: `${STORAGE_PREFIX}:wordbook`,
   survival: `${STORAGE_PREFIX}:survival`,
   timers: `${STORAGE_PREFIX}:timers`,
@@ -415,5 +417,26 @@ export const towerSchema: Schema<TowerSession> = {
       (l): l is TowerRun['log'][number] => isRecord(l) && isWord(l.answer) && typeof l.won === 'boolean' && Array.isArray(l.twists),
     );
     return { game, run: { ...(r as unknown as TowerRun), log } };
+  },
+};
+
+// ---------- Cloud save bookkeeping (this device) ----------
+
+export interface SyncMeta {
+  /** Random id for this device, stable across launches. */
+  deviceId: string;
+  /** Account the base below belongs to. */
+  uid: string | null;
+  /** Other devices' counters as of the last sync (see engine/sync.ts). */
+  base: Counters;
+}
+
+export const syncMetaSchema: Schema<SyncMeta> = {
+  version: 1,
+  validate(d) {
+    if (!isRecord(d) || typeof d.deviceId !== 'string' || !isRecord(d.base)) return null;
+    const base = zeroCounters();
+    for (const k of COUNTERS) if (nonNegInt(d.base[k])) base[k] = d.base[k];
+    return { deviceId: d.deviceId, uid: typeof d.uid === 'string' ? d.uid : null, base };
   },
 };

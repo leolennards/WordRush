@@ -71,6 +71,29 @@ service cloud.firestore {
       }
     }
 
+    // ---- Cloud save: one private document per Google account. ----
+    // Guests can't use it: progress only syncs once you sign in with Google.
+    function withGoogle() {
+      return signedIn() && 'google.com' in request.auth.token.firebase.identities;
+    }
+    function smallString(d, key, max) {
+      return !(key in d) || (d[key] is string && d[key].size() <= max);
+    }
+    match /saves/{uid} {
+      allow get: if signedIn() && me() == uid;
+      allow list: if false;
+      allow create, update: if withGoogle() && me() == uid
+        && request.resource.data.keys().hasOnly(['v', 'devices', 'shared', 'dailyStats', 'practiceStats', 'daily', 'wordbook', 'updatedAt'])
+        && request.resource.data.v == 1
+        && request.resource.data.devices is map && request.resource.data.devices.size() <= 25
+        && smallString(request.resource.data, 'shared', 40000)
+        && smallString(request.resource.data, 'dailyStats', 4000)
+        && smallString(request.resource.data, 'practiceStats', 4000)
+        && smallString(request.resource.data, 'daily', 8000)
+        && smallString(request.resource.data, 'wordbook', 150000);
+      allow delete: if signedIn() && me() == uid;
+    }
+
     // ---- Challenges: one word, played separately by two friends. ----
     match /challenges/{id} {
       allow get, list: if signedIn() && me() in resource.data.players;

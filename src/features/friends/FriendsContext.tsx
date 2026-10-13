@@ -3,6 +3,7 @@ import { useServices } from '@/app/services';
 import { GAME, STORAGE_PREFIX } from '@/config/game';
 import { cleanDisplayName, dailyAnswer, dayIndexFor, parseFriendCode, pickPracticeAnswer } from '@/engine';
 import { friendsConfigured } from './config';
+import type { SaveDoc } from './api';
 import type { Account, Challenge, DailySummary, Friend, FinishedResult, FriendLink, PlayerDoc, Race, RaceProgress } from './types';
 
 type Api = typeof import('./api');
@@ -41,6 +42,14 @@ interface FriendsContextValue {
   /** Permanently delete my profile, code, friendships and account. */
   deleteProfile: () => Promise<void>;
   nameOf: (uid: string) => string;
+  /** Cloud save for a Google account (null for guests or before connecting). */
+  cloud: CloudSave | null;
+}
+
+export interface CloudSave {
+  uid: string;
+  watch: (cb: (save: SaveDoc | null) => void, onError?: (e: Error) => void) => () => void;
+  write: (deviceId: string, own: string, sections: Omit<SaveDoc, 'v' | 'devices'>) => Promise<void>;
 }
 
 const FriendsContext = createContext<FriendsContextValue | null>(null);
@@ -165,6 +174,21 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
     return pickPracticeAnswer(dictionary.answers, [today], random);
   }, [dictionary, random, now]);
 
+  // Cloud save is only for Google accounts, once Firebase is connected as that account.
+  const signedInUid = account && !account.isAnonymous && uid === account.uid ? uid : null;
+  // (The account only appears once the Firebase module has loaded, so api.current is set by then.)
+  const cloud = useMemo<CloudSave | null>(() => {
+    if (!signedInUid) return null;
+    return {
+      uid: signedInUid,
+      watch: (cb, onError) => api.current?.watchSave(signedInUid, cb, onError) ?? (() => {}),
+      write: async (deviceId, own, sections) => {
+        if (!api.current) throw new Error('Not connected');
+        await api.current.writeSave(signedInUid, deviceId, own, sections);
+      },
+    };
+  }, [signedInUid]);
+
   const value = useMemo<FriendsContextValue>(() => {
     const friends: Friend[] = links
       .map((l) => ({ ...l, profile: profiles[l.uid] ?? null }))
@@ -185,6 +209,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       pendingCount: pendingChallenges + pendingRaces,
       connect,
       nameOf,
+      cloud,
       async createProfile(raw) {
         const name = cleanDisplayName(raw);
         if (!name) throw new Error('Please enter a name');
@@ -277,7 +302,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         });
       },
     };
-  }, [status, error, uid, account, profile, links, profiles, challenges, races, connect, need, pickAnswer, fail, store, configured, startConnection]);
+  }, [status, error, uid, account, profile, links, profiles, challenges, races, connect, need, pickAnswer, fail, store, configured, startConnection, cloud]);
 
   return <FriendsContext.Provider value={value}>{children}</FriendsContext.Provider>;
 }

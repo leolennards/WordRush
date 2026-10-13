@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Cloud, Loader2, LogOut, UserRound } from 'lucide-react';
+import { Check, Cloud, Loader2, LogOut, UserRound } from 'lucide-react';
+import type { SyncStatus } from '@/features/sync/useCloudSync';
 import { useFriends } from '@/features/friends/FriendsContext';
 import { useToast } from '@/components/layout/Toasts';
 import { Button } from '@/components/ui';
 import { GoogleButton } from './GoogleButton';
 
 /** Sign in with Google (or out) from Settings, without going through Friends. */
-export function AccountSettings() {
+export function AccountSettings({ syncStatus = 'off' }: { syncStatus?: SyncStatus }) {
   const f = useFriends();
   const { toast } = useToast();
   const [confirming, setConfirming] = useState(false);
@@ -52,9 +53,25 @@ export function AccountSettings() {
           <GoogleButton label="Sign in with Google" className="min-h-10" />
         )}
       </div>
-      {!signedIn && (
+      {signedIn ? (
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-muted" aria-live="polite">
+          {syncStatus === 'syncing' ? (
+            <>
+              <Loader2 className="size-3.5 animate-spin" aria-hidden /> Syncing your progress…
+            </>
+          ) : syncStatus === 'error' ? (
+            <span className="text-danger">Couldn’t sync right now. Your progress is safe on this device and will sync later.</span>
+          ) : (
+            <>
+              <Check className="size-3.5 text-correct" aria-hidden /> Level, XP, achievements, Daily stats and Word Book are
+              synced across your devices.
+            </>
+          )}
+        </p>
+      ) : (
         <p className="mt-2 text-xs text-muted">
-          Keeps your Friends profile, friend code and friends safe, and brings them to your other devices.
+          Sign in to sync your level, XP, achievements, Daily stats and Word Book across devices, and keep your Friends
+          profile.
         </p>
       )}
       {f.error && !signedIn && (

@@ -24,3 +24,4 @@ export * from './fibber';
 export * from './reverse';
 export * from './bot';
 export * from './tower';
+export * from './sync';

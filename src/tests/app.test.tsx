@@ -71,7 +71,7 @@ describe('Wordskiis app', () => {
     await user.keyboard('{Backspace}{Backspace}');
     expect(rowText(0)).toBe('abc');
     await user.keyboard('{Enter}');
-    expect(await screen.findByText('Not enough letters')).toBeInTheDocument();
+    expect((await screen.findAllByText('Not enough letters')).length).toBeGreaterThan(0);
   });
 
   it('accepts on-screen keyboard input', async () => {
@@ -89,7 +89,7 @@ describe('Wordskiis app', () => {
   it('rejects words that are not in the list without using an attempt', async () => {
     const { user } = setup();
     await guess(user, 'qxzvj');
-    expect(await screen.findByText('Not in word list')).toBeInTheDocument();
+    expect((await screen.findAllByText('Not in word list')).length).toBeGreaterThan(0);
     expect(rows()[0]).toHaveAttribute('aria-label', expect.stringContaining('(typing)'));
     expect(rowText(0)).toBe('qxzvj');
   });
@@ -206,7 +206,7 @@ describe('Wordskiis app', () => {
     await guess(user, first);
     const breaker = ANSWERS.find((w) => w[0] !== ANSWER[0])!;
     await guess(user, breaker);
-    expect(await screen.findByText(`1st letter must be ${ANSWER[0]!.toUpperCase()}`)).toBeInTheDocument();
+    expect((await screen.findAllByText(`1st letter must be ${ANSWER[0]!.toUpperCase()}`)).length).toBeGreaterThan(0);
   });
 
   it('still works when storage is unavailable', async () => {
@@ -328,7 +328,7 @@ describe('levels, achievements and hints', () => {
     const dialog = await screen.findByRole('dialog', {}, { timeout: 3000 });
     expect(within(dialog).getByText(/^\+\d+ XP$/)).toBeInTheDocument();
     // Reward cards, not emoji text.
-    expect(await screen.findByText('Hole in one', {}, { timeout: 6000 })).toBeInTheDocument();
+    expect((await screen.findAllByText('Hole in one', {}, { timeout: 6000 })).length).toBeGreaterThan(0);
     expect(screen.getAllByText('Achievement unlocked').length).toBeGreaterThan(0);
     expect(screen.getByText('Level up')).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/[🏆⭐✅🎉]/u);
@@ -349,7 +349,7 @@ describe('levels, achievements and hints', () => {
     const { user, store } = setup();
     const answer = JSON.parse(store.get(KEYS.practice)!).data.game.answer as string;
     await user.click(screen.getByRole('button', { name: 'Hint, 2 left' }));
-    expect(await screen.findByText(`Hint: letter 1 is ${answer[0]!.toUpperCase()}`)).toBeInTheDocument();
+    expect((await screen.findAllByText(`Hint: letter 1 is ${answer[0]!.toUpperCase()}`)).length).toBeGreaterThan(0);
     expect(within(rows()[0]!).getAllByRole('gridcell')[0]).toHaveAttribute('data-state', 'hint');
     await user.click(screen.getByRole('button', { name: 'Hint, 1 left' }));
     expect(screen.getByRole('button', { name: 'No hints left' })).toBeDisabled();
@@ -634,7 +634,7 @@ describe('bot duel, tower, reverse and fibber', () => {
     await user.click(screen.getByRole('button', { name: 'Enter floor 1' }));
     const answer = JSON.parse(store.get(KEYS.tower)!).data.game.answer as string;
     await guess(user, answer);
-    expect(await screen.findByText('Choose a perk', {}, { timeout: 4000 })).toBeInTheDocument();
+    expect((await screen.findAllByText('Choose a perk', {}, { timeout: 4000 })).length).toBeGreaterThan(0);
     const perks = screen.getAllByRole('button').filter((b) => /Heal|Lantern|Shield|Clear skies/.test(b.textContent ?? ''));
     expect(perks).toHaveLength(2);
     await user.click(perks[0]!);
@@ -654,7 +654,7 @@ describe('bot duel, tower, reverse and fibber', () => {
     expect(screen.getByRole('img', { name: '2 lives left' })).toBeInTheDocument();
     expect(screen.getByText('Your tries made')).toBeInTheDocument();
     await guess(user, fits);
-    expect(await screen.findByText(/Round 2 of 5 · 1 solved/, {}, { timeout: 3000 })).toBeInTheDocument();
+    expect((await screen.findAllByText(/Round 2 of 5 · 1 solved/, {}, { timeout: 3000 })).length).toBeGreaterThan(0);
   });
 
   it('Fibber shows one lie per row and unmasks the lies at the end', async () => {

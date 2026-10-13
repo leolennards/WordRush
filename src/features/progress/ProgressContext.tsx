@@ -14,6 +14,8 @@ interface ProgressContextValue {
   gains: Record<string, number>;
   /** Shows the full-screen rank-up moment. */
   celebrateRank: (rank: Rank, level: number) => void;
+  /** Re-reads progress from storage (after a cloud sync). */
+  refresh: () => void;
 }
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
@@ -42,7 +44,11 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     [load, store, now],
   );
 
-  const value = useMemo(() => ({ progress, record, gains, celebrateRank }), [progress, record, gains, celebrateRank]);
+  const refresh = useCallback(() => setProgress(load()), [load]);
+  const value = useMemo(
+    () => ({ progress, record, gains, celebrateRank, refresh }),
+    [progress, record, gains, celebrateRank, refresh],
+  );
   return (
     <ProgressContext.Provider value={value}>
       {children}

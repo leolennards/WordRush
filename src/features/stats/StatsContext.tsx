@@ -14,6 +14,8 @@ interface StatsContextValue {
    * challenge as recorded so restoring it later doesn't count it again.
    */
   reset: (dailyRecordedKey: number | null) => void;
+  /** Re-reads statistics from storage (after a cloud sync). */
+  refresh: () => void;
 }
 
 const StatsContext = createContext<StatsContextValue | null>(null);
@@ -51,7 +53,11 @@ export function StatsProvider({ children }: { children: ReactNode }) {
     [store],
   );
 
-  const value = useMemo(() => ({ daily, practice, record, reset }), [daily, practice, record, reset]);
+  const refresh = useCallback(() => {
+    setDaily(load('daily'));
+    setPractice(load('practice'));
+  }, [load]);
+  const value = useMemo(() => ({ daily, practice, record, reset, refresh }), [daily, practice, record, reset, refresh]);
   return <StatsContext.Provider value={value}>{children}</StatsContext.Provider>;
 }
 

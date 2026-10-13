@@ -13,6 +13,8 @@ interface WordsContextValue {
   book: WordBookEntry[];
   /** Adds played answers to the Word Book (the newest play of a word wins). */
   collect: (mode: string, words: { answer: string; won: boolean }[]) => void;
+  /** Re-reads the Word Book from storage (after a cloud sync). */
+  refresh: () => void;
 }
 
 const WordsContext = createContext<WordsContextValue | null>(null);
@@ -42,7 +44,8 @@ export function WordsProvider({ children }: { children: ReactNode }) {
   const showWord = useCallback((w: string) => setWord(w.toLowerCase()), []);
   const showBook = useCallback(() => setBookOpen(true), []);
 
-  const value = useMemo(() => ({ showWord, showBook, book, collect }), [showWord, showBook, book, collect]);
+  const refresh = useCallback(() => setBook(readVersioned(store, KEYS.wordbook, wordbookSchema) ?? []), [store]);
+  const value = useMemo(() => ({ showWord, showBook, book, collect, refresh }), [showWord, showBook, book, collect, refresh]);
   return (
     <WordsContext.Provider value={value}>
       {children}
