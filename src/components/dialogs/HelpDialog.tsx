@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Award, BookOpen, CalendarClock, CalendarDays, Columns2, Heart, ScrollText, Share2, Shuffle, SlidersHorizontal, Zap } from 'lucide-react';
+import { Award, BookOpen, Footprints, CalendarClock, CalendarDays, Columns2, Heart, ScrollText, Share2, Shuffle, SlidersHorizontal, Zap } from 'lucide-react';
 import type { LetterState } from '@/engine';
 import { BRAND, GAME } from '@/config/game';
 import { Dialog } from './Dialog';
@@ -88,6 +88,13 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
             </span>
           </li>
           <li className="flex gap-3">
+            <Footprints className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <span>
+              <strong>Word Ladder</strong> — turn the start word into the target by changing one letter at a time.
+              Every step must be a real word. Reach it in par for three stars.
+            </span>
+          </li>
+          <li className="flex gap-3">
             <CalendarClock className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
             <span>
               <strong>Daily Rush</strong> — a Blitz run on the same words for everyone, once a day. Compare scores
@@ -123,7 +130,8 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
           <li className="flex gap-3">
             <Award className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
             <span>
-              <strong>Level up</strong> — every game earns XP, and there are achievements to unlock.
+              <strong>Level up</strong> — every game earns XP. Climb through ten ranks, from Rookie to Wordskiis
+              Legend at level 100, each with its own emblem and new tile themes to unlock.
             </span>
           </li>
           <li className="flex gap-3">

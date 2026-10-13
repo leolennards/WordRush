@@ -7,10 +7,12 @@ import { useProgress } from './ProgressContext';
 
 /** Delay between reward cards when several arrive together. */
 const STAGGER_MS = 1000;
+/** Let the board celebration play before a rank-up takes over the screen. */
+const RANK_DELAY_MS = 1400;
 
 /** Records a finished game and celebrates new achievements, quests and level-ups. */
 export function useAward() {
-  const { record } = useProgress();
+  const { record, celebrateRank } = useProgress();
   const { toast } = useToast();
   const { collect } = useWords();
   return useCallback(
@@ -18,7 +20,11 @@ export function useAward() {
       const result = record(event);
       if (event.words && result.xpGained > 0) collect(event.id.startsWith('rush-') ? 'rush' : event.mode, event.words);
       const rewards: Reward[] = [];
-      if (result.levelUp) {
+      // A new rank gets the full-screen moment, shortly after the game's own celebration.
+      if (result.rankUp && result.levelUp) {
+        const { rankUp, levelUp } = result;
+        window.setTimeout(() => celebrateRank(rankUp, levelUp), RANK_DELAY_MS);
+      } else if (result.levelUp) {
         rewards.push({
           kind: 'level',
           eyebrow: 'Level up',
@@ -48,6 +54,6 @@ export function useAward() {
       });
       return result;
     },
-    [record, toast, collect],
+    [record, toast, collect, celebrateRank],
   );
 }

@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 import { keepFocus } from '@/lib/accessibility/keepFocus';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -15,7 +15,7 @@ export function Button({
   className = '',
   children,
   ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; children: ReactNode }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; children: ReactNode; ref?: Ref<HTMLButtonElement> }) {
   return (
     <button
       type="button"

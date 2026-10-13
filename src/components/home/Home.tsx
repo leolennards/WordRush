@@ -2,6 +2,7 @@ import { m } from 'motion/react';
 import {
   ArrowRight,
   Award,
+  Palette,
   BookOpen,
   CalendarClock,
   Grid2x2,
@@ -11,6 +12,7 @@ import {
   Clock3,
   Columns2,
   Flame,
+  Footprints,
   Heart,
   Settings,
   Shuffle,
@@ -42,10 +44,12 @@ interface HomeProps {
   onDuo: () => void;
   onQuad: () => void;
   onRush: () => void;
+  onLadder: () => void;
   /** Today's Daily Rush score, or null if not played yet. */
   rushScore: number | null;
   onSurvival: () => void;
   onAchievements: () => void;
+  onRanks: () => void;
   onWordBook: () => void;
   wordCount: number;
   progress: Progress;
@@ -101,6 +105,17 @@ export function Home(props: HomeProps) {
   const bestSurvival = props.progress.bestSurvival;
   const modes = [
     {
+      name: 'Word Ladder',
+      label: 'Play Word Ladder',
+      icon: Footprints,
+      tint: 'bg-accent/15',
+      iconClass: 'text-accent',
+      onClick: props.onLadder,
+      detail: 'Change one letter at a time.',
+      isNew: true,
+      featured: true,
+    },
+    {
       name: 'Practice',
       label: `${practiceInProgress ? 'Continue' : 'Play'} Practice`,
       icon: Shuffle,
@@ -113,6 +128,7 @@ export function Home(props: HomeProps) {
           ? 'Unlimited words, with hints.'
           : `${practiceStats.wins} of ${practiceStats.played} solved`,
       isNew: false,
+      featured: false,
     },
     {
       name: 'Blitz',
@@ -123,6 +139,7 @@ export function Home(props: HomeProps) {
       onClick: props.onBlitz,
       detail: best > 0 ? `Best: ${best} ${best === 1 ? 'word' : 'words'}` : 'Race the clock.',
       isNew: false,
+      featured: false,
     },
     {
       name: 'Daily Rush',
@@ -135,7 +152,8 @@ export function Home(props: HomeProps) {
         props.rushScore === null
           ? 'Same words for all. One try.'
           : `Today: ${props.rushScore} ${props.rushScore === 1 ? 'word' : 'words'}`,
-      isNew: true,
+      isNew: false,
+      featured: false,
     },
     {
       name: 'Duo',
@@ -146,6 +164,7 @@ export function Home(props: HomeProps) {
       onClick: props.onDuo,
       detail: props.progress.duoWins > 0 ? `${props.progress.duoWins} won` : 'Two words at once.',
       isNew: false,
+      featured: false,
     },
     {
       name: 'Quad',
@@ -155,7 +174,8 @@ export function Home(props: HomeProps) {
       iconClass: 'text-present',
       onClick: props.onQuad,
       detail: props.progress.quadWins > 0 ? `${props.progress.quadWins} won` : 'Four words, nine guesses.',
-      isNew: true,
+      isNew: false,
+      featured: false,
     },
     {
       name: 'Survival',
@@ -166,6 +186,7 @@ export function Home(props: HomeProps) {
       onClick: props.onSurvival,
       detail: bestSurvival > 0 ? `Best: ${bestSurvival} ${bestSurvival === 1 ? 'word' : 'words'}` : 'Three lives. How far?',
       isNew: false,
+      featured: false,
     },
   ];
 
@@ -229,22 +250,40 @@ export function Home(props: HomeProps) {
           </m.section>
 
           {/* Level & achievements */}
-          <m.button
+          <m.div
             {...rise(2)}
-            type="button"
-            onClick={props.onAchievements}
-            aria-label={`Achievements — ${unlocked} of ${ACHIEVEMENTS.length} unlocked`}
-            className="group w-full rounded-[var(--radius-card)] border border-border bg-surface p-4 text-left transition hover:border-border-strong"
+            className="overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface transition hover:border-border-strong"
           >
-            <LevelBar xp={props.progress.xp} />
-            <span className="mt-3 flex items-center justify-between text-sm">
-              <span className="flex items-center gap-1.5 font-semibold">
+            <button
+              type="button"
+              onClick={props.onRanks}
+              aria-label="Ranks and tile themes"
+              className="block w-full p-4 text-left transition hover:bg-surface-2/50"
+            >
+              <LevelBar xp={props.progress.xp} />
+            </button>
+            <div className="grid grid-cols-2 divide-x divide-border border-t border-border text-sm">
+              <button
+                type="button"
+                onClick={props.onAchievements}
+                aria-label={`Achievements — ${unlocked} of ${ACHIEVEMENTS.length} unlocked`}
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 font-semibold transition hover:bg-surface-2"
+              >
                 <Award className="size-4 text-present" aria-hidden />
-                {unlocked} of {ACHIEVEMENTS.length} achievements
-              </span>
-              <ChevronRight className="size-5 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
-            </span>
-          </m.button>
+                <span className="tabular">
+                  {unlocked}/{ACHIEVEMENTS.length}
+                </span>{' '}
+                <span className="text-muted">badges</span>
+              </button>
+              <button
+                type="button"
+                onClick={props.onRanks}
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 font-semibold transition hover:bg-surface-2"
+              >
+                <Palette className="size-4 text-accent" aria-hidden /> Ranks & themes
+              </button>
+            </div>
+          </m.div>
 
           <m.div {...rise(3)}>
             <QuestsCard progress={props.progress} todayIndex={props.todayIndex} countdown={props.countdown} />
@@ -299,20 +338,27 @@ export function Home(props: HomeProps) {
                   type="button"
                   onClick={mode.onClick}
                   aria-label={mode.label}
-                  className="group flex min-h-[7.5rem] flex-col items-start rounded-[var(--radius-card)] border border-border bg-surface p-4 text-left transition hover:border-border-strong active:scale-[0.99]"
+                  className={`group flex rounded-[var(--radius-card)] border border-border bg-surface p-4 text-left transition hover:border-border-strong active:scale-[0.99] ${
+                    mode.featured ? 'col-span-2 items-center gap-4' : 'min-h-[7.5rem] flex-col items-start'
+                  }`}
                 >
-                  <span className={`grid size-10 place-items-center rounded-xl ${mode.tint}`}>
+                  <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${mode.tint}`}>
                     <mode.icon className={`size-5 ${mode.iconClass}`} aria-hidden />
                   </span>
-                  <span className="mt-3 flex items-center gap-1.5 font-bold">
-                    {mode.name}
-                    {mode.isNew && (
-                      <span className="rounded-full bg-present/20 px-1.5 py-px text-[0.6rem] font-bold tracking-wide uppercase">
-                        New
-                      </span>
-                    )}
+                  <span className={mode.featured ? 'min-w-0 flex-1' : 'contents'}>
+                    <span className={`flex items-center gap-1.5 font-bold ${mode.featured ? '' : 'mt-3'}`}>
+                      {mode.name}
+                      {mode.isNew && (
+                        <span className="rounded-full bg-present/20 px-1.5 py-px text-[0.6rem] font-bold tracking-wide uppercase">
+                          New
+                        </span>
+                      )}
+                    </span>
+                    <span className="mt-0.5 block text-[0.8rem] leading-snug text-muted">{mode.detail}</span>
                   </span>
-                  <span className="mt-0.5 text-[0.8rem] leading-snug text-muted">{mode.detail}</span>
+                  {mode.featured && (
+                    <ChevronRight className="size-5 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
+                  )}
                 </button>
               ))}
             </div>

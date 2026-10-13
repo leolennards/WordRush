@@ -127,13 +127,31 @@ the next game. Hard-mode results are marked with `*` when shared.
 - Progress comes from finished games of any mode; each completed quest is worth 60 bonus XP.
 - Quests reset with the Daily Challenge at 00:00 UTC.
 
+## Word Ladder
+
+- Change one letter of the current word to make a new real word; repeat until you reach the target.
+- Puzzles are built from the answer list so the shortest path uses common words; par is that path's length
+  (3–5 moves). You have par + 3 moves.
+- Any accepted word may be played. A move must change exactly one letter and can't repeat a word.
+- Stars: 3 at par, 2 at one over par (or when hints were used), otherwise 1. Up to 2 hints, each revealing the
+  next word on a shortest path from where you are.
+- A win earns 50 + 30 × stars XP.
+
+## Ranks and tile themes
+
+- Ranks by level: Rookie (1), Apprentice (5), Wordsmith (10), Lexicon (20), Scholar (30), Sage (40),
+  Virtuoso (50), Grandmaster (65), Mythic (80), Wordskiis Legend (100+).
+- Reaching a rank can unlock a tile theme (Ocean, Sunset, Forest, Neon, Royal, Ember, Aurora, Prism).
+  The colour-accessible palette always takes priority over themes.
+
 ## Levels and achievements
 
 - XP per game: a win earns 50 + 15 × (6 − guesses), +25 in hard mode, +40 for the Daily Challenge,
   −20 per hint (minimum 15). A loss earns 10. A Blitz run earns 10 + 25 per word.
-- Level *n* starts at 50 × n × (n − 1) XP (level 2 at 100, level 3 at 300, …).
+- Level *n* starts at 20 × n × (n − 1) + 60 × (n − 1) XP (level 2 at 100, level 3 at 240, level 100 at
+  about 204,000), so each level costs 40 XP more than the one before.
 - Each finished game is counted once by its id, so refreshes never award XP twice.
-- 29 achievements, including Duo, Quad, Survival, mods, Daily Rush and daily-quest ones (first win, solving in 1/2/6 guesses, streaks of 3/7/30, hard mode, under 60 s,
+- 35 achievements, including Word Ladder and rank ones, Duo, Quad, Survival, mods, Daily Rush and daily-quest ones (first win, solving in 1/2/6 guesses, streaks of 3/7/30, hard mode, under 60 s,
   Practice and total wins, Blitz scores, level 5). Solve time runs from the first letter typed.
 
 ## Statistics

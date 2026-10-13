@@ -43,9 +43,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     root.classList.toggle('dark', resolvedTheme === 'dark');
     root.dataset.contrast = settings.highContrast ? 'high' : 'normal';
     root.dataset.reduceMotion = String(settings.reduceMotion);
+    root.dataset.skin = settings.skin;
     const meta = document.querySelector('meta[name="theme-color"]');
     meta?.setAttribute('content', resolvedTheme === 'dark' ? '#0c0f15' : '#f6f3ec');
-  }, [resolvedTheme, settings.highContrast, settings.reduceMotion]);
+  }, [resolvedTheme, settings.highContrast, settings.reduceMotion, settings.skin]);
 
   const value = useMemo(
     () => ({ settings, update, resolvedTheme, reducedMotion }) as const,

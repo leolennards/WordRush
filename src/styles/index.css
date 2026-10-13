@@ -54,6 +54,10 @@
   --c-key-absent: #7c818c;
   --c-key-absent-ink: #ffffff;
 
+  /* Tile/key fills: the colour by default; animated themes use gradients. */
+  --fill-correct: var(--c-correct);
+  --fill-present: var(--c-present);
+
   /* Background decal */
   --c-decal-dot: rgb(28 31 38 / 0.09);
   --c-decal-line: rgb(28 31 38 / 0.10);
@@ -133,8 +137,58 @@
   --shadow-lg: 0 30px 70px -20px rgb(0 0 0 / 0.75);
 }
 
+/* Tile themes, unlocked by rank (see engine/ranks.ts). Defined before the
+   colour-accessible palette so that palette always wins. */
+[data-skin='ocean'] { --c-correct: #0e8fb8; --c-correct-ink: #fff; --c-present: #f2b65a; --c-present-ink: #2b1c00; }
+.dark[data-skin='ocean'] { --c-correct: #38bdf8; --c-correct-ink: #04202e; --c-present: #f6c56f; --c-present-ink: #2a1a00; }
+[data-skin='sunset'] { --c-correct: #e0533f; --c-correct-ink: #fff; --c-present: #f7c548; --c-present-ink: #2b1c00; }
+.dark[data-skin='sunset'] { --c-correct: #ff7a62; --c-correct-ink: #2a0a04; --c-present: #ffd36b; --c-present-ink: #2a1a00; }
+[data-skin='forest'] { --c-correct: #2f7d4a; --c-correct-ink: #fff; --c-present: #c9963a; --c-present-ink: #2b1c00; }
+.dark[data-skin='forest'] { --c-correct: #4ade80; --c-correct-ink: #052e16; --c-present: #e0b45a; --c-present-ink: #2a1a00; }
+[data-skin='neon'] { --c-correct: #8b5cf6; --c-correct-ink: #fff; --c-present: #06b6d4; --c-present-ink: #022c33; }
+.dark[data-skin='neon'] { --c-correct: #a78bfa; --c-correct-ink: #1e0b45; --c-present: #22d3ee; --c-present-ink: #022c33; }
+[data-skin='royal'] { --c-correct: #c9a227; --c-correct-ink: #2a1f00; --c-present: #7c3aed; --c-present-ink: #fff; }
+.dark[data-skin='royal'] { --c-correct: #facc15; --c-correct-ink: #2a1f00; --c-present: #a78bfa; --c-present-ink: #1e0b45; }
+[data-skin='ember'] { --c-correct: #dc2626; --c-correct-ink: #fff; --c-present: #f59e0b; --c-present-ink: #2a1500; }
+.dark[data-skin='ember'] { --c-correct: #f87171; --c-correct-ink: #2a0505; --c-present: #fbbf24; --c-present-ink: #2a1500; }
+[data-skin='aurora'] {
+  --c-correct: #0ea47a;
+  --c-correct-ink: #fff;
+  --c-present: #8b5cf6;
+  --c-present-ink: #fff;
+  --fill-correct: linear-gradient(135deg, #10b981, #06b6d4, #6366f1, #10b981);
+  --fill-present: linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6, #f59e0b);
+}
+[data-skin='prism'] {
+  --c-correct: #db2777;
+  --c-correct-ink: #fff;
+  --c-present: #eab308;
+  --c-present-ink: #2a1f00;
+  --fill-correct: linear-gradient(135deg, #ec4899, #8b5cf6, #06b6d4, #8b5cf6, #ec4899);
+  --fill-present: linear-gradient(135deg, #fde047, #fb923c, #fde047, #facc15);
+}
+[data-skin='aurora'] .tile:is([data-state='correct'], [data-state='present']):not([data-anim]),
+[data-skin='prism'] .tile:is([data-state='correct'], [data-state='present']):not([data-anim]),
+[data-skin='aurora'] .key:is([data-state='correct'], [data-state='present']),
+[data-skin='prism'] .key:is([data-state='correct'], [data-state='present']) {
+  background-size: 300% 300%;
+  animation: skin-flow 7s ease-in-out infinite;
+}
+[data-skin='prism'] .tile[data-state='correct'] {
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+}
+@keyframes skin-flow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-skin] .tile, [data-skin] .key { animation-iteration-count: 1 !important; }
+}
+
 /* Colour-accessible palette (orange / blue), both themes. */
 [data-contrast='high'] {
+  --fill-correct: var(--c-correct);
+  --fill-present: var(--c-present);
   --c-correct: #e8682a;
   --c-correct-ink: #ffffff;
   --c-present: #3d8fe0;
@@ -324,6 +378,220 @@ button {
 }
 
 /* =========================================================================
+   Rank emblems (see RankBadge.tsx). Effects grow with data-fx (0–5).
+   ========================================================================= */
+.rank-badge {
+  --hex: polygon(50% 0, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%);
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: var(--size);
+  height: var(--size);
+  flex-shrink: 0;
+  isolation: isolate;
+}
+.rank-badge > * {
+  grid-area: 1 / 1;
+}
+.rank-hexwrap {
+  width: 86%;
+  height: 92%;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 calc(var(--size) * 0.04) calc(var(--size) * 0.06) rgb(0 0 0 / 0.25));
+}
+.rank-hex {
+  position: absolute;
+  inset: 0;
+  clip-path: var(--hex);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--to) 70%, #000), var(--to));
+  overflow: hidden;
+}
+.rank-hex-inner {
+  position: absolute;
+  inset: 7%;
+  clip-path: var(--hex);
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(120% 80% at 30% 15%, rgb(255 255 255 / 0.45), transparent 55%),
+    linear-gradient(160deg, var(--from), var(--to));
+}
+.rank-num {
+  color: var(--ink);
+  font-weight: 900;
+  font-size: calc(var(--size) * 0.34);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.18);
+  font-variant-numeric: tabular-nums;
+}
+.rank-badge[data-locked] {
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+
+/* 1+: a sheen sweeps across every few seconds. */
+.rank-sheen {
+  position: absolute;
+  inset: -20% auto -20% -60%;
+  width: 45%;
+  transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.6), transparent);
+  animation: rank-sheen 3.6s ease-in-out infinite;
+}
+@keyframes rank-sheen {
+  0%, 55% { left: -60%; }
+  85%, 100% { left: 130%; }
+}
+
+/* 2+: a breathing aura in the rank's colour. */
+.rank-badge[data-fx='2'] .rank-hexwrap,
+.rank-badge[data-fx='3'] .rank-hexwrap,
+.rank-badge[data-fx='4'] .rank-hexwrap,
+.rank-badge[data-fx='5'] .rank-hexwrap {
+  animation: rank-aura 2.8s ease-in-out infinite;
+}
+@keyframes rank-aura {
+  0%, 100% { filter: drop-shadow(0 0 calc(var(--size) * 0.05) color-mix(in srgb, var(--to) 70%, transparent)); }
+  50% { filter: drop-shadow(0 0 calc(var(--size) * 0.14) color-mix(in srgb, var(--from) 90%, transparent)); }
+}
+
+/* 3+: a rotating ring of light behind the emblem. */
+.rank-ring {
+  width: 112%;
+  height: 112%;
+  border-radius: 50%;
+  z-index: 1;
+  background: conic-gradient(from 0deg, transparent 0 15%, var(--from) 25%, transparent 40% 60%, var(--to) 75%, transparent 90%);
+  -webkit-mask: radial-gradient(closest-side, transparent 78%, #000 80%, #000 96%, transparent 98%);
+  mask: radial-gradient(closest-side, transparent 78%, #000 80%, #000 96%, transparent 98%);
+  animation: rank-spin 6s linear infinite;
+  opacity: 0.9;
+}
+@keyframes rank-spin {
+  to { rotate: 360deg; }
+}
+
+/* 4+: sparks orbiting the emblem. */
+.rank-orbit {
+  width: 118%;
+  height: 118%;
+  z-index: 3;
+  animation: rank-spin 4.5s linear infinite reverse;
+  pointer-events: none;
+}
+.rank-orbit i {
+  position: absolute;
+  width: calc(var(--size) * 0.07);
+  height: calc(var(--size) * 0.07);
+  min-width: 3px;
+  min-height: 3px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px 2px var(--from), 0 0 12px 3px var(--to);
+}
+.rank-orbit i:nth-child(1) { top: 0; left: 50%; }
+.rank-orbit i:nth-child(2) { bottom: 12%; left: 8%; }
+.rank-orbit i:nth-child(3) { bottom: 12%; right: 8%; }
+
+/* 5: Legend — prismatic colour, light rays and rising particles. */
+.rank-badge[data-fx='5'] .rank-hex-inner {
+  animation: rank-prism 6s linear infinite;
+}
+.rank-badge[data-fx='5'] .rank-ring {
+  animation: rank-spin 6s linear infinite, rank-prism 6s linear infinite;
+}
+@keyframes rank-prism {
+  to { filter: hue-rotate(360deg); }
+}
+.rank-rays {
+  width: 170%;
+  height: 170%;
+  z-index: 0;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--from) 55%, transparent) 0 6deg, transparent 6deg 24deg);
+  -webkit-mask: radial-gradient(closest-side, #000 20%, transparent 72%);
+  mask: radial-gradient(closest-side, #000 20%, transparent 72%);
+  animation: rank-spin 18s linear infinite, rank-prism 6s linear infinite;
+}
+.rank-particles {
+  width: 140%;
+  height: 140%;
+  z-index: 4;
+  pointer-events: none;
+}
+.rank-particles i {
+  position: absolute;
+  bottom: 15%;
+  left: calc(12% + var(--i) * 10%);
+  width: calc(var(--size) * 0.045);
+  height: calc(var(--size) * 0.045);
+  min-width: 2px;
+  min-height: 2px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--from) 60%, #fff);
+  opacity: 0;
+  animation: rank-rise 2.6s ease-out infinite;
+  animation-delay: calc(var(--i) * 0.33s);
+}
+@keyframes rank-rise {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(calc(var(--size) * -0.9)) scale(1.1); opacity: 0; }
+}
+
+/* Rank-up: a slow-turning burst of light in the new rank's colours. */
+.rankup-glow {
+  background:
+    radial-gradient(40% 35% at 50% 45%, color-mix(in srgb, var(--from) 55%, transparent), transparent 70%),
+    repeating-conic-gradient(from 0deg at 50% 45%, color-mix(in srgb, var(--to) 22%, transparent) 0 8deg, transparent 8deg 22deg);
+  -webkit-mask: radial-gradient(70% 60% at 50% 45%, #000 30%, transparent 75%);
+  mask: radial-gradient(70% 60% at 50% 45%, #000 30%, transparent 75%);
+  animation: rankup-turn 30s linear infinite;
+}
+@keyframes rankup-turn {
+  to { rotate: 360deg; }
+}
+[data-reduce-motion='true'] .rankup-glow {
+  animation: none !important;
+}
+
+/* Rank names in the rank's colours. */
+.rank-title {
+  background: linear-gradient(90deg, var(--from), var(--to), var(--from));
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: skin-flow 6s ease-in-out infinite;
+}
+.swatch-flow {
+  background-size: 300% 300% !important;
+  animation: skin-flow 5s ease-in-out infinite;
+}
+
+/* Calm, static emblems when motion is reduced. */
+@media (prefers-reduced-motion: reduce) {
+  .rank-badge *, .rank-badge .rank-hexwrap { animation: none !important; }
+  .rank-particles, .rank-sheen { display: none; }
+}
+[data-reduce-motion='true'] .rank-badge *,
+[data-reduce-motion='true'] .rank-badge .rank-hexwrap {
+  animation: none !important;
+}
+[data-reduce-motion='true'] .rank-title,
+[data-reduce-motion='true'] .swatch-flow,
+[data-reduce-motion='true'][data-skin] .tile,
+[data-reduce-motion='true'][data-skin] .key {
+  animation: none !important;
+}
+[data-reduce-motion='true'] .rank-particles,
+[data-reduce-motion='true'] .rank-sheen {
+  display: none;
+}
+
+/* =========================================================================
    Board & tiles
    ========================================================================= */
 .board-area {
@@ -384,6 +652,44 @@ button {
   to { filter: blur(0); opacity: 1; }
 }
 
+/* Word Ladder: two faint rails run down the climb. */
+.ladder-rails {
+  background:
+    linear-gradient(var(--c-border), var(--c-border)) calc(50% - min(50%, 8.5rem) - 7px) 0 / 3px 100% no-repeat,
+    linear-gradient(var(--c-border), var(--c-border)) calc(50% + min(50%, 8.5rem) + 7px) 0 / 3px 100% no-repeat;
+  background-attachment: local;
+}
+.ladder-rails .ladder-row {
+  position: relative;
+}
+
+/* Word Ladder rows. */
+.ladder-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  width: min(100%, 17rem);
+  margin-inline: auto;
+}
+.ladder-row[data-shake] {
+  animation: row-shake var(--dur-shake) ease-in-out;
+}
+.ladder-tile {
+  aspect-ratio: 1;
+  font-size: clamp(1.1rem, 5.5vw, 1.5rem);
+}
+.ladder-tile[data-state='start'] {
+  --tile-border: transparent;
+  --tile-bg: var(--c-surface-3);
+}
+.ladder-tile[data-state='step'] {
+  --tile-border: var(--c-tile-filled-border);
+  --tile-bg: var(--c-surface);
+}
+.ladder-tile[data-changed] {
+  box-shadow: 0 0 0 2.5px var(--c-accent);
+}
+
 /* Small boards (Quad). */
 .board[data-compact] {
   --gap: clamp(2px, 1.2cqmin, 5px);
@@ -417,11 +723,11 @@ button {
   box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.12);
 }
 .tile[data-state='correct'] {
-  --tile-bg: var(--c-correct);
+  --tile-bg: var(--fill-correct);
   --tile-ink: var(--c-correct-ink);
 }
 .tile[data-state='present'] {
-  --tile-bg: var(--c-present);
+  --tile-bg: var(--fill-present);
   --tile-ink: var(--c-present-ink);
 }
 .tile[data-state='absent'] {
@@ -543,11 +849,11 @@ button {
   transform: translateY(1px) scale(0.96);
 }
 .key[data-state='correct'] {
-  --key-bg: var(--c-correct);
+  --key-bg: var(--fill-correct);
   --key-ink: var(--c-correct-ink);
 }
 .key[data-state='present'] {
-  --key-bg: var(--c-present);
+  --key-bg: var(--fill-present);
   --key-ink: var(--c-present-ink);
 }
 .key[data-state='absent'] {

@@ -3,8 +3,10 @@ import { MODS, type GameState, type LetterState, type Mod } from '@/engine/types
 import type { Stats } from '@/engine/stats';
 import { emptyProgress, type Progress } from '@/engine/progress';
 import type { QuestState } from '@/engine/quests';
+import { SKINS, type SkinId } from '@/engine/ranks';
 import type { SurvivalRun } from '@/engine/survival';
 import type { MultiState } from '@/engine/multi';
+import type { LadderState } from '@/engine/ladder';
 import { isRecord, type Schema } from './versioned';
 
 export const KEYS = {
@@ -17,6 +19,7 @@ export const KEYS = {
   duo: `${STORAGE_PREFIX}:duo`,
   quad: `${STORAGE_PREFIX}:quad`,
   rush: `${STORAGE_PREFIX}:rush`,
+  ladder: `${STORAGE_PREFIX}:ladder`,
   wordbook: `${STORAGE_PREFIX}:wordbook`,
   survival: `${STORAGE_PREFIX}:survival`,
   timers: `${STORAGE_PREFIX}:timers`,
@@ -38,6 +41,8 @@ export interface Settings {
   /** Practice mods. */
   modFog: boolean;
   modBlind: boolean;
+  /** Tile theme (unlocked by rank). */
+  skin: SkinId;
   /** Whether the first-visit help has been shown. */
   seenHelp: boolean;
 }
@@ -51,6 +56,7 @@ export const DEFAULT_SETTINGS: Settings = {
   haptics: true,
   modFog: false,
   modBlind: false,
+  skin: 'classic',
   seenHelp: false,
 };
 
@@ -70,6 +76,7 @@ export const settingsSchema: Schema<Settings> = {
       haptics: bool('haptics'),
       modFog: bool('modFog'),
       modBlind: bool('modBlind'),
+      skin: SKINS.some((x) => x.id === d.skin) ? (d.skin as SkinId) : 'classic',
       seenHelp: bool('seenHelp'),
     };
   },
@@ -348,5 +355,26 @@ export const rushSchema: Schema<RushResult> = {
       (w): w is RushResult['words'][number] => isRecord(w) && isWord(w.answer) && typeof w.won === 'boolean',
     );
     return { day: d.day as number, solved: d.solved, words, done: d.done };
+  },
+};
+
+// ---------- Word Ladder ----------
+
+export interface LadderSession {
+  game: LadderState;
+  /** Ladders started so far. */
+  number: number;
+}
+
+export const ladderSchema: Schema<LadderSession> = {
+  version: 1,
+  validate(d) {
+    if (!isRecord(d) || !nonNegInt(d.number) || !isRecord(d.game)) return null;
+    const { id, start, target, steps, par, maxMoves, status, hints } = d.game;
+    if (typeof id !== 'string' || !isWord(start) || !isWord(target)) return null;
+    if (!Array.isArray(steps) || !steps.every(isWord) || !nonNegInt(par) || !nonNegInt(maxMoves) || !nonNegInt(hints)) return null;
+    if (steps.length > maxMoves) return null;
+    if (status !== 'playing' && status !== 'won' && status !== 'lost') return null;
+    return { number: d.number, game: { id, start, target, steps, par, maxMoves, status, hints } };
   },
 };

@@ -5,7 +5,17 @@ import { App } from '@/app/App';
 import type { Services } from '@/app/services';
 import { dictionary } from '@/data/words';
 import { ANSWERS } from '@/data/words/answers';
-import { BLITZ, dailyAnswer, pickPracticeAnswer, rushSeed, seededRandom } from '@/engine';
+import {
+  BLITZ,
+  LADDER,
+  LadderGraph,
+  dailyAnswer,
+  emptyProgress,
+  pickPracticeAnswer,
+  rushSeed,
+  seededRandom,
+  xpForLevel,
+} from '@/engine';
 import { createMemoryStore, type KeyValueStore } from '@/lib/storage/store';
 import { DEFAULT_SETTINGS, KEYS } from '@/lib/storage/schemas';
 import { HELP_EXAMPLES } from '@/components/dialogs/helpExamples';
@@ -364,7 +374,7 @@ describe('blitz', () => {
     const user = userEvent.setup();
     render(<App services={services} />);
 
-    expect(screen.getByRole('heading', { name: 'Blitz' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Blitz' })).toBeInTheDocument();
     expect(screen.getByRole('timer')).toHaveTextContent('1:30');
     await user.click(screen.getByRole('button', { name: /Start/ }));
 
@@ -386,7 +396,7 @@ describe('blitz', () => {
     window.history.replaceState(null, '', '/');
     const { user } = setup();
     await user.click(screen.getByRole('button', { name: 'Play Blitz' }));
-    expect(screen.getByRole('heading', { name: 'Blitz' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Blitz' })).toBeInTheDocument();
     expect(window.location.hash).toBe('#blitz');
   });
 });
@@ -399,7 +409,7 @@ describe('duo and survival', () => {
     const { user, store } = setup();
     const first = pick([ANSWER]);
     const second = pick([ANSWER, first]);
-    expect(screen.getByRole('heading', { name: 'Duo' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Duo' })).toBeInTheDocument();
     expect(screen.getByText('7 guesses left')).toBeInTheDocument();
     await guess(user, first);
     const word1 = screen.getByRole('region', { name: 'Word 1' });
@@ -416,7 +426,7 @@ describe('duo and survival', () => {
   it('plays Survival: lives drop on misses and the run ends at zero', async () => {
     window.history.replaceState(null, '', '/#survival');
     const { user, store } = setup();
-    expect(screen.getByRole('img', { name: '3 lives left' })).toBeInTheDocument();
+    expect(await screen.findByRole('img', { name: '3 lives left' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Start/ }));
 
     const first = pick([ANSWER]);
@@ -441,10 +451,11 @@ describe('duo and survival', () => {
     window.history.replaceState(null, '', '/#survival');
     const store = seededStore();
     const a = setup(store);
-    await a.user.click(screen.getByRole('button', { name: /Start/ }));
+    await a.user.click(await screen.findByRole('button', { name: /Start/ }));
     await guess(a.user, WRONG[0]!);
     a.unmount();
     setup(store);
+    await screen.findByRole('heading', { name: 'Survival' });
     expect(screen.queryByRole('button', { name: /Start/ })).not.toBeInTheDocument();
     expect(rowText(0)).toBe(WRONG[0]);
   });
@@ -464,7 +475,7 @@ describe('quad, daily rush, mods and words', () => {
   it('plays Quad: four boards, nine guesses', async () => {
     window.history.replaceState(null, '', '/#quad');
     const { user } = setup();
-    expect(screen.getByRole('heading', { name: 'Quad' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Quad' })).toBeInTheDocument();
     expect(screen.getAllByRole('grid')).toHaveLength(4);
     expect(screen.getByText('9 guesses left')).toBeInTheDocument();
     const answers: string[] = [];
@@ -481,7 +492,7 @@ describe('quad, daily rush, mods and words', () => {
     const services: Services = { store, dictionary, now: () => new Date(t), random: Math.random };
     const user = userEvent.setup();
     const view = render(<App services={services} />);
-    expect(screen.getByRole('heading', { name: 'Daily Rush #1' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Daily Rush #1' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Start/ }));
     // The first word comes from the day's seed, not from the device's randomness.
     const first = pick([ANSWER], seededRandom(rushSeed(0)));
@@ -552,5 +563,47 @@ describe('quad, daily rush, mods and words', () => {
     expect(within(book).getByText('1 word collected · 1 solved')).toBeInTheDocument();
     await user.click(within(book).getByRole('button', { name: /CRANE, solved in Practice/ }));
     expect(await screen.findByRole('dialog', { name: 'Meaning of CRANE' })).toBeInTheDocument();
+  });
+});
+
+describe('ranks, themes and word ladder', () => {
+  it('plays a Word Ladder to the target with 3 stars', async () => {
+    window.history.replaceState(null, '', '/#ladder');
+    const { user, store } = setup();
+    expect(await screen.findByRole('heading', { name: 'Word Ladder' })).toBeInTheDocument();
+    const game = JSON.parse(store.get(KEYS.ladder)!).data.game as { start: string; target: string; par: number };
+    const path = new LadderGraph(ANSWERS).path(game.start, game.target)!;
+    expect(screen.getByText(`${game.par + LADDER.slack} moves left`)).toBeInTheDocument();
+    // A move that changes two letters is refused.
+    const bad = [...game.start].map((l, i) => (i < 2 ? (l === 'a' ? 'b' : 'a') : l)).join('');
+    await guess(user, bad);
+    expect(screen.getAllByText(/Change exactly one letter|Not in word list/).length).toBeGreaterThan(0);
+    for (let i = 0; i < 5; i++) await user.keyboard('{Backspace}');
+    for (const w of path.slice(1)) await guess(user, w);
+    const result = await screen.findByRole('region', { name: 'Ladder result' }, { timeout: 4000 });
+    expect(within(result).getByRole('img', { name: '3 of 3 stars' })).toBeInTheDocument();
+    expect(JSON.parse(store.get(KEYS.progress)!).data.unlocked).toHaveProperty('ladder-perfect');
+  });
+
+  it('celebrates a new rank full-screen and offers its tile theme', async () => {
+    const store = seededStore();
+    store.set(KEYS.progress, JSON.stringify({ v: 1, data: { ...emptyProgress(), xp: xpForLevel(5) - 5 } }));
+    const { user } = setup(store);
+    await guess(user, ANSWER);
+    const moment = await screen.findByRole('dialog', { name: 'New rank: Apprentice' }, { timeout: 5000 });
+    expect(within(moment).getByText('Ocean tiles')).toBeInTheDocument();
+    await user.click(within(moment).getByRole('button', { name: 'Use it' }));
+    expect(document.documentElement.dataset.skin).toBe('ocean');
+    expect(JSON.parse(store.get(KEYS.settings)!).data.skin).toBe('ocean');
+  });
+
+  it('lists ranks and only lets you use themes you have unlocked', async () => {
+    window.history.replaceState(null, '', '/');
+    const { user } = setup();
+    await user.click(screen.getByRole('button', { name: 'Ranks and tile themes' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Ranks and themes' });
+    expect(within(dialog).getByText('Wordskiis Legend')).toBeInTheDocument();
+    expect(within(dialog).getByRole('radio', { name: 'Classic tiles' })).toHaveAttribute('aria-checked', 'true');
+    expect(within(dialog).getByRole('radio', { name: /Prism tiles, unlocks at level 100/ })).toBeDisabled();
   });
 });

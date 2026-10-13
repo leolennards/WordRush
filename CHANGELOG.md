@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.8.0 — 2026-10-13 (ranks, themes and Word Ladder)
+
+- **Ranks:** ten tiers from Rookie to Wordskiis Legend at level 100, each with a bevelled emblem in its own
+  colours. Effects grow with rank: sheen, breathing aura, rotating ring, orbiting sparks, and for Legends a
+  prismatic emblem with light rays and rising particles. Shown on Home, in Achievements and in a new
+  **Ranks and themes** screen.
+- **Rank-up moment:** a full-screen celebration with the new emblem and any unlocked theme.
+- **Tile themes** unlocked by rank: Ocean, Sunset, Forest, Neon, Royal, Ember, and animated Aurora and Prism.
+  Pick one in Ranks and themes or from Settings.
+- **Word Ladder:** a new game type. Change one letter at a time to reach the target within par + 3 moves;
+  stars, hints and the shortest path shown at the end.
+- Level curve rebalanced so level 100 is a long-term goal (level 2 still at 100 XP).
+- 6 new achievements (35 in total) and a Word Ladder daily quest.
+- Game modes now load on demand, keeping the first load smaller.
+- **Android app 1.8.0** (versionCode 5).
+
 ## 1.7.0 — 2026-10-13 (more modes, mods and meanings)
 
 - **Reward cards** replace emoji pop-ups: designed cards for achievements, quests and level-ups, with an

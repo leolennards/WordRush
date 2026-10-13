@@ -29,6 +29,7 @@ export const QUESTS: readonly Quest[] = [
   { id: 'mod-win', title: 'Win a Practice word with a mod on', target: 1, count: (e) => (e.mode === 'practice' && e.won && (e.mods?.length ?? 0) > 0 ? 1 : 0) },
   { id: 'rush', title: 'Play today’s Daily Rush', target: 1, count: (e) => (e.rush ? 1 : 0) },
   { id: 'words-10', title: 'Play 10 words in any mode', target: 10, count: (e) => e.words?.length ?? 0 },
+  { id: 'ladder', title: 'Finish a Word Ladder', target: 1, count: (e) => (e.mode === 'ladder' && e.won ? 1 : 0) },
   { id: 'wins-5', title: 'Win 5 games of any kind', target: 5, count: (e) => ((word(e) || e.mode === 'duo' || e.mode === 'quad') && e.won ? 1 : 0) },
 ];
 

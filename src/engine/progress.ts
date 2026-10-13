@@ -5,11 +5,12 @@
  */
 import { QUEST_XP, advanceQuests, questsFor, type Quest, type QuestState } from './quests';
 import type { Mod } from './types';
+import { rankFor, type Rank } from './ranks';
 
 /** XP multiplier for each mod on a won game. */
 export const MOD_BONUS: Record<Mod, number> = { fog: 0.3, blind: 0.25 };
 
-export type ProgressMode = 'daily' | 'practice' | 'blitz' | 'duo' | 'quad' | 'survival';
+export type ProgressMode = 'daily' | 'practice' | 'blitz' | 'duo' | 'quad' | 'survival' | 'ladder';
 
 export interface GameEvent {
   /** Unique per game or run: `daily-12`, `practice-40`, `blitz-<start ms>`. */
@@ -34,6 +35,8 @@ export interface GameEvent {
   mods?: Mod[];
   /** Daily Rush run. */
   rush?: boolean;
+  /** Word Ladder: stars earned (0–3). */
+  stars?: number;
 }
 
 export interface Progress {
@@ -76,7 +79,7 @@ export interface Achievement {
   title: string;
   description: string;
   /** Lucide icon name used by the UI. */
-  icon: 'sparkles' | 'target' | 'crosshair' | 'shield' | 'flame' | 'calendar' | 'crown' | 'skull' | 'dumbbell' | 'medal' | 'timer' | 'zap' | 'bolt' | 'star' | 'brain' | 'scroll' | 'list' | 'map' | 'columns' | 'heart' | 'swords' | 'grid' | 'broom' | 'cloud' | 'eyeoff' | 'rocket' | 'book';
+  icon: 'sparkles' | 'target' | 'crosshair' | 'shield' | 'flame' | 'calendar' | 'crown' | 'skull' | 'dumbbell' | 'medal' | 'timer' | 'zap' | 'bolt' | 'star' | 'brain' | 'scroll' | 'list' | 'map' | 'columns' | 'heart' | 'swords' | 'grid' | 'broom' | 'cloud' | 'eyeoff' | 'rocket' | 'book' | 'gem' | 'trophy' | 'ladder' | 'stairs';
   /** True once this event (with the updated progress) earns it. */
   earned: (p: Progress, e: GameEvent) => boolean;
 }
@@ -100,6 +103,8 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
   { id: 'duo-quick', title: 'Twin strike', description: 'Win a Duo game in 4 guesses or fewer.', icon: 'swords', earned: (_, e) => e.mode === 'duo' && e.won && e.guesses <= 4 },
   { id: 'quad-win', title: 'Four of a kind', description: 'Win a Quad game.', icon: 'grid', earned: (p) => p.quadWins >= 1 },
   { id: 'quad-quick', title: 'Clean sweep', description: 'Win a Quad game in 6 guesses or fewer.', icon: 'broom', earned: (_, e) => e.mode === 'quad' && e.won && e.guesses <= 6 },
+  { id: 'ladder-win', title: 'Climber', description: 'Finish a Word Ladder.', icon: 'ladder', earned: (_, e) => e.mode === 'ladder' && e.won },
+  { id: 'ladder-perfect', title: 'Perfect climb', description: 'Finish a Word Ladder in par for 3 stars.', icon: 'stairs', earned: (_, e) => e.mode === 'ladder' && (e.stars ?? 0) >= 3 },
   { id: 'fog-win', title: 'Through the fog', description: 'Win a Practice word with Fog on.', icon: 'cloud', earned: (_, e) => e.won && !!e.mods?.includes('fog') },
   { id: 'blind-win', title: 'Blindfolded', description: 'Win a Practice word with Blind keys on.', icon: 'eyeoff', earned: (_, e) => e.won && !!e.mods?.includes('blind') },
   { id: 'rush', title: 'Rush hour', description: 'Play a Daily Rush.', icon: 'rocket', earned: (_, e) => !!e.rush },
@@ -110,7 +115,10 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
   { id: 'quest-set', title: 'Full set', description: 'Complete all three daily quests in one day.', icon: 'list', earned: (p) => p.quests !== null && questsFor(p.quests.day).every((q) => (p.quests!.progress[q.id] ?? 0) >= q.target) },
   { id: 'quest-25', title: 'Adventurer', description: 'Complete 25 daily quests.', icon: 'map', earned: (p) => p.questsDone >= 25 },
   { id: 'level-5', title: 'Rising star', description: 'Reach level 5.', icon: 'star', earned: (p) => levelFor(p.xp).level >= 5 },
-  { id: 'level-10', title: 'Word legend', description: 'Reach level 10.', icon: 'crown', earned: (p) => levelFor(p.xp).level >= 10 },
+  { id: 'level-10', title: 'Wordsmith', description: 'Reach level 10 and the Wordsmith rank.', icon: 'crown', earned: (p) => levelFor(p.xp).level >= 10 },
+  { id: 'level-25', title: 'Lexicon', description: 'Reach level 25.', icon: 'medal', earned: (p) => levelFor(p.xp).level >= 25 },
+  { id: 'level-50', title: 'Virtuoso', description: 'Reach level 50.', icon: 'gem', earned: (p) => levelFor(p.xp).level >= 50 },
+  { id: 'level-100', title: 'Wordskiis Legend', description: 'Reach level 100.', icon: 'trophy', earned: (p) => levelFor(p.xp).level >= 100 },
 ];
 
 const MAX_GUESSES = 6;
@@ -122,6 +130,7 @@ const APPLIED_LIMIT = 300;
 export function xpFor(e: GameEvent): number {
   if (e.mode === 'blitz') return 10 + 25 * (e.blitzScore ?? 0);
   if (e.mode === 'survival') return 10 + 30 * (e.survivalScore ?? 0);
+  if (e.mode === 'ladder') return e.won ? 50 + 30 * (e.stars ?? 1) : 10;
   if (!e.won) return 10;
   if (e.mode === 'duo') return 70 + (DUO_GUESSES - e.guesses) * 15;
   if (e.mode === 'quad') return 120 + (QUAD_GUESSES - e.guesses) * 20;
@@ -134,9 +143,11 @@ export function xpFor(e: GameEvent): number {
 }
 
 /** Cumulative XP needed to reach `level` (level 1 starts at 0). */
-export const xpForLevel = (level: number) => 50 * level * (level - 1);
-
-const TITLES = ['Rookie', 'Letter Hunter', 'Word Seeker', 'Wordsmith', 'Lexicon Pro', 'Vocab Ace', 'Word Wizard', 'Grandmaster'];
+/**
+ * Cumulative XP needed to reach `level` (level 1 starts at 0): 100 for level 2,
+ * then each level costs 40 more than the last. Level 100 needs ~204k XP.
+ */
+export const xpForLevel = (level: number) => 20 * level * (level - 1) + 60 * (level - 1);
 
 export function levelFor(xp: number): { level: number; title: string; into: number; span: number } {
   let level = 1;
@@ -144,7 +155,7 @@ export function levelFor(xp: number): { level: number; title: string; into: numb
   const start = xpForLevel(level);
   return {
     level,
-    title: TITLES[Math.min(TITLES.length - 1, Math.floor((level - 1) / 2))]!,
+    title: rankFor(level).rank.name,
     into: xp - start,
     span: xpForLevel(level + 1) - start,
   };
@@ -156,6 +167,8 @@ export interface ApplyResult {
   unlocked: Achievement[];
   /** New level when this event levelled the player up. */
   levelUp: number | null;
+  /** New rank when the level-up crossed into a new rank. */
+  rankUp: Rank | null;
   /** Daily quests this event completed (their XP is included in xpGained). */
   questsCompleted: Quest[];
 }
@@ -168,14 +181,16 @@ const isRun = (e: GameEvent) => e.mode === 'blitz' || e.mode === 'survival';
  * for the daily quests.
  */
 export function applyEvent(progress: Progress, e: GameEvent, now: number, day = 0): ApplyResult {
-  if (progress.applied.includes(e.id)) return { progress, xpGained: 0, unlocked: [], levelUp: null, questsCompleted: [] };
+  if (progress.applied.includes(e.id)) {
+    return { progress, xpGained: 0, unlocked: [], levelUp: null, rankUp: null, questsCompleted: [] };
+  }
 
   const quests = advanceQuests(progress.quests, day, e);
   const xpGained = xpFor(e) + QUEST_XP * quests.completed.length;
   const next: Progress = {
     xp: progress.xp + xpGained,
     unlocked: { ...progress.unlocked },
-    wins: progress.wins + (e.won && !isRun(e) ? 1 : 0),
+    wins: progress.wins + (e.won && !isRun(e) && e.mode !== 'ladder' ? 1 : 0),
     practiceWins: progress.practiceWins + (e.won && e.mode === 'practice' ? 1 : 0),
     bestBlitz: Math.max(progress.bestBlitz, e.blitzScore ?? 0),
     bestSurvival: Math.max(progress.bestSurvival, e.survivalScore ?? 0),
@@ -197,5 +212,14 @@ export function applyEvent(progress: Progress, e: GameEvent, now: number, day = 
 
   const before = levelFor(progress.xp).level;
   const after = levelFor(next.xp).level;
-  return { progress: next, xpGained, unlocked, levelUp: after > before ? after : null, questsCompleted: quests.completed };
+  const rankBefore = rankFor(before).rank;
+  const rankAfter = rankFor(after).rank;
+  return {
+    progress: next,
+    xpGained,
+    unlocked,
+    levelUp: after > before ? after : null,
+    rankUp: rankAfter.id !== rankBefore.id ? rankAfter : null,
+    questsCompleted: quests.completed,
+  };
 }

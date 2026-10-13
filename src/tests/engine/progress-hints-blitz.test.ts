@@ -91,7 +91,7 @@ describe('levels and achievements', () => {
   it('computes levels from cumulative XP', () => {
     expect(levelFor(0)).toMatchObject({ level: 1, into: 0, span: 100 });
     expect(levelFor(99).level).toBe(1);
-    expect(levelFor(100)).toMatchObject({ level: 2, into: 0, span: 200 });
+    expect(levelFor(100)).toMatchObject({ level: 2, into: 0, span: 140 });
     expect(levelFor(xpForLevel(5) + 1).level).toBe(5);
   });
 

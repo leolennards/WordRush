@@ -18,3 +18,5 @@ export * from './blitz';
 export * from './multi';
 export * from './survival';
 export * from './quests';
+export * from './ranks';
+export * from './ladder';

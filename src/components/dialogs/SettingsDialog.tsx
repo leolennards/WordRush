@@ -4,6 +4,7 @@ import { useSettings } from '@/features/settings/SettingsContext';
 import type { ThemePreference } from '@/lib/storage/schemas';
 import { BRAND, GAME } from '@/config/game';
 import { Button, Segmented, Switch } from '@/components/ui';
+import { SKINS } from '@/engine';
 import { Dialog } from './Dialog';
 import { hapticsSupported } from '@/lib/haptics';
 
@@ -14,9 +15,11 @@ interface SettingsDialogProps {
   hardModeLocked: boolean;
   onReset: () => void;
   storagePersistent: boolean;
+  /** Opens tile themes (Ranks and themes). */
+  onThemes: () => void;
 }
 
-export function SettingsDialog({ open, onClose, hardModeLocked, onReset, storagePersistent }: SettingsDialogProps) {
+export function SettingsDialog({ open, onClose, hardModeLocked, onReset, storagePersistent, onThemes }: SettingsDialogProps) {
   const { settings, update } = useSettings();
   const [confirming, setConfirming] = useState(false);
 
@@ -43,6 +46,22 @@ export function SettingsDialog({ open, onClose, hardModeLocked, onReset, storage
               { value: 'system', label: <><Monitor className="size-4" aria-hidden /> System</> },
             ]}
           />
+        </div>
+
+        <div className="flex items-center justify-between gap-3 py-3">
+          <span>
+            <span className="block font-semibold">Tile theme</span>
+            <span className="mt-0.5 block text-sm text-muted">
+              {SKINS.find((s) => s.id === settings.skin)?.name ?? 'Classic'} · more unlock as you rank up
+            </span>
+          </span>
+          <Button variant="secondary" onClick={onThemes}>
+            <span className="flex gap-0.5" aria-hidden>
+              <span className="size-3 rounded-[3px] bg-correct" />
+              <span className="size-3 rounded-[3px] bg-present" />
+            </span>
+            Change
+          </Button>
         </div>
 
         <Switch

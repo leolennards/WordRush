@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { LazyMotion, MotionConfig, domAnimation } from 'motion/react';
 import { BRAND, GAME } from '@/config/game';
 import {
@@ -9,6 +9,8 @@ import {
   effectiveStreak,
   encodeRows,
   hintsUsed,
+  levelFor,
+  skinUnlocked,
   nextHintPosition,
   type GameState,
   type SoloMode,
@@ -46,11 +48,15 @@ import { ProgressProvider, useProgress } from '@/features/progress/ProgressConte
 import { useAward } from '@/features/progress/useAward';
 import { WordsProvider, useWords } from '@/features/words/WordsContext';
 import { Backdrop } from '@/components/layout/Backdrop';
-import { BlitzScreen } from '@/components/blitz/BlitzScreen';
-import { MultiScreen } from '@/components/multi/MultiScreen';
-import { SurvivalScreen } from '@/components/survival/SurvivalScreen';
 import { AchievementsDialog } from '@/components/dialogs/AchievementsDialog';
 import { ModsDialog } from '@/components/dialogs/ModsDialog';
+import { RanksDialog } from '@/components/progress/RanksDialog';
+
+// Extra game modes load on demand, keeping the first load small.
+const BlitzScreen = lazy(() => import('@/components/blitz/BlitzScreen').then((m) => ({ default: m.BlitzScreen })));
+const MultiScreen = lazy(() => import('@/components/multi/MultiScreen').then((m) => ({ default: m.MultiScreen })));
+const LadderScreen = lazy(() => import('@/components/ladder/LadderScreen').then((m) => ({ default: m.LadderScreen })));
+const SurvivalScreen = lazy(() => import('@/components/survival/SurvivalScreen').then((m) => ({ default: m.SurvivalScreen })));
 
 export function App({ services }: { services: Services }) {
   return (
@@ -84,7 +90,17 @@ function MotionRoot({ children }: { children: ReactNode }) {
   );
 }
 
-type DialogName = 'help' | 'stats' | 'settings' | 'result' | 'confirm-new' | 'get-app' | 'achievements' | 'mods' | null;
+type DialogName =
+  | 'help'
+  | 'stats'
+  | 'settings'
+  | 'result'
+  | 'confirm-new'
+  | 'get-app'
+  | 'achievements'
+  | 'mods'
+  | 'ranks'
+  | null;
 
 /** Already running as an installed app (Android app, or added to a home screen)? */
 const runningAsApp = () =>
@@ -97,6 +113,11 @@ function Wordskiis() {
   const friends = useFriends();
   const { toast } = useToast();
   const { progress, gains } = useProgress();
+  // A tile theme can only stay on while its rank is reached (e.g. after resetting progress).
+  const playerLevel = levelFor(progress.xp).level;
+  useEffect(() => {
+    if (!skinUnlocked(settings.skin, playerLevel)) update({ skin: 'classic' });
+  }, [settings.skin, playerLevel, update]);
   const award = useAward();
   const words = useWords();
 
@@ -200,6 +221,7 @@ function Wordskiis() {
   const goDuo = useCallback(() => go('duo'), [go]);
   const goQuad = useCallback(() => go('quad'), [go]);
   const goRush = useCallback(() => go('rush'), [go]);
+  const goLadder = useCallback(() => go('ladder'), [go]);
   const goSurvival = useCallback(() => go('survival'), [go]);
   const openChallenge = useCallback((id: string) => go('challenge', id), [go]);
   const openRace = useCallback((id: string) => go('race', id), [go]);
@@ -266,12 +288,14 @@ function Wordskiis() {
           onDuo={goDuo}
           onQuad={goQuad}
           onRush={goRush}
+          onLadder={goLadder}
           rushScore={(() => {
             const r = readVersioned(services.store, KEYS.rush, rushSchema);
             return r && r.day === todayIndex ? r.solved : null;
           })()}
           onSurvival={goSurvival}
           onAchievements={() => setDialog('achievements')}
+          onRanks={() => setDialog('ranks')}
           onWordBook={words.showBook}
           wordCount={words.book.length}
           progress={progress}
@@ -295,6 +319,8 @@ function Wordskiis() {
     content = (
       <MultiScreen key={view} mode={view} avoidAnswer={dailyGame.answer} inputEnabled={dialog === null} onHome={goHome} />
     );
+  } else if (view === 'ladder') {
+    content = <LadderScreen inputEnabled={dialog === null} onHome={goHome} />;
   } else if (view === 'rush') {
     content = (
       <BlitzScreen
@@ -379,7 +405,7 @@ function Wordskiis() {
           {BRAND.name} — {BRAND.tagline}
         </h1>
 
-        {content}
+        <Suspense fallback={<main id="game" className="flex-1" aria-busy="true" />}>{content}</Suspense>
 
         <HelpDialog open={dialog === 'help'} onClose={closeDialog} />
         <GetAppDialog open={dialog === 'get-app'} onClose={closeDialog} />
@@ -389,6 +415,7 @@ function Wordskiis() {
           onClose={closeDialog}
           hardModeLocked={game.guesses.length > 0 && game.status === 'playing'}
           onReset={onReset}
+        onThemes={() => setDialog('ranks')}
           storagePersistent={services.store.persistent}
         />
         <ResultDialog
@@ -406,6 +433,7 @@ function Wordskiis() {
           xp={gains[game.id]}
         />
         <AchievementsDialog open={dialog === 'achievements'} onClose={closeDialog} />
+      <RanksDialog open={dialog === 'ranks'} onClose={closeDialog} />
       <ModsDialog
         open={dialog === 'mods'}
         onClose={closeDialog}

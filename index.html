@@ -24,6 +24,7 @@
           if (dark) root.classList.add('dark');
           root.dataset.contrast = s.highContrast ? 'high' : 'normal';
           root.dataset.reduceMotion = s.reduceMotion ? 'true' : 'false';
+          if (typeof s.skin === 'string' && /^[a-z]+$/.test(s.skin)) root.dataset.skin = s.skin;
           document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#0c0f15' : '#f6f3ec');
         } catch (e) {}
       })();
