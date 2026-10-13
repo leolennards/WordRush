@@ -297,11 +297,12 @@ button {
 
 .board {
   /* Fit inside the available box while keeping a 5:6 tile grid. */
+  --rows: 6;
   --gap: clamp(4px, 1.4cqmin, 7px);
-  width: min(100cqw, calc(100cqh * 5 / 6), 26rem);
-  aspect-ratio: 5 / 6;
+  width: min(100cqw, calc(100cqh * 5 / var(--rows)), 26rem);
+  aspect-ratio: 5 / var(--rows);
   display: grid;
-  grid-template-rows: repeat(6, 1fr);
+  grid-template-rows: repeat(var(--rows), 1fr);
   gap: var(--gap);
 }
 
@@ -488,6 +489,26 @@ button {
 .key[data-state='absent'] {
   --key-bg: var(--c-key-absent);
   --key-ink: var(--c-key-absent-ink);
+  box-shadow: none;
+}
+
+/* Duo: each half of a key shows that word's colour. */
+.key[data-left],
+.key[data-right] {
+  --kl: var(--c-key);
+  --kr: var(--c-key);
+  background: linear-gradient(90deg, var(--kl) 0 50%, var(--kr) 50% 100%);
+  text-shadow: 0 0 4px var(--c-key), 0 0 2px var(--c-key);
+}
+.key[data-left='correct'] { --kl: var(--c-correct); }
+.key[data-left='present'] { --kl: var(--c-present); }
+.key[data-left='absent'] { --kl: var(--c-key-absent); }
+.key[data-right='correct'] { --kr: var(--c-correct); }
+.key[data-right='present'] { --kr: var(--c-present); }
+.key[data-right='absent'] { --kr: var(--c-key-absent); }
+.key[data-left='absent'][data-right='absent'] {
+  --key-ink: var(--c-key-absent-ink);
+  text-shadow: none;
   box-shadow: none;
 }
 

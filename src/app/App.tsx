@@ -44,6 +44,8 @@ import { ProgressProvider, useProgress } from '@/features/progress/ProgressConte
 import { useAward } from '@/features/progress/useAward';
 import { Backdrop } from '@/components/layout/Backdrop';
 import { BlitzScreen } from '@/components/blitz/BlitzScreen';
+import { DuoScreen } from '@/components/duo/DuoScreen';
+import { SurvivalScreen } from '@/components/survival/SurvivalScreen';
 import { AchievementsDialog } from '@/components/dialogs/AchievementsDialog';
 
 export function App({ services }: { services: Services }) {
@@ -182,6 +184,8 @@ function Wordskiis() {
   const goHome = useCallback(() => go('home'), [go]);
   const goFriends = useCallback(() => go('friends'), [go]);
   const goBlitz = useCallback(() => go('blitz'), [go]);
+  const goDuo = useCallback(() => go('duo'), [go]);
+  const goSurvival = useCallback(() => go('survival'), [go]);
   const openChallenge = useCallback((id: string) => go('challenge', id), [go]);
   const openRace = useCallback((id: string) => go('race', id), [go]);
 
@@ -244,6 +248,8 @@ function Wordskiis() {
           onDailyResults={() => setDialog('result')}
           onPlayPractice={() => changeMode('practice')}
           onBlitz={goBlitz}
+          onDuo={goDuo}
+          onSurvival={goSurvival}
           onAchievements={() => setDialog('achievements')}
           progress={progress}
           onFriends={goFriends}
@@ -262,6 +268,10 @@ function Wordskiis() {
     );
   } else if (view === 'blitz') {
     content = <BlitzScreen avoidAnswer={dailyGame.answer} inputEnabled={dialog === null} onHome={goHome} />;
+  } else if (view === 'duo') {
+    content = <DuoScreen avoidAnswer={dailyGame.answer} inputEnabled={dialog === null} onHome={goHome} />;
+  } else if (view === 'survival') {
+    content = <SurvivalScreen avoidAnswer={dailyGame.answer} inputEnabled={dialog === null} onHome={goHome} />;
   } else if (view === 'challenge' && route.id) {
     content = (
       <ChallengeScreen id={route.id} inputEnabled={dialog === null} onBack={goFriends} onOpenChallenge={openChallenge} />

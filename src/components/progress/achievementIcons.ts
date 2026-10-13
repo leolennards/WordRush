@@ -14,6 +14,12 @@ import {
   Timer,
   Zap,
   CloudLightning,
+  Columns2,
+  Heart,
+  ListChecks,
+  Map as MapIcon,
+  ScrollText,
+  Swords,
   type LucideIcon,
 } from 'lucide-react';
 import type { Achievement } from '@/engine';
@@ -34,4 +40,10 @@ export const ACHIEVEMENT_ICONS: Record<Achievement['icon'], LucideIcon> = {
   bolt: CloudLightning,
   star: Star,
   brain: Brain,
+  scroll: ScrollText,
+  list: ListChecks,
+  map: MapIcon,
+  columns: Columns2,
+  heart: Heart,
+  swords: Swords,
 };

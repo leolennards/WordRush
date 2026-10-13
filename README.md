@@ -13,7 +13,10 @@ paid API or database — and keeps preferences, progress and statistics in `loca
 - Practice: unlimited words with separate statistics; never touches the daily game or streak. Up to two
   hints per word reveal a letter.
 - Blitz: solve as many words as possible against the clock (90 s, +15 s per solve, −10 s per miss).
-- Levels, XP and 15 achievements; XP rewards fewer guesses, hard mode and the Daily Challenge.
+- Duo: two hidden words at once with 7 shared guesses and a split-colour keyboard.
+- Survival: word after word with 3 lives; quick solves win a life back. Runs survive a refresh.
+- Daily quests: three goals per day (the same for everyone) worth bonus XP.
+- Levels, XP and 23 achievements; XP rewards fewer guesses, hard mode and the Daily Challenge.
 - "What it means": the answer's definition after each game (free Dictionary API).
 - Decorative tile backdrop in both themes; optional vibration on supported phones.
 - Correct duplicate-letter feedback, local dictionary (12,675 accepted guesses, 1,922 curated answers).

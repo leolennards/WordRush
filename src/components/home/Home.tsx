@@ -1,9 +1,26 @@
 import { m } from 'motion/react';
-import { ArrowRight, Award, BarChart3, ChevronRight, CircleHelp, Clock3, Flame, Settings, Shuffle, Smartphone, Trophy, Users, Zap } from 'lucide-react';
+import {
+  ArrowRight,
+  Award,
+  BarChart3,
+  ChevronRight,
+  CircleHelp,
+  Clock3,
+  Columns2,
+  Flame,
+  Heart,
+  Settings,
+  Shuffle,
+  Smartphone,
+  Trophy,
+  Users,
+  Zap,
+} from 'lucide-react';
 import { BRAND, GAME } from '@/config/game';
 import { ACHIEVEMENTS, effectiveStreak, winPercentage, type GameState, type Progress, type Stats } from '@/engine';
 import { LevelBar } from '@/components/progress/LevelBar';
 import { MiniBoard } from './MiniBoard';
+import { QuestsCard } from './QuestsCard';
 
 interface HomeProps {
   challengeNumber: number;
@@ -19,6 +36,8 @@ interface HomeProps {
   onDailyResults: () => void;
   onPlayPractice: () => void;
   onBlitz: () => void;
+  onDuo: () => void;
+  onSurvival: () => void;
   onAchievements: () => void;
   progress: Progress;
   onFriends: () => void;
@@ -70,6 +89,53 @@ export function Home(props: HomeProps) {
   const practiceInProgress = practice.status === 'playing' && practice.guesses.length > 0;
   const unlocked = ACHIEVEMENTS.filter((a) => props.progress.unlocked[a.id]).length;
   const best = props.progress.bestBlitz;
+  const bestSurvival = props.progress.bestSurvival;
+  const modes = [
+    {
+      name: 'Practice',
+      label: `${practiceInProgress ? 'Continue' : 'Play'} Practice`,
+      icon: Shuffle,
+      tint: 'bg-surface-2',
+      iconClass: '',
+      onClick: props.onPlayPractice,
+      detail: practiceInProgress
+        ? `Word ${props.practiceNumber} in progress`
+        : practiceStats.played === 0
+          ? 'Unlimited words, with hints.'
+          : `${practiceStats.wins} of ${practiceStats.played} solved`,
+      isNew: false,
+    },
+    {
+      name: 'Blitz',
+      label: 'Play Blitz',
+      icon: Zap,
+      tint: 'bg-present/20',
+      iconClass: 'text-present',
+      onClick: props.onBlitz,
+      detail: best > 0 ? `Best: ${best} ${best === 1 ? 'word' : 'words'}` : 'Race the clock.',
+      isNew: false,
+    },
+    {
+      name: 'Duo',
+      label: 'Play Duo',
+      icon: Columns2,
+      tint: 'bg-correct/15',
+      iconClass: 'text-correct',
+      onClick: props.onDuo,
+      detail: props.progress.duoWins > 0 ? `${props.progress.duoWins} won` : 'Two words at once.',
+      isNew: true,
+    },
+    {
+      name: 'Survival',
+      label: 'Play Survival',
+      icon: Heart,
+      tint: 'bg-danger/12',
+      iconClass: 'text-danger',
+      onClick: props.onSurvival,
+      detail: bestSurvival > 0 ? `Best: ${bestSurvival} ${bestSurvival === 1 ? 'word' : 'words'}` : 'Three lives. How far?',
+      isNew: true,
+    },
+  ];
 
   return (
     <div className="mx-auto w-full max-w-[30rem] px-4 pt-5 pb-8 sm:pt-10 lg:max-w-[60rem]">
@@ -148,12 +214,15 @@ export function Home(props: HomeProps) {
             </span>
           </m.button>
 
+          <m.div {...rise(3)}>
+            <QuestsCard progress={props.progress} todayIndex={props.todayIndex} countdown={props.countdown} />
+          </m.div>
         </div>
 
         <div className="flex flex-col gap-4">
           {/* Streak strip */}
           <m.section
-            {...rise(3)}
+            {...rise(4)}
             aria-label="Daily statistics"
             className="rounded-[var(--radius-card)] border border-border bg-surface"
           >
@@ -186,52 +255,36 @@ export function Home(props: HomeProps) {
             )}
           </m.section>
 
-          {/* Practice */}
-          <m.button
-            {...rise(4)}
-            type="button"
-            onClick={props.onPlayPractice}
-            aria-label={`${practiceInProgress ? 'Continue' : 'Play'} Practice`}
-            className="group flex w-full items-center gap-4 rounded-[var(--radius-card)] border border-border bg-surface p-5 text-left transition hover:border-border-strong"
-          >
-            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-surface-2">
-              <Shuffle className="size-5" aria-hidden />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-bold">Practice</span>
-              <span className="block text-sm text-muted">
-                {practiceInProgress
-                  ? `Word ${props.practiceNumber} in progress`
-                  : practiceStats.played === 0
-                    ? 'Unlimited words, no pressure.'
-                    : `${practiceStats.wins} of ${practiceStats.played} solved`}
-              </span>
-            </span>
-            <ChevronRight className="size-5 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
-          </m.button>
-
-          {/* Blitz */}
-          <m.button
-            {...rise(5)}
-            type="button"
-            onClick={props.onBlitz}
-            aria-label="Play Blitz"
-            className="group flex w-full items-center gap-4 rounded-[var(--radius-card)] border border-border bg-surface p-5 text-left transition hover:border-border-strong"
-          >
-            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-present/20">
-              <Zap className="size-5 text-present" aria-hidden />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-2 font-bold">
-                Blitz
-                <span className="rounded-full bg-present/20 px-1.5 py-px text-[0.65rem] font-bold tracking-wide uppercase">New</span>
-              </span>
-              <span className="block text-sm text-muted">
-                {best > 0 ? `Best: ${best} ${best === 1 ? 'word' : 'words'}. Beat it?` : 'As many words as you can, against the clock.'}
-              </span>
-            </span>
-            <ChevronRight className="size-5 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
-          </m.button>
+          {/* Ways to play */}
+          <m.section {...rise(5)} aria-labelledby="home-modes">
+            <h3 id="home-modes" className="mb-2 px-1 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
+              Ways to play
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              {modes.map((mode) => (
+                <button
+                  key={mode.name}
+                  type="button"
+                  onClick={mode.onClick}
+                  aria-label={mode.label}
+                  className="group flex min-h-[7.5rem] flex-col items-start rounded-[var(--radius-card)] border border-border bg-surface p-4 text-left transition hover:border-border-strong active:scale-[0.99]"
+                >
+                  <span className={`grid size-10 place-items-center rounded-xl ${mode.tint}`}>
+                    <mode.icon className={`size-5 ${mode.iconClass}`} aria-hidden />
+                  </span>
+                  <span className="mt-3 flex items-center gap-1.5 font-bold">
+                    {mode.name}
+                    {mode.isNew && (
+                      <span className="rounded-full bg-present/20 px-1.5 py-px text-[0.6rem] font-bold tracking-wide uppercase">
+                        New
+                      </span>
+                    )}
+                  </span>
+                  <span className="mt-0.5 text-[0.8rem] leading-snug text-muted">{mode.detail}</span>
+                </button>
+              ))}
+            </div>
+          </m.section>
 
           {props.friendsAvailable && (
             <m.button

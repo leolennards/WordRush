@@ -2,6 +2,9 @@ import { GAME, STORAGE_PREFIX } from '@/config/game';
 import type { GameState, LetterState } from '@/engine';
 import type { Stats } from '@/engine/stats';
 import { emptyProgress, type Progress } from '@/engine/progress';
+import type { QuestState } from '@/engine/quests';
+import type { SurvivalRun } from '@/engine/survival';
+import type { DuoState } from '@/engine/duo';
 import { isRecord, type Schema } from './versioned';
 
 export const KEYS = {
@@ -11,6 +14,8 @@ export const KEYS = {
   dailyStats: `${STORAGE_PREFIX}:stats:daily`,
   practiceStats: `${STORAGE_PREFIX}:stats:practice`,
   progress: `${STORAGE_PREFIX}:progress`,
+  duo: `${STORAGE_PREFIX}:duo`,
+  survival: `${STORAGE_PREFIX}:survival`,
   timers: `${STORAGE_PREFIX}:timers`,
 } as const;
 
@@ -68,7 +73,7 @@ const WORD = new RegExp(`^[a-z]{${GAME.wordLength}}$`);
 export function validateGameState(d: unknown): GameState | null {
   if (!isRecord(d)) return null;
   const { mode, id, answer, guesses, evaluations, status, hardMode, dayIndex, hints } = d;
-  if (mode !== 'daily' && mode !== 'practice' && mode !== 'challenge' && mode !== 'race') return null;
+  if (mode !== 'daily' && mode !== 'practice' && mode !== 'challenge' && mode !== 'race' && mode !== 'survival') return null;
   if (typeof id !== 'string' || typeof answer !== 'string' || !WORD.test(answer)) return null;
   if (!Array.isArray(guesses) || !Array.isArray(evaluations)) return null;
   if (guesses.length > GAME.maxGuesses || guesses.length !== evaluations.length) return null;
@@ -189,6 +194,13 @@ export const friendGameKey = (mode: 'challenge' | 'race', id: string) => `${STOR
 
 // ---------- Levels & achievements ----------
 
+function validateQuests(q: unknown): QuestState | null {
+  if (!isRecord(q) || !Number.isInteger(q.day) || !isRecord(q.progress)) return null;
+  const progress: Record<string, number> = {};
+  for (const [k, v] of Object.entries(q.progress)) if (nonNegInt(v)) progress[k] = v;
+  return { day: q.day as number, progress };
+}
+
 export const progressSchema: Schema<Progress> = {
   version: 1,
   validate(d) {
@@ -204,6 +216,10 @@ export const progressSchema: Schema<Progress> = {
       wins: nonNegInt(d.wins) ? d.wins : 0,
       practiceWins: nonNegInt(d.practiceWins) ? d.practiceWins : 0,
       bestBlitz: nonNegInt(d.bestBlitz) ? d.bestBlitz : 0,
+      bestSurvival: nonNegInt(d.bestSurvival) ? d.bestSurvival : 0,
+      duoWins: nonNegInt(d.duoWins) ? d.duoWins : 0,
+      questsDone: nonNegInt(d.questsDone) ? d.questsDone : 0,
+      quests: validateQuests(d.quests),
       applied: Array.isArray(d.applied) ? d.applied.filter((x): x is string => typeof x === 'string') : [],
     };
   },
@@ -217,5 +233,53 @@ export const timersSchema: Schema<Record<string, number>> = {
     const out: Record<string, number> = {};
     for (const [k, v] of Object.entries(d)) if (typeof v === 'number') out[k] = v;
     return out;
+  },
+};
+
+// ---------- Duo & Survival ----------
+
+const isWord = (w: unknown): w is string => typeof w === 'string' && WORD.test(w);
+const isRow = (row: unknown) =>
+  Array.isArray(row) && row.length === GAME.wordLength && row.every((x) => LETTER_STATES.includes(x as LetterState));
+
+export interface DuoSession {
+  game: DuoState;
+  /** Duo games started so far. */
+  number: number;
+}
+
+export const duoSchema: Schema<DuoSession> = {
+  version: 1,
+  validate(d) {
+    if (!isRecord(d) || !nonNegInt(d.number) || !isRecord(d.game)) return null;
+    const { id, answers, guesses, evaluations, status } = d.game;
+    if (typeof id !== 'string' || !Array.isArray(answers) || answers.length !== 2 || !answers.every(isWord)) return null;
+    if (!Array.isArray(guesses) || !guesses.every(isWord)) return null;
+    if (!Array.isArray(evaluations) || evaluations.length !== 2) return null;
+    if (!evaluations.every((rows) => Array.isArray(rows) && rows.length <= guesses.length && rows.every(isRow))) return null;
+    if (status !== 'playing' && status !== 'won' && status !== 'lost') return null;
+    return { number: d.number, game: d.game as unknown as DuoState };
+  },
+};
+
+export interface SurvivalSession {
+  run: SurvivalRun;
+  game: GameState;
+}
+
+export const survivalSchema: Schema<SurvivalSession> = {
+  version: 1,
+  validate(d) {
+    if (!isRecord(d) || !isRecord(d.run)) return null;
+    const game = validateGameState(d.game);
+    if (!game || game.mode !== 'survival') return null;
+    const { id, score, lives, words, lastWordId } = d.run;
+    if (!Number.isInteger(id) || !nonNegInt(score) || !Number.isInteger(lives) || !Array.isArray(words)) return null;
+    if (!(lastWordId === null || typeof lastWordId === 'string')) return null;
+    const clean = words.filter(
+      (w): w is SurvivalRun['words'][number] =>
+        isRecord(w) && isWord(w.answer) && typeof w.won === 'boolean' && nonNegInt(w.guesses),
+    );
+    return { run: { id: id as number, score, lives: lives as number, words: clean, lastWordId }, game };
   },
 };

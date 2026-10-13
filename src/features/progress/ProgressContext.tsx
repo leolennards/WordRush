@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { useServices } from '@/app/services';
-import { applyEvent, emptyProgress, type ApplyResult, type GameEvent, type Progress } from '@/engine';
+import { GAME } from '@/config/game';
+import { applyEvent, dayIndexFor, emptyProgress, type ApplyResult, type GameEvent, type Progress } from '@/engine';
 import { KEYS, progressSchema } from '@/lib/storage/schemas';
 import { readVersioned, writeVersioned } from '@/lib/storage/versioned';
 
@@ -23,7 +24,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const record = useCallback(
     (event: GameEvent) => {
       // Read from storage so another tab's progress is respected.
-      const result = applyEvent(load(), event, now().getTime());
+      const at = now();
+      const result = applyEvent(load(), event, at.getTime(), dayIndexFor(at, GAME.dailyEpoch));
       if (result.xpGained > 0) {
         writeVersioned(store, KEYS.progress, progressSchema, result.progress);
         setGains((g) => ({ ...g, [event.id]: result.xpGained }));

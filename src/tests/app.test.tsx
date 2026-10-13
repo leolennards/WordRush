@@ -387,3 +387,70 @@ describe('blitz', () => {
     expect(window.location.hash).toBe('#blitz');
   });
 });
+
+describe('duo and survival', () => {
+  const pick = (avoid: string[]) => pickPracticeAnswer(ANSWERS, avoid, () => 0.5);
+
+  it('plays Duo: one guess counts for both words, and solving both wins', async () => {
+    window.history.replaceState(null, '', '/#duo');
+    const { user, store } = setup();
+    const first = pick([ANSWER]);
+    const second = pick([ANSWER, first]);
+    expect(screen.getByRole('heading', { name: 'Duo' })).toBeInTheDocument();
+    expect(screen.getByText('7 guesses left')).toBeInTheDocument();
+    await guess(user, first);
+    const word1 = screen.getByRole('region', { name: 'Word 1' });
+    expect(within(word1).getByText('Solved')).toBeInTheDocument();
+    expect(screen.getByText('6 guesses left')).toBeInTheDocument();
+    await guess(user, second);
+    const result = await screen.findByRole('region', { name: 'Duo result' }, { timeout: 3000 });
+    expect(within(result).getByText(/Both solved in 2/)).toBeInTheDocument();
+    expect(JSON.parse(store.get(KEYS.progress)!).data.duoWins).toBe(1);
+    await user.click(within(result).getByRole('button', { name: /New Duo/ }));
+    expect(screen.getByText('7 guesses left')).toBeInTheDocument();
+  });
+
+  it('plays Survival: lives drop on misses and the run ends at zero', async () => {
+    window.history.replaceState(null, '', '/#survival');
+    const { user, store } = setup();
+    expect(screen.getByRole('img', { name: '3 lives left' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Start/ }));
+
+    const first = pick([ANSWER]);
+    await guess(user, first);
+    await waitFor(() => expect(screen.getByText(/Score 1/)).toBeInTheDocument());
+
+    const used = [first];
+    for (let miss = 0; miss < 3; miss++) {
+      await waitFor(() => expect(rowText(0)).toBe(''), { timeout: 3000 });
+      const answer = pick([...used, ANSWER]);
+      used.push(answer);
+      const wrong = ANSWERS.filter((w) => w !== answer).slice(0, 6);
+      for (const w of wrong) await guess(user, w);
+    }
+    const result = await screen.findByRole('region', { name: 'Survival result' }, { timeout: 3000 });
+    expect(within(result).getByText(/1 word survived/)).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: '0 lives left' })).toBeInTheDocument();
+    expect(JSON.parse(store.get(KEYS.progress)!).data.bestSurvival).toBe(1);
+  }, 20000);
+
+  it('keeps a Survival run after a refresh', async () => {
+    window.history.replaceState(null, '', '/#survival');
+    const store = seededStore();
+    const a = setup(store);
+    await a.user.click(screen.getByRole('button', { name: /Start/ }));
+    await guess(a.user, WRONG[0]!);
+    a.unmount();
+    setup(store);
+    expect(screen.queryByRole('button', { name: /Start/ })).not.toBeInTheDocument();
+    expect(rowText(0)).toBe(WRONG[0]);
+  });
+
+  it('shows the daily quests on the home dashboard', () => {
+    window.history.replaceState(null, '', '/');
+    setup();
+    const quests = screen.getByRole('region', { name: 'Daily quests' });
+    expect(within(quests).getAllByRole('listitem')).toHaveLength(3);
+    expect(within(quests).getByText('0/3 done')).toBeInTheDocument();
+  });
+});

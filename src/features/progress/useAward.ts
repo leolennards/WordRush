@@ -15,6 +15,7 @@ export function useAward() {
         const names = result.unlocked.map((a) => a.title).join(', ');
         toast(`🏆 ${result.unlocked.length === 1 ? 'Achievement' : 'Achievements'}: ${names}`, { tone: 'success', duration: 3600 });
       }
+      for (const q of result.questsCompleted) toast(`✅ Quest complete: ${q.title}`, { tone: 'success', duration: 3400 });
       if (result.levelUp) toast(`⭐ Level ${result.levelUp} reached!`, { tone: 'success', duration: 3400 });
       return result;
     },

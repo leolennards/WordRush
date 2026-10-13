@@ -89,13 +89,32 @@ the next game. Hard-mode results are marked with `*` when shared.
 - The run ends when the clock reaches zero; runs are not saved if you leave the screen.
 - Your best score is kept; sharing shows one square per word, never the words.
 
+## Duo
+
+- Two hidden words, 7 guesses shared between them. Every guess is checked against both words.
+- A word's board stops once that word is solved; the game is won when both are solved.
+- Keys show two halves: the left half is word 1, the right half is word 2 (blank once that word is solved).
+- Saved after every guess. A win earns 70 + 15 × (7 − guesses) XP.
+
+## Survival
+
+- Solve word after word. You start with 3 lives (the most you can hold).
+- A missed word costs a life; solving in 3 guesses or fewer wins a life back. The run ends at 0 lives.
+- Each word is counted once, and the run is saved after every guess. A run earns 10 + 30 per word solved.
+
+## Daily quests
+
+- Three quests per UTC day, picked from a pool by a seeded shuffle, so everyone gets the same ones.
+- Progress comes from finished games of any mode; each completed quest is worth 60 bonus XP.
+- Quests reset with the Daily Challenge at 00:00 UTC.
+
 ## Levels and achievements
 
 - XP per game: a win earns 50 + 15 × (6 − guesses), +25 in hard mode, +40 for the Daily Challenge,
   −20 per hint (minimum 15). A loss earns 10. A Blitz run earns 10 + 25 per word.
 - Level *n* starts at 50 × n × (n − 1) XP (level 2 at 100, level 3 at 300, …).
 - Each finished game is counted once by its id, so refreshes never award XP twice.
-- 15 achievements (first win, solving in 1/2/6 guesses, streaks of 3/7/30, hard mode, under 60 s,
+- 23 achievements, including Duo, Survival and daily-quest ones (first win, solving in 1/2/6 guesses, streaks of 3/7/30, hard mode, under 60 s,
   Practice and total wins, Blitz scores, level 5). Solve time runs from the first letter typed.
 
 ## Statistics

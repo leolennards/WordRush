@@ -13,13 +13,15 @@ const STATE_LABEL: Record<LetterState, string> = {
 
 interface KeyboardProps {
   letterStates: Record<string, LetterState>;
+  /** Duo: a state per word; overrides letterStates. */
+  splitStates?: Record<string, [LetterState | undefined, LetterState | undefined]>;
   onLetter: (letter: string) => void;
   onDelete: () => void;
   onEnter: () => void;
   disabled?: boolean;
 }
 
-export const Keyboard = memo(function Keyboard({ letterStates, onLetter, onDelete, onEnter, disabled }: KeyboardProps) {
+export const Keyboard = memo(function Keyboard({ letterStates, splitStates, onLetter, onDelete, onEnter, disabled }: KeyboardProps) {
   return (
     <div className="mx-auto flex w-full max-w-[34rem] flex-col gap-1.5 px-1.5 select-none sm:gap-2" role="group" aria-label="Keyboard">
       {ROWS.map((row, r) => (
@@ -32,13 +34,22 @@ export const Keyboard = memo(function Keyboard({ letterStates, onLetter, onDelet
             </Key>
           )}
           {[...row].map((letter) => {
-            const state = letterStates[letter];
+            const state = splitStates ? undefined : letterStates[letter];
+            const split = splitStates?.[letter];
+            const label = split
+              ? `${letter.toUpperCase()}, ${split
+                  .map((s, k) => `word ${k + 1} ${s ? STATE_LABEL[s] : 'unknown'}`)
+                  .join(', ')}`
+              : state
+                ? `${letter.toUpperCase()}, ${STATE_LABEL[state]}`
+                : letter.toUpperCase();
             return (
               <Key
                 key={letter}
                 state={state}
+                split={split}
                 onClick={() => onLetter(letter)}
-                label={state ? `${letter.toUpperCase()}, ${STATE_LABEL[state]}` : letter.toUpperCase()}
+                label={label}
                 disabled={disabled}
               >
                 {letter.toUpperCase()}
@@ -62,6 +73,7 @@ function Key(props: {
   onClick: () => void;
   label: string;
   state?: LetterState;
+  split?: [LetterState | undefined, LetterState | undefined];
   wide?: boolean;
   disabled?: boolean;
 }) {
@@ -72,6 +84,8 @@ function Key(props: {
         props.wide ? 'flex-[1.55]' : 'flex-1'
       } min-w-0`}
       data-state={props.state}
+      data-left={props.split ? (props.split[0] ?? 'none') : undefined}
+      data-right={props.split ? (props.split[1] ?? 'none') : undefined}
       aria-label={props.label}
       aria-disabled={props.disabled || undefined}
       onMouseDown={keepFocus}

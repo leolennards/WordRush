@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, type CSSProperties } from 'react';
 import { GAME, TIMING } from '@/config/game';
 import type { GameState, LetterState } from '@/engine';
 
@@ -22,10 +22,22 @@ interface BoardProps {
   shakeKey: number;
   /** Bounce the winning row once its reveal has finished. */
   celebrate: boolean;
+  /** Number of rows (Duo uses 7). */
+  rowCount?: number;
+  /** Accessible name of the grid. */
+  label?: string;
 }
 
-export function Board({ game, input, revealingRow, shakeKey, celebrate }: BoardProps) {
-  const rows = Array.from({ length: GAME.maxGuesses }, (_, r) => r);
+export function Board({
+  game,
+  input,
+  revealingRow,
+  shakeKey,
+  celebrate,
+  rowCount = GAME.maxGuesses,
+  label = 'Game board',
+}: BoardProps) {
+  const rows = Array.from({ length: rowCount }, (_, r) => r);
   const currentRow = game.status === 'playing' ? game.guesses.length : -1;
   const winningRow = game.status === 'won' ? game.guesses.length - 1 : -1;
   // Hinted letters are shown as ghosts in the row being typed.
@@ -33,7 +45,13 @@ export function Board({ game, input, revealingRow, shakeKey, celebrate }: BoardP
   const hintKey = hintLetters.map(([i, l]) => `${i}${l}`).join('');
 
   return (
-    <div className="board" role="grid" aria-label="Game board" aria-rowcount={GAME.maxGuesses}>
+    <div
+      className="board"
+      role="grid"
+      aria-label={label}
+      aria-rowcount={rowCount}
+      style={rowCount !== GAME.maxGuesses ? ({ '--rows': rowCount } as CSSProperties) : undefined}
+    >
       {rows.map((r) => {
         const submitted = game.guesses[r];
         const letters = submitted ?? (r === currentRow ? input : '');

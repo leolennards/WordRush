@@ -3,7 +3,9 @@
  * finished game is applied once by its id, so refreshes or duplicate effects
  * never award anything twice.
  */
-export type ProgressMode = 'daily' | 'practice' | 'blitz';
+import { QUEST_XP, advanceQuests, questsFor, type Quest, type QuestState } from './quests';
+
+export type ProgressMode = 'daily' | 'practice' | 'blitz' | 'duo' | 'survival';
 
 export interface GameEvent {
   /** Unique per game or run: `daily-12`, `practice-40`, `blitz-<start ms>`. */
@@ -20,6 +22,8 @@ export interface GameEvent {
   streak?: number;
   /** Blitz: words solved in the run. */
   blitzScore?: number;
+  /** Survival: words solved in the run. */
+  survivalScore?: number;
 }
 
 export interface Progress {
@@ -29,6 +33,12 @@ export interface Progress {
   wins: number;
   practiceWins: number;
   bestBlitz: number;
+  bestSurvival: number;
+  duoWins: number;
+  /** Total daily quests completed. */
+  questsDone: number;
+  /** Today's quest progress (reset when the UTC day changes). */
+  quests: QuestState | null;
   /** Recently applied event ids (bounded). */
   applied: string[];
 }
@@ -39,6 +49,10 @@ export const emptyProgress = (): Progress => ({
   wins: 0,
   practiceWins: 0,
   bestBlitz: 0,
+  bestSurvival: 0,
+  duoWins: 0,
+  questsDone: 0,
+  quests: null,
   applied: [],
 });
 
@@ -47,7 +61,7 @@ export interface Achievement {
   title: string;
   description: string;
   /** Lucide icon name used by the UI. */
-  icon: 'sparkles' | 'target' | 'crosshair' | 'shield' | 'flame' | 'calendar' | 'crown' | 'skull' | 'dumbbell' | 'medal' | 'timer' | 'zap' | 'bolt' | 'star' | 'brain';
+  icon: 'sparkles' | 'target' | 'crosshair' | 'shield' | 'flame' | 'calendar' | 'crown' | 'skull' | 'dumbbell' | 'medal' | 'timer' | 'zap' | 'bolt' | 'star' | 'brain' | 'scroll' | 'list' | 'map' | 'columns' | 'heart' | 'swords';
   /** True once this event (with the updated progress) earns it. */
   earned: (p: Progress, e: GameEvent) => boolean;
 }
@@ -67,16 +81,27 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
   { id: 'wins-50', title: 'Half century', description: 'Win 50 games.', icon: 'medal', earned: (p) => p.wins >= 50 },
   { id: 'blitz-5', title: 'Blitzed', description: 'Solve 5 words in one Blitz run.', icon: 'zap', earned: (_, e) => (e.blitzScore ?? 0) >= 5 },
   { id: 'blitz-10', title: 'Lightning', description: 'Solve 10 words in one Blitz run.', icon: 'bolt', earned: (_, e) => (e.blitzScore ?? 0) >= 10 },
+  { id: 'duo-win', title: 'Double trouble', description: 'Win a Duo game.', icon: 'columns', earned: (p) => p.duoWins >= 1 },
+  { id: 'duo-quick', title: 'Twin strike', description: 'Win a Duo game in 4 guesses or fewer.', icon: 'swords', earned: (_, e) => e.mode === 'duo' && e.won && e.guesses <= 4 },
+  { id: 'survival-5', title: 'Survivor', description: 'Solve 5 words in one Survival run.', icon: 'heart', earned: (_, e) => (e.survivalScore ?? 0) >= 5 },
+  { id: 'survival-15', title: 'Last one standing', description: 'Solve 15 words in one Survival run.', icon: 'crown', earned: (_, e) => (e.survivalScore ?? 0) >= 15 },
+  { id: 'quest-1', title: 'Quest taker', description: 'Complete a daily quest.', icon: 'scroll', earned: (p) => p.questsDone >= 1 },
+  { id: 'quest-set', title: 'Full set', description: 'Complete all three daily quests in one day.', icon: 'list', earned: (p) => p.quests !== null && questsFor(p.quests.day).every((q) => (p.quests!.progress[q.id] ?? 0) >= q.target) },
+  { id: 'quest-25', title: 'Adventurer', description: 'Complete 25 daily quests.', icon: 'map', earned: (p) => p.questsDone >= 25 },
   { id: 'level-5', title: 'Rising star', description: 'Reach level 5.', icon: 'star', earned: (p) => levelFor(p.xp).level >= 5 },
+  { id: 'level-10', title: 'Word legend', description: 'Reach level 10.', icon: 'crown', earned: (p) => levelFor(p.xp).level >= 10 },
 ];
 
 const MAX_GUESSES = 6;
+const DUO_GUESSES = 7;
 const APPLIED_LIMIT = 300;
 
 /** XP for one finished game or run. */
 export function xpFor(e: GameEvent): number {
   if (e.mode === 'blitz') return 10 + 25 * (e.blitzScore ?? 0);
+  if (e.mode === 'survival') return 10 + 30 * (e.survivalScore ?? 0);
   if (!e.won) return 10;
+  if (e.mode === 'duo') return 70 + (DUO_GUESSES - e.guesses) * 15;
   let xp = 50 + (MAX_GUESSES - e.guesses) * 15;
   if (e.hardMode) xp += 25;
   if (e.mode === 'daily') xp += 40;
@@ -107,18 +132,32 @@ export interface ApplyResult {
   unlocked: Achievement[];
   /** New level when this event levelled the player up. */
   levelUp: number | null;
+  /** Daily quests this event completed (their XP is included in xpGained). */
+  questsCompleted: Quest[];
 }
 
-export function applyEvent(progress: Progress, e: GameEvent, now: number): ApplyResult {
-  if (progress.applied.includes(e.id)) return { progress, xpGained: 0, unlocked: [], levelUp: null };
+/** A run-based mode (Blitz, Survival) has no single win; everything else does. */
+const isRun = (e: GameEvent) => e.mode === 'blitz' || e.mode === 'survival';
 
-  const xpGained = xpFor(e);
+/**
+ * Applies a finished game once. `day` is today's daily-challenge index, used
+ * for the daily quests.
+ */
+export function applyEvent(progress: Progress, e: GameEvent, now: number, day = 0): ApplyResult {
+  if (progress.applied.includes(e.id)) return { progress, xpGained: 0, unlocked: [], levelUp: null, questsCompleted: [] };
+
+  const quests = advanceQuests(progress.quests, day, e);
+  const xpGained = xpFor(e) + QUEST_XP * quests.completed.length;
   const next: Progress = {
     xp: progress.xp + xpGained,
     unlocked: { ...progress.unlocked },
-    wins: progress.wins + (e.won && e.mode !== 'blitz' ? 1 : 0),
+    wins: progress.wins + (e.won && !isRun(e) ? 1 : 0),
     practiceWins: progress.practiceWins + (e.won && e.mode === 'practice' ? 1 : 0),
     bestBlitz: Math.max(progress.bestBlitz, e.blitzScore ?? 0),
+    bestSurvival: Math.max(progress.bestSurvival, e.survivalScore ?? 0),
+    duoWins: progress.duoWins + (e.won && e.mode === 'duo' ? 1 : 0),
+    questsDone: progress.questsDone + quests.completed.length,
+    quests: quests.state,
     applied: [...progress.applied, e.id].slice(-APPLIED_LIMIT),
   };
 
@@ -132,5 +171,5 @@ export function applyEvent(progress: Progress, e: GameEvent, now: number): Apply
 
   const before = levelFor(progress.xp).level;
   const after = levelFor(next.xp).level;
-  return { progress: next, xpGained, unlocked, levelUp: after > before ? after : null };
+  return { progress: next, xpGained, unlocked, levelUp: after > before ? after : null, questsCompleted: quests.completed };
 }

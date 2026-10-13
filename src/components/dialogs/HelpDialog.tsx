@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Award, CalendarDays, Share2, Shuffle, Zap } from 'lucide-react';
+import { Award, CalendarDays, Columns2, Heart, ScrollText, Share2, Shuffle, Zap } from 'lucide-react';
 import type { LetterState } from '@/engine';
 import { BRAND, GAME } from '@/config/game';
 import { Dialog } from './Dialog';
@@ -78,6 +78,26 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
             <span>
               <strong>Blitz</strong> — solve as many words as you can before the clock runs out. Solves add time, misses
               cost time.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <Columns2 className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <span>
+              <strong>Duo</strong> — two hidden words at once with 7 shared guesses. Each key shows a colour for each
+              word: left half for word 1, right half for word 2.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <Heart className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <span>
+              <strong>Survival</strong> — word after word with 3 lives. A miss costs a life; solving in 3 guesses or
+              fewer wins one back.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <ScrollText className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <span>
+              <strong>Daily quests</strong> — three new goals every day for bonus XP.
             </span>
           </li>
           <li className="flex gap-3">

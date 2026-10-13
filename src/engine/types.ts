@@ -5,7 +5,7 @@ export type LetterState = 'correct' | 'present' | 'absent';
 export type GameStatus = 'playing' | 'won' | 'lost';
 
 /** daily/practice are solo; challenge/race are played against a friend. */
-export type GameMode = 'daily' | 'practice' | 'challenge' | 'race' | 'blitz';
+export type GameMode = 'daily' | 'practice' | 'challenge' | 'race' | 'blitz' | 'survival';
 
 /** The two single-player modes, which have their own statistics. */
 export type SoloMode = 'daily' | 'practice';

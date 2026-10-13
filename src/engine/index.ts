@@ -15,3 +15,6 @@ export * from './friends';
 export * from './hints';
 export * from './progress';
 export * from './blitz';
+export * from './duo';
+export * from './survival';
+export * from './quests';

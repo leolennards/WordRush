@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.6.0 — 2026-10-13 (new modes and challenges)
+
+- **Duo:** two hidden words at once with 7 shared guesses, side-by-side boards and a split-colour
+  keyboard (left half word 1, right half word 2). Saved after every guess; spoiler-free sharing.
+- **Survival:** word after word with 3 lives; a miss costs a life and a quick solve (3 guesses or
+  fewer) wins one back. Runs survive a refresh; best score kept.
+- **Daily quests:** three goals per day, the same for everyone, worth +60 XP each, shown on Home.
+- **8 new achievements** (23 in total): Duo, Survival, quests and level 10.
+- Home: a "Ways to play" grid (Practice, Blitz, Duo, Survival) and the Daily quests card.
+- How to play covers Duo, Survival and quests.
+- **Android app 1.6.0** (versionCode 3).
+
 ## 1.5.0 — 2026-10-13 (more fun)
 
 - **Background decal:** a soft dot grid and gently floating letter tiles in the game's own colours, in
