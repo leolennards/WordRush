@@ -10,7 +10,7 @@ import { rankFor, type Rank } from './ranks';
 /** XP multiplier for each mod on a won game. */
 export const MOD_BONUS: Record<Mod, number> = { fog: 0.3, blind: 0.25, liar: 0.4 };
 
-export type ProgressMode = 'daily' | 'practice' | 'blitz' | 'duo' | 'quad' | 'survival' | 'ladder' | 'duel' | 'reverse' | 'tower';
+export type ProgressMode = 'daily' | 'practice' | 'blitz' | 'duo' | 'quad' | 'survival' | 'ladder' | 'duel' | 'reverse' | 'tower' | 'swap';
 
 export interface GameEvent {
   /** Unique per game or run: `daily-12`, `practice-40`, `blitz-<start ms>`. */
@@ -44,6 +44,8 @@ export interface GameEvent {
   flawless?: boolean;
   /** Tower: floors cleared in the run. */
   towerFloors?: number;
+  /** Word Swap: this player picked the word (and won by stumping the guesser). */
+  swapPicker?: boolean;
 }
 
 export interface Progress {
@@ -92,7 +94,7 @@ export interface Achievement {
   title: string;
   description: string;
   /** Lucide icon name used by the UI. */
-  icon: 'sparkles' | 'target' | 'crosshair' | 'shield' | 'flame' | 'calendar' | 'crown' | 'skull' | 'dumbbell' | 'medal' | 'timer' | 'zap' | 'bolt' | 'star' | 'brain' | 'scroll' | 'list' | 'map' | 'columns' | 'heart' | 'swords' | 'grid' | 'broom' | 'cloud' | 'eyeoff' | 'rocket' | 'book' | 'gem' | 'trophy' | 'ladder' | 'stairs' | 'bot' | 'castle' | 'reverse' | 'mask';
+  icon: 'sparkles' | 'target' | 'crosshair' | 'shield' | 'flame' | 'calendar' | 'crown' | 'skull' | 'dumbbell' | 'medal' | 'timer' | 'zap' | 'bolt' | 'star' | 'brain' | 'scroll' | 'list' | 'map' | 'columns' | 'heart' | 'swords' | 'grid' | 'broom' | 'cloud' | 'eyeoff' | 'rocket' | 'book' | 'gem' | 'trophy' | 'ladder' | 'stairs' | 'bot' | 'castle' | 'reverse' | 'mask' | 'repeat';
   /** True once this event (with the updated progress) earns it. */
   earned: (p: Progress, e: GameEvent) => boolean;
 }
@@ -118,6 +120,8 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
   { id: 'quad-quick', title: 'Clean sweep', description: 'Win a Quad game in 6 guesses or fewer.', icon: 'broom', earned: (_, e) => e.mode === 'quad' && e.won && e.guesses <= 6 },
   { id: 'ladder-win', title: 'Climber', description: 'Finish a Word Ladder.', icon: 'ladder', earned: (_, e) => e.mode === 'ladder' && e.won },
   { id: 'ladder-perfect', title: 'Perfect climb', description: 'Finish a Word Ladder in par for 3 stars.', icon: 'stairs', earned: (_, e) => e.mode === 'ladder' && (e.stars ?? 0) >= 3 },
+  { id: 'swap-round', title: 'Word swapper', description: 'Finish a round of Word Swap.', icon: 'repeat', earned: (_, e) => e.mode === 'swap' },
+  { id: 'swap-stump', title: 'Stumped!', description: 'Pick a word your friend can’t solve in Word Swap.', icon: 'mask', earned: (_, e) => e.mode === 'swap' && e.won && !!e.swapPicker },
   { id: 'duel-win', title: 'Beat the bot', description: 'Win a Bot Duel.', icon: 'bot', earned: (_, e) => e.mode === 'duel' && e.won },
   { id: 'duel-hard', title: 'Machine breaker', description: 'Beat Oracle, the hardest bot.', icon: 'swords', earned: (_, e) => e.mode === 'duel' && e.won && e.bot === 'hard' },
   { id: 'tower-5', title: 'Climber of towers', description: 'Clear 5 floors in one Tower run.', icon: 'castle', earned: (_, e) => (e.towerFloors ?? 0) >= 5 },
@@ -152,6 +156,10 @@ export function xpFor(e: GameEvent): number {
   if (e.mode === 'ladder') return e.won ? 50 + 30 * (e.stars ?? 1) : 10;
   if (e.mode === 'tower') return 10 + 45 * (e.towerFloors ?? 0);
   if (e.mode === 'reverse') return 10 + 30 * (e.reverseScore ?? 0) + (e.flawless ? 50 : 0);
+  if (e.mode === 'swap') {
+    if (!e.won) return 10;
+    return e.swapPicker ? 45 : 40 + (MAX_GUESSES - e.guesses) * 10;
+  }
   if (e.mode === 'duel') {
     if (!e.won) return 10;
     return 60 + { easy: 0, medium: 30, hard: 70 }[e.bot ?? 'easy'] + (MAX_GUESSES - e.guesses) * 10;

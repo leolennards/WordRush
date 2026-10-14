@@ -1,7 +1,7 @@
 {
   "name": "wordskiis",
   "private": true,
-  "version": "1.10.3",
+  "version": "1.11.0",
   "type": "module",
   "description": "Wordskiis — a little word challenge every day.",
   "scripts": {
@@ -29,6 +29,7 @@
     "@capacitor/app": "^8.1.2",
     "@capacitor/core": "^8.5.3",
     "@capacitor/ios": "^8.5.3",
+    "@capacitor/local-notifications": "8.2.0",
     "@capacitor/share": "^8.0.3",
     "@capacitor/splash-screen": "^8.0.2",
     "@capacitor/status-bar": "^8.0.4",

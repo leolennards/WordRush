@@ -137,6 +137,19 @@ the next game. Hard-mode results are marked with `*` when shared.
   next word on a shortest path from where you are.
 - A win earns 50 + 30 × stars XP.
 
+## Word Swap (Friends)
+
+- One match per pair of friends. The player who starts picks first. The picker chooses any accepted
+  five-letter word; the guesser gets 6 guesses. The picker can watch every guess and keystroke live.
+- Scoring per round: a solve scores 7 − guesses for the guesser (6 for a first-guess solve); if the guesser
+  fails, the picker scores 3. Then roles swap and the round number goes up.
+- Either player can nudge the other once a minute. Either player can end the match.
+
+## Submitting a guess
+
+- The Submit button under the keyboard is disabled until all five letters are typed. For a word that isn't
+  in the word list it reads "Not a real word" and stays disabled; the typed row turns red.
+
 ## The Tower
 
 - Start with 3 hearts on floor 1. Each floor is one word (6 guesses) with twists: none on floor 1, one from

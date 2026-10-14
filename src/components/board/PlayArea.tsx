@@ -4,6 +4,8 @@ import type { GameSession } from '@/features/game/useGameSession';
 import { useSettings } from '@/features/settings/SettingsContext';
 import { Celebration } from '@/components/layout/Celebration';
 import { Keyboard } from '@/components/keyboard/Keyboard';
+import { submitStateFor } from '@/components/keyboard/submit';
+import { useServices } from '@/app/services';
 import { Board } from './Board';
 import type { useGameScreen } from '@/features/game/useGameScreen';
 
@@ -43,6 +45,8 @@ export function PlayArea({
     () => (liar && truth.status === 'playing' ? { ...truth, evaluations: fibRows(truth.id, truth.evaluations) } : truth),
     [liar, truth],
   );
+  const { dictionary } = useServices();
+  const submit = submitStateFor(input, (w) => dictionary.isAccepted(w));
   const lies = useMemo(
     () =>
       liar && truth.status !== 'playing'
@@ -67,6 +71,7 @@ export function PlayArea({
             shakeKey={screen.shakeKey}
             celebrate={screen.celebrating}
             lies={lies}
+            inputInvalid={submit === 'unknown'}
           />
         </div>
         {screen.celebrating && !reducedMotion && <Celebration seed={celebrationSeed} />}
@@ -81,6 +86,8 @@ export function PlayArea({
             onLetter={screen.onLetter}
             onDelete={active.remove}
             onEnter={active.submit}
+            input={input}
+            submit={submit}
             disabled={game.status !== 'playing' || keyboardDisabled}
           />
         )}

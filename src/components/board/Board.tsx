@@ -31,6 +31,8 @@ interface BoardProps {
   compact?: boolean;
   /** Fibber, after the game: "row:pos" pairs of tiles that lied. */
   lies?: string;
+  /** The typed row isn't a real word (shown in red). */
+  inputInvalid?: boolean;
 }
 
 export function Board({
@@ -43,6 +45,7 @@ export function Board({
   label = 'Game board',
   compact = false,
   lies = '',
+  inputInvalid = false,
 }: BoardProps) {
   const lieAt = new Map(lies ? lies.split(',').map((p) => p.split(':').map(Number) as [number, number]) : []);
   const rows = Array.from({ length: rowCount }, (_, r) => r);
@@ -81,6 +84,7 @@ export function Board({
             hints={r === currentRow ? hintKey : ''}
             fogged={r < fogBefore && r !== revealingRow}
             lie={lieAt.get(r) ?? -1}
+            invalid={r === currentRow && inputInvalid}
           />
         );
       })}
@@ -100,9 +104,10 @@ interface RowProps {
   fogged: boolean;
   /** Position of the tile that lied in this row, or -1. */
   lie: number;
+  invalid?: boolean;
 }
 
-const Row = memo(function Row({ index, letters, evaluation, mode, shake, active, hints, fogged, lie }: RowProps) {
+const Row = memo(function Row({ index, letters, evaluation, mode, shake, active, hints, fogged, lie, invalid }: RowProps) {
   const ghosts = new Map<number, string>();
   for (let k = 0; k + 1 < hints.length; k += 2) ghosts.set(Number(hints[k]), hints[k + 1]!);
   const cells = Array.from({ length: GAME.wordLength }, (_, i) => i);
@@ -122,6 +127,7 @@ const Row = memo(function Row({ index, letters, evaluation, mode, shake, active,
       aria-label={`Row ${index + 1}: ${description}`}
       aria-current={active ? 'true' : undefined}
       data-shake={shake ? 'true' : undefined}
+      data-invalid={invalid || undefined}
     >
       {cells.map((i) => {
         const typed = letters[i] ?? '';

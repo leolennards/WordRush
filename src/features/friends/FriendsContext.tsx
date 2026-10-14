@@ -4,6 +4,9 @@ import { GAME, STORAGE_PREFIX } from '@/config/game';
 import { cleanDisplayName, dailyAnswer, dayIndexFor, parseFriendCode, pickPracticeAnswer } from '@/engine';
 import { friendsConfigured } from './config';
 import type { SaveDoc } from './api';
+import { swapWaitingOn, type Swap } from '@/engine';
+import { useToast } from '@/components/layout/Toasts';
+import { notify } from '@/lib/notify';
 import type { Account, Challenge, DailySummary, Friend, FinishedResult, FriendLink, PlayerDoc, Race, RaceProgress } from './types';
 
 type Api = typeof import('./api');
@@ -18,8 +21,10 @@ interface FriendsContextValue {
   account: Account | null;
   friends: Friend[];
   challenges: Challenge[];
+  /** Word Swap matches, most recently active first. */
+  swaps: Swap[];
   races: Race[];
-  /** Things waiting for me: challenges I haven't played + race invites. */
+  /** Things waiting for me: challenges I haven't played, race invites and Word Swaps on my turn. */
   pendingCount: number;
   connect: () => void;
   createProfile: (name: string) => Promise<void>;
@@ -42,6 +47,15 @@ interface FriendsContextValue {
   /** Permanently delete my profile, code, friendships and account. */
   deleteProfile: () => Promise<void>;
   nameOf: (uid: string) => string;
+  /** Word Swap. */
+  startSwap: (uid: string) => Promise<string>;
+  pickSwapWord: (id: string, word: string) => Promise<void>;
+  pushSwapGuesses: (id: string, guesses: string[], live: string) => Promise<void>;
+  setSwapLive: (id: string, live: string) => Promise<void>;
+  finishSwapRound: (id: string) => Promise<void>;
+  nudgeSwap: (id: string) => Promise<void>;
+  endSwap: (id: string) => Promise<void>;
+  watchSwap: (id: string, cb: (swap: Swap | null) => void) => () => void;
   /** Cloud save for a Google account (null for guests or before connecting). */
   cloud: CloudSave | null;
 }
@@ -72,6 +86,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
   const [links, setLinks] = useState<FriendLink[]>([]);
   const [profiles, setProfiles] = useState<Record<string, PlayerDoc | null>>({});
   const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [swaps, setSwaps] = useState<Swap[]>([]);
   const [races, setRaces] = useState<Race[]>([]);
   const api = useRef<Api | null>(null);
 
@@ -100,6 +115,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
             setProfile(null);
             setLinks([]);
             setChallenges([]);
+            setSwaps([]);
             setRaces([]);
             setUid(acct.uid);
           }
@@ -148,6 +164,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       a.watchFriends(uid, setLinks, fail),
       a.watchChallenges(uid, setChallenges, fail),
       a.watchRaces(uid, setRaces, fail),
+      a.watchSwaps(uid, setSwaps, fail),
     ];
     return () => unsubs.forEach((u) => u());
   }, [ready, uid, fail]);
@@ -162,6 +179,38 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
     );
     return () => unsubs.forEach((u) => u());
   }, [ready, linkKey]);
+
+  // Word Swap news: a word picked for me, a nudge, or my word solved. Toast in the app, and a system
+  // notification when Wordskiis is in the background.
+  const { toast } = useToast();
+  const seenSwaps = useRef<Map<string, Swap> | null>(null);
+  useEffect(() => {
+    const before = seenSwaps.current;
+    seenSwaps.current = new Map(swaps.map((s) => [s.id, s]));
+    if (!before || !uid) return; // first load: nothing is "new"
+    const name = (id: string) => profiles[id]?.name ?? 'Your friend';
+    for (const s of swaps) {
+      const prev = before.get(s.id);
+      const them = s.players.find((p) => p !== uid) ?? '';
+      let message: string | null = null;
+      if (prev && prev.state === 'picking' && s.state === 'guessing' && s.guesser === uid) {
+        message = `${name(them)} picked a word for you. Your turn to guess!`;
+      } else if (s.nudge && s.nudge.by !== uid && (!prev?.nudge || prev.nudge.at !== s.nudge.at)) {
+        message = swapWaitingOn(s) === uid ? `${name(them)} nudged you: it’s your turn in Word Swap` : `${name(them)} nudged you`;
+      } else if (prev && prev.round !== s.round) {
+        const last = s.history.at(-1);
+        if (last && last.guesser === them) {
+          message = last.solved
+            ? `${name(them)} solved your word ${last.word.toUpperCase()} in ${last.guesses}`
+            : `${name(them)} couldn’t get ${last.word.toUpperCase()}. +${last.points} to you!`;
+        }
+      }
+      if (message) {
+        toast(message, { tone: 'success', duration: 4000 });
+        void notify('Wordskiis', message, `swap-${s.id}`);
+      }
+    }
+  }, [swaps, uid, profiles, toast]);
 
   const need = useCallback(() => {
     if (!api.current || !uid) throw new Error('Friends are not connected yet');
@@ -197,6 +246,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       id === uid ? 'You' : (profiles[id]?.name ?? 'Your friend');
     const pendingChallenges = challenges.filter((c) => uid && !c.results[uid]).length;
     const pendingRaces = races.filter((r) => r.state === 'invited' && r.guest === uid).length;
+    const pendingSwaps = swaps.filter((s) => uid && swapWaitingOn(s) === uid).length;
 
     return {
       status,
@@ -206,10 +256,37 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       friends,
       challenges,
       races,
-      pendingCount: pendingChallenges + pendingRaces,
+      pendingCount: pendingChallenges + pendingRaces + pendingSwaps,
+      swaps,
       connect,
       nameOf,
       cloud,
+      async startSwap(friendUid) {
+        const { a, me } = need();
+        return a.createSwap(me, friendUid);
+      },
+      async pickSwapWord(id, word) {
+        await need().a.pickSwapWord(id, word);
+      },
+      async pushSwapGuesses(id, guesses, live) {
+        await need().a.pushSwapGuesses(id, guesses, live);
+      },
+      async setSwapLive(id, live) {
+        await need().a.setSwapLive(id, live);
+      },
+      async finishSwapRound(id) {
+        await need().a.finishSwapRound(id);
+      },
+      async nudgeSwap(id) {
+        const { a, me } = need();
+        await a.nudgeSwap(id, me);
+      },
+      async endSwap(id) {
+        await need().a.deleteSwap(id);
+      },
+      watchSwap(id, cb) {
+        return need().a.watchSwap(id, cb, fail);
+      },
       async createProfile(raw) {
         const name = cleanDisplayName(raw);
         if (!name) throw new Error('Please enter a name');
@@ -302,7 +379,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         });
       },
     };
-  }, [status, error, uid, account, profile, links, profiles, challenges, races, connect, need, pickAnswer, fail, store, configured, startConnection, cloud]);
+  }, [status, error, uid, account, profile, links, profiles, challenges, races, swaps, connect, need, pickAnswer, fail, store, configured, startConnection, cloud]);
 
   return <FriendsContext.Provider value={value}>{children}</FriendsContext.Provider>;
 }

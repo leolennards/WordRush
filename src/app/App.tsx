@@ -48,6 +48,8 @@ import { ProgressProvider, useProgress } from '@/features/progress/ProgressConte
 import { useAward } from '@/features/progress/useAward';
 import { WordsProvider, useWords } from '@/features/words/WordsContext';
 import { useCloudSync } from '@/features/sync/useCloudSync';
+import { useUpdateAvailable } from '@/hooks/useUpdateAvailable';
+import { UpdateBar } from '@/components/layout/UpdateBar';
 import { Backdrop } from '@/components/layout/Backdrop';
 import { AchievementsDialog } from '@/components/dialogs/AchievementsDialog';
 import { ModsDialog } from '@/components/dialogs/ModsDialog';
@@ -60,6 +62,7 @@ const LadderScreen = lazy(() => import('@/components/ladder/LadderScreen').then(
 const DuelScreen = lazy(() => import('@/components/duel/DuelScreen').then((m) => ({ default: m.DuelScreen })));
 const TowerScreen = lazy(() => import('@/components/tower/TowerScreen').then((m) => ({ default: m.TowerScreen })));
 const ReverseScreen = lazy(() => import('@/components/reverse/ReverseScreen').then((m) => ({ default: m.ReverseScreen })));
+const SwapScreen = lazy(() => import('@/components/swap/SwapScreen').then((m) => ({ default: m.SwapScreen })));
 const SurvivalScreen = lazy(() => import('@/components/survival/SurvivalScreen').then((m) => ({ default: m.SurvivalScreen })));
 
 export function App({ services }: { services: Services }) {
@@ -139,6 +142,7 @@ function Wordskiis() {
   // Newer game saves from another device: Settings and Practice reload in place; an open game screen
   // for that save restarts from it (so a stale copy can't overwrite the newer one).
   const [syncKey, setSyncKey] = useState(0);
+  const updateAvailable = useUpdateAvailable();
   const pullTargets = useRef({ view, reloadSettings: settingsCtx.reload, practice, stats });
   useEffect(() => {
     pullTargets.current = { view, reloadSettings: settingsCtx.reload, practice, stats };
@@ -152,7 +156,7 @@ function Wordskiis() {
     }
     if (sections.includes(t.view as SyncSection) && t.view !== 'practice') setSyncKey((k) => k + 1);
   }, []);
-  const syncStatus = useCloudSync({ game: daily.session.game, replace: daily.replace }, onPulled);
+  const sync = useCloudSync({ game: daily.session.game, replace: daily.replace }, onPulled);
   const active = mode === 'daily' ? daily : practice;
   const { game } = active.session;
 
@@ -251,6 +255,7 @@ function Wordskiis() {
   const goSurvival = useCallback(() => go('survival'), [go]);
   const openChallenge = useCallback((id: string) => go('challenge', id), [go]);
   const openRace = useCallback((id: string) => go('race', id), [go]);
+  const openSwap = useCallback((id: string) => go('swap', id), [go]);
 
   const onHint = () => {
     const position = nextHintPosition(practice.session.game);
@@ -339,7 +344,7 @@ function Wordskiis() {
   } else if (view === 'friends') {
     content = (
       <main id="game" className="min-h-0 flex-1 overflow-y-auto">
-        <FriendsView todayIndex={todayIndex} onOpenChallenge={openChallenge} onOpenRace={openRace} />
+        <FriendsView todayIndex={todayIndex} onOpenChallenge={openChallenge} onOpenRace={openRace} onOpenSwap={openSwap} />
       </main>
     );
   } else if (view === 'blitz') {
@@ -372,6 +377,8 @@ function Wordskiis() {
     content = (
       <ChallengeScreen id={route.id} inputEnabled={dialog === null} onBack={goFriends} onOpenChallenge={openChallenge} />
     );
+  } else if (view === 'swap' && route.id) {
+    content = <SwapScreen id={route.id} inputEnabled={dialog === null} onBack={goFriends} />;
   } else if (view === 'race' && route.id) {
     content = <RaceScreen id={route.id} inputEnabled={dialog === null} onBack={goFriends} onOpenRace={openRace} />;
   } else {
@@ -436,6 +443,7 @@ function Wordskiis() {
           onStats={() => setDialog('stats')}
           onSettings={() => setDialog('settings')}
         />
+        <UpdateBar show={updateAvailable} />
         <h1 className="sr-only">
           {BRAND.name} — {BRAND.tagline}
         </h1>
@@ -462,7 +470,7 @@ function Wordskiis() {
           hardModeLocked={game.guesses.length > 0 && game.status === 'playing'}
           onReset={onReset}
         onThemes={() => setDialog('ranks')}
-        syncStatus={syncStatus}
+        sync={sync}
           storagePersistent={services.store.persistent}
         />
         <ResultDialog

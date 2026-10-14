@@ -8,7 +8,7 @@ import { SKINS, levelFor } from '@/engine';
 import { useProgress } from '@/features/progress/ProgressContext';
 import { ThemePicker } from '@/components/progress/ThemePicker';
 import { AccountSettings } from '@/components/friends/AccountSettings';
-import type { SyncStatus } from '@/features/sync/useCloudSync';
+import type { CloudSyncState } from '@/features/sync/useCloudSync';
 import { Dialog } from './Dialog';
 import { hapticsSupported } from '@/lib/haptics';
 
@@ -21,10 +21,10 @@ interface SettingsDialogProps {
   storagePersistent: boolean;
   /** Opens tile themes (Ranks and themes). */
   onThemes: () => void;
-  syncStatus: SyncStatus;
+  sync: CloudSyncState;
 }
 
-export function SettingsDialog({ open, onClose, hardModeLocked, onReset, storagePersistent, onThemes, syncStatus }: SettingsDialogProps) {
+export function SettingsDialog({ open, onClose, hardModeLocked, onReset, storagePersistent, onThemes, sync }: SettingsDialogProps) {
   const { settings, update } = useSettings();
   const [confirming, setConfirming] = useState(false);
   const [themesOpen, setThemesOpen] = useState(false);
@@ -39,7 +39,7 @@ export function SettingsDialog({ open, onClose, hardModeLocked, onReset, storage
   return (
     <Dialog open={open} onClose={close} title="Settings">
       <div className="divide-y divide-border">
-        <AccountSettings syncStatus={syncStatus} />
+        <AccountSettings sync={sync} />
         <div className="flex flex-wrap items-center justify-between gap-3 py-3">
           <span className="font-semibold" id="theme-label">
             Appearance

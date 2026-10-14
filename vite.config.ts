@@ -3,9 +3,24 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath, URL } from 'node:url';
+import type { Plugin } from 'vite';
+
+// Identifies this build. Open web pages compare it with /version.json to notice a newer release.
+const BUILD_ID = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) || Date.now().toString(36);
+
+function versionFile(): Plugin {
+  return {
+    name: 'wordskiis-version-file',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ build: BUILD_ID }) });
+    },
+  };
+}
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), versionFile()],
+  define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
   build: {
     // The Firebase chunk (~170 kB gzip) only loads when a player opens Friends.
     chunkSizeWarningLimit: 600,

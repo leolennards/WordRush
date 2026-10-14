@@ -11,6 +11,7 @@ import { usePhysicalKeyboard } from '@/hooks/usePhysicalKeyboard';
 import { playCue } from '@/lib/audio/sound';
 import { buzz } from '@/lib/haptics';
 import { Keyboard } from '@/components/keyboard/Keyboard';
+import { submitStateFor } from '@/components/keyboard/submit';
 import { useToast } from '@/components/layout/Toasts';
 import { WordChip } from '@/components/words/WordChip';
 import { BoardOverlay, Button } from '@/components/ui';
@@ -339,7 +340,9 @@ export function ReverseScreen({ inputEnabled, onHome }: ReverseScreenProps) {
             }}
             onDelete={() => dispatch({ type: 'delete' })}
             onEnter={() => submit(dictionary)}
-            disabled={s.phase !== 'playing'}
+            input={s.input}
+            submit={submitStateFor(s.input, (w) => dictionary.isAccepted(w))}
+            disabled={s.phase !== 'playing' || s.celebrating}
           />
         )}
       </div>

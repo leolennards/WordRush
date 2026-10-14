@@ -25,6 +25,7 @@ import {
   collection,
   connectFirestoreEmulator,
   getDocs,
+  deleteDoc,
   doc,
   getDoc,
   initializeFirestore,
@@ -40,7 +41,7 @@ import {
   writeBatch,
   type Firestore,
 } from 'firebase/firestore';
-import { generateFriendCode, resolveRace, type RacerProgress } from '@/engine';
+import { finishRound, generateFriendCode, resolveRace, roundOver, type RacerProgress, type Swap, type SwapDoc } from '@/engine';
 import type { Account, ChallengeDoc, DailySummary, FriendLink, PlayerDoc, RaceDoc, RaceProgress } from './types';
 import { firebaseConfig } from './config';
 import { isNativeApp } from '@/lib/native/platform';
@@ -421,4 +422,80 @@ export async function writeSave(uid: string, deviceId: string, own: string, sect
     { v: 1, devices: { [deviceId]: own }, ...sections, updatedAt: serverTimestamp() },
     { merge: true },
   );
+}
+
+// ---------- Word Swap ----------
+
+export async function createSwap(me: string, them: string): Promise<string> {
+  const { db } = handles();
+  const ref = doc(collection(db, 'swaps'));
+  const now = Date.now();
+  const data: SwapDoc = {
+    players: [me, them],
+    createdAt: now,
+    updatedAt: now,
+    round: 1,
+    scores: { [me]: 0, [them]: 0 },
+    setter: me,
+    guesser: them,
+    state: 'picking',
+    word: null,
+    guesses: [],
+    live: '',
+    history: [],
+    nudge: null,
+  };
+  await setDoc(ref, data);
+  return ref.id;
+}
+
+export function watchSwaps(me: string, cb: (list: Swap[]) => void, onError?: (e: Error) => void) {
+  const q = query(collection(handles().db, 'swaps'), where('players', 'array-contains', me), orderBy('updatedAt', 'desc'), limit(30));
+  return onSnapshot(
+    q,
+    (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as SwapDoc) }))),
+    (e) => onError?.(e),
+  );
+}
+
+export function watchSwap(id: string, cb: (swap: Swap | null) => void, onError?: (e: Error) => void) {
+  return onSnapshot(
+    doc(handles().db, 'swaps', id),
+    (snap) => cb(snap.exists() ? { id: snap.id, ...(snap.data() as SwapDoc) } : null),
+    (e) => onError?.(e),
+  );
+}
+
+export async function pickSwapWord(id: string, word: string) {
+  await updateDoc(doc(handles().db, 'swaps', id), { state: 'guessing', word, guesses: [], live: '', nudge: null, updatedAt: Date.now() });
+}
+
+/** The guesser's guesses so far and what they're typing (for spectators). */
+export async function pushSwapGuesses(id: string, guesses: string[], live: string) {
+  await updateDoc(doc(handles().db, 'swaps', id), { guesses, live, updatedAt: Date.now() });
+}
+
+export async function setSwapLive(id: string, live: string) {
+  await updateDoc(doc(handles().db, 'swaps', id), { live });
+}
+
+/** Scores the finished round and swaps roles (read and written together, so it's never counted twice). */
+export async function finishSwapRound(id: string) {
+  const { db } = handles();
+  await runTransaction(db, async (tx) => {
+    const ref = doc(db, 'swaps', id);
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return;
+    const s = snap.data() as SwapDoc;
+    if (s.state !== 'guessing' || !roundOver(s)) return;
+    tx.update(ref, finishRound(s, Date.now()));
+  });
+}
+
+export async function nudgeSwap(id: string, me: string) {
+  await updateDoc(doc(handles().db, 'swaps', id), { nudge: { by: me, at: Date.now() } });
+}
+
+export async function deleteSwap(id: string) {
+  await deleteDoc(doc(handles().db, 'swaps', id));
 }

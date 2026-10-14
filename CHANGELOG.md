@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.11.0 — 2026-10-14 (Word Swap, Submit button, update prompt)
+
+- **Word Swap (Friends):** pick a word for a friend and watch them guess it live (every guess and keystroke),
+  then roles swap. Solving scores 7 − guesses; stumping your friend scores 3. A scoreboard shows the score,
+  who leads (with a crown) and the round. **Nudge** your friend when it's their turn; turns, nudges and
+  results arrive as toasts, and as system notifications when Wordskiis is in the background (with
+  permission). Firestore rules enforce whose turn it is, one guess at a time, and at most 6 points a round.
+- **Submit button:** the Enter key is replaced by a wide Submit button under the keyboard. It's greyed out
+  (with a letter counter) until the row is full, turns into **Not a real word** — and can't be pressed —
+  for unknown words (the row also turns red), and lights up for a real word. Physical Enter still works.
+- **Update prompt:** an open tab now notices a new release and offers **Update**, so it never keeps
+  running old code (this is why a laptop tab could miss new syncing features).
+- **Settings → Account:** "Last synced" time, **Sync now**, and the reason if a sync fails.
+- **Android app 1.11.0** (versionCode 11), with notifications for Word Swap.
+
 ## 1.10.3 — 2026-10-13 (games in progress sync too)
 
 - **Cloud save now covers games in progress and settings:** your Tower run, Practice game and statistics,

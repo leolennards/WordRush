@@ -82,7 +82,24 @@ describe('Wordskiis app', () => {
     await user.click(within(kb).getByRole('button', { name: 'Delete letter' }));
     expect(rowText(0)).toBe(WRONG[0]!.slice(0, 4));
     await user.click(within(kb).getByRole('button', { name: WRONG[0]![4]!.toUpperCase() }));
-    await user.click(within(kb).getByRole('button', { name: 'Enter' }));
+    await user.click(within(kb).getByRole('button', { name: 'Submit' }));
+    expect(rows()[0]).toHaveAttribute('aria-label', expect.stringMatching(/correct|in the word|not in the word/));
+  });
+
+  it('only offers Submit for a full, real word', async () => {
+    const { user } = setup();
+    const kb = screen.getByRole('group', { name: 'Keyboard' });
+    expect(within(kb).getByRole('button', { name: 'Submit (0 of 5 letters)' })).toBeDisabled();
+    await user.keyboard('qxz');
+    expect(within(kb).getByRole('button', { name: 'Submit (3 of 5 letters)' })).toBeDisabled();
+    await user.keyboard('vj');
+    expect(within(kb).getByRole('button', { name: 'Not a real word' })).toBeDisabled();
+    expect(rows()[0]).toHaveAttribute('data-invalid', 'true');
+    await user.keyboard('{Backspace}{Backspace}{Backspace}{Backspace}{Backspace}');
+    await user.keyboard(WRONG[0]!);
+    const submit = within(kb).getByRole('button', { name: 'Submit' });
+    expect(submit).toBeEnabled();
+    await user.click(submit);
     expect(rows()[0]).toHaveAttribute('aria-label', expect.stringMatching(/correct|in the word|not in the word/));
   });
 
@@ -618,9 +635,13 @@ describe('bot duel, tower, reverse and fibber', () => {
     // Typing is ignored during the countdown.
     await user.keyboard('abc');
     expect(rowText(0)).toBe('');
-    await waitFor(() => expect(screen.getByRole('group', { name: 'Keyboard' }).querySelector('[aria-disabled]')).toBeNull(), {
-      timeout: 5000,
-    });
+    await waitFor(
+      () =>
+        expect(within(screen.getByRole('group', { name: 'Keyboard' })).getByRole('button', { name: 'A' })).not.toHaveAttribute(
+          'aria-disabled',
+        ),
+      { timeout: 5000 },
+    );
     const answer = pickPracticeAnswer(ANSWERS, [ANSWER], () => 0.5);
     await guess(user, answer);
     const result = await screen.findByRole('region', { name: 'Duel result' }, { timeout: 4000 });

@@ -25,6 +25,7 @@ import { buzz } from '@/lib/haptics';
 import { markStarted, secondsSinceStart } from '@/lib/storage/timers';
 import { Board } from '@/components/board/Board';
 import { Keyboard } from '@/components/keyboard/Keyboard';
+import { submitStateFor } from '@/components/keyboard/submit';
 import { Celebration } from '@/components/layout/Celebration';
 import { useToast } from '@/components/layout/Toasts';
 import { WordChip } from '@/components/words/WordChip';
@@ -43,7 +44,7 @@ export function MultiScreen({ mode, avoidAnswer, inputEnabled, onHome }: MultiSc
   const multi = useMulti(mode, avoidAnswer);
   const { game, input, revealing, rejection, justCompleted } = multi.state;
   const { settings, reducedMotion } = useSettings();
-  const { store, now } = useServices();
+  const { store, now, dictionary } = useServices();
   const { toast } = useToast();
   const { gains } = useProgress();
   const award = useAward();
@@ -204,6 +205,8 @@ export function MultiScreen({ mode, avoidAnswer, inputEnabled, onHome }: MultiSc
             onLetter={onLetter}
             onDelete={multi.remove}
             onEnter={multi.submit}
+            input={input}
+            submit={submitStateFor(input, (w) => dictionary.isAccepted(w))}
             disabled={game.status !== 'playing'}
           />
         )}

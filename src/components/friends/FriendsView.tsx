@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { m } from 'motion/react';
-import { Check, Cloud, Copy, Flame, Loader2, LogOut, Pencil, Share2, Smartphone, Swords, Timer, Trash2, UserPlus, Users, X, Zap } from 'lucide-react';
+import { Check, Cloud, Copy, Crown, Flame, Loader2, LogOut, Pencil, Repeat2, Share2, Smartphone, Swords, Timer, Trash2, UserPlus, Users, X, Zap } from 'lucide-react';
 import { BRAND, GAME } from '@/config/game';
-import { compareChallenge, decodeRows, formatFriendCode, type GameState } from '@/engine';
+import { compareChallenge, decodeRows, formatFriendCode, swapLeader, swapTurn, type GameState, type Swap } from '@/engine';
 import { useFriends } from '@/features/friends/FriendsContext';
 import type { Challenge, Friend, Race } from '@/features/friends/types';
 import { copyText, shareResult } from '@/features/sharing/shareResult';
@@ -16,6 +16,7 @@ interface FriendsViewProps {
   todayIndex: number;
   onOpenChallenge: (id: string) => void;
   onOpenRace: (id: string) => void;
+  onOpenSwap: (id: string) => void;
 }
 
 const card = 'rounded-[var(--radius-card)] border border-border bg-surface';
@@ -34,7 +35,7 @@ const boardFromRows = (rows: string[]): GameState => ({
   dayIndex: null,
 });
 
-export function FriendsView({ todayIndex, onOpenChallenge, onOpenRace }: FriendsViewProps) {
+export function FriendsView({ todayIndex, onOpenChallenge, onOpenRace, onOpenSwap }: FriendsViewProps) {
   const friends = useFriends();
   const { status, connect } = friends;
 
@@ -73,7 +74,7 @@ export function FriendsView({ todayIndex, onOpenChallenge, onOpenRace }: Friends
       )}
       {status === 'needs-profile' && <CreateProfile />}
       {status === 'ready' && (
-        <Ready todayIndex={todayIndex} onOpenChallenge={onOpenChallenge} onOpenRace={onOpenRace} />
+        <Ready todayIndex={todayIndex} onOpenChallenge={onOpenChallenge} onOpenRace={onOpenRace} onOpenSwap={onOpenSwap} />
       )}
     </div>
   );
@@ -164,7 +165,7 @@ function CreateProfile() {
   );
 }
 
-function Ready({ todayIndex, onOpenChallenge, onOpenRace }: FriendsViewProps) {
+function Ready({ todayIndex, onOpenChallenge, onOpenRace, onOpenSwap }: FriendsViewProps) {
   const f = useFriends();
   const me = f.me!;
   const invites = f.races.filter((r) => r.state === 'invited' && r.guest === me.uid);
@@ -176,7 +177,8 @@ function Ready({ todayIndex, onOpenChallenge, onOpenRace }: FriendsViewProps) {
         <ProfileCard />
         <AddFriend />
       </div>
-      <div className="flex flex-col gap-4">
+      {/* On phones, games and invites come first when something is going on. */}
+      <div className={`flex flex-col gap-4 ${f.swaps.length > 0 || invites.length > 0 || myTurn.length > 0 ? 'max-lg:order-first' : ''}`}>
         {(invites.length > 0 || myTurn.length > 0) && (
           <section aria-labelledby="waiting" className={`${card} p-5`}>
             <h3 id="waiting" className="mb-3 flex items-center gap-2 font-bold">
@@ -204,6 +206,8 @@ function Ready({ todayIndex, onOpenChallenge, onOpenRace }: FriendsViewProps) {
           </section>
         )}
 
+        <SwapList onOpenSwap={onOpenSwap} />
+
         <section aria-labelledby="friends-list" className={card}>
           <div className="flex items-baseline justify-between px-5 pt-5">
             <h3 id="friends-list" className="font-bold">
@@ -224,6 +228,11 @@ function Ready({ todayIndex, onOpenChallenge, onOpenRace }: FriendsViewProps) {
                   todayIndex={todayIndex}
                   onChallenge={async () => onOpenChallenge(await f.challenge(friend.uid))}
                   onRace={async () => onOpenRace(await f.race(friend.uid))}
+                  onSwap={async () => {
+                    // One Word Swap per friend: open the existing one, or start a new one.
+                    const existing = f.swaps.find((s) => s.players.includes(friend.uid));
+                    onOpenSwap(existing ? existing.id : await f.startSwap(friend.uid));
+                  }}
                 />
               ))}
             </ul>
@@ -516,22 +525,24 @@ function FriendRow({
   todayIndex,
   onChallenge,
   onRace,
+  onSwap,
 }: {
   friend: Friend;
   todayIndex: number;
   onChallenge: () => Promise<void>;
   onRace: () => Promise<void>;
+  onSwap: () => Promise<void>;
 }) {
   const f = useFriends();
   const { toast } = useToast();
-  const [busy, setBusy] = useState<'challenge' | 'race' | 'remove' | null>(null);
+  const [busy, setBusy] = useState<'challenge' | 'race' | 'swap' | 'remove' | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const name = friend.profile?.name ?? 'Loading…';
   const daily = friend.profile?.daily;
   const playedToday = daily && daily.dayIndex === todayIndex && daily.rows.length > 0;
   const streak = daily && daily.dayIndex >= todayIndex - 1 ? daily.streak : 0;
 
-  const run = async (kind: 'challenge' | 'race' | 'remove', fn: () => Promise<void>) => {
+  const run = async (kind: 'challenge' | 'race' | 'swap' | 'remove', fn: () => Promise<void>) => {
     setBusy(kind);
     try {
       await fn();
@@ -560,12 +571,16 @@ function FriendRow({
         </div>
         {playedToday && <MiniBoard game={boardFromRows(daily.rows)} tile="size-2 rounded-[2px]" className="shrink-0" />}
       </div>
-      <div className="mt-3 flex gap-2 pl-14">
-        <Button onClick={() => run('challenge', onChallenge)} disabled={busy !== null} className="min-h-10 flex-1">
+      <div className="mt-3 flex gap-1.5 sm:pl-14">
+        <Button variant="primary" onClick={() => run('swap', onSwap)} disabled={busy !== null} className="min-h-10 flex-1 px-2">
+          {busy === 'swap' ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Repeat2 className="size-4" aria-hidden />}
+          Swap
+        </Button>
+        <Button onClick={() => run('challenge', onChallenge)} disabled={busy !== null} className="min-h-10 flex-1 px-2">
           {busy === 'challenge' ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Swords className="size-4" aria-hidden />}
           Challenge
         </Button>
-        <Button variant="primary" onClick={() => run('race', onRace)} disabled={busy !== null} className="min-h-10 flex-1">
+        <Button onClick={() => run('race', onRace)} disabled={busy !== null} className="min-h-10 flex-1 px-2">
           {busy === 'race' ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Zap className="size-4" aria-hidden />}
           Race
         </Button>
@@ -705,6 +720,83 @@ function Activity({ onOpenChallenge, onOpenRace }: Pick<FriendsViewProps, 'onOpe
                   Race with <strong>{f.nameOf(other)}</strong>
                 </span>
                 <span className="shrink-0 text-xs text-muted">{label}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+/** Word Swap matches: score, round, and whose move it is. */
+function SwapList({ onOpenSwap }: { onOpenSwap: (id: string) => void }) {
+  const f = useFriends();
+  const me = f.me!.uid;
+  if (f.swaps.length === 0) {
+    return (
+      <section aria-labelledby="swaps" className={`${card} p-5`}>
+        <h3 id="swaps" className="flex items-center gap-2 font-bold">
+          <Repeat2 className="size-4 text-accent" aria-hidden /> Word Swap
+        </h3>
+        <p className="mt-1 text-sm text-muted">
+          Pick a word for a friend, watch them guess it live, then swap roles. Tap <strong>Swap</strong> next to a friend to
+          start.
+        </p>
+      </section>
+    );
+  }
+  const status = (s: Swap) => {
+    const them = s.players.find((p) => p !== me) ?? '';
+    const name = f.nameOf(them);
+    switch (swapTurn(s, me)) {
+      case 'pick':
+        return { text: `Your turn: pick a word for ${name}`, cta: 'Pick', mine: true };
+      case 'guess':
+        return { text: `${name} picked a word for you`, cta: 'Guess', mine: true };
+      case 'watch':
+        return { text: `${name} is guessing your word`, cta: 'Watch', mine: false };
+      default:
+        return { text: `${name} is picking a word for you`, cta: 'Open', mine: false };
+    }
+  };
+  return (
+    <section aria-labelledby="swaps" className={card}>
+      <h3 id="swaps" className="flex items-center gap-2 px-5 pt-5 font-bold">
+        <Repeat2 className="size-4 text-accent" aria-hidden /> Word Swap
+      </h3>
+      <ul className="divide-y divide-border">
+        {f.swaps.map((s) => {
+          const them = s.players.find((p) => p !== me) ?? '';
+          const st = status(s);
+          const leader = swapLeader(s);
+          return (
+            <li key={s.id}>
+              <button
+                type="button"
+                onClick={() => onOpenSwap(s.id)}
+                className={`flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-surface-2 ${st.mine ? 'bg-present/8' : ''}`}
+              >
+                <Avatar uid={them} name={f.nameOf(them)} size="sm" />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2 text-sm font-semibold">
+                    <span className="tabular">
+                      You {s.scores[me] ?? 0} – {s.scores[them] ?? 0} {f.nameOf(them)}
+                    </span>
+                    {leader === me && <Crown className="size-3.5 fill-present text-present" aria-label="You lead" />}
+                  </span>
+                  <span className="block truncate text-xs text-muted">
+                    Round {s.round} · {st.text}
+                  </span>
+                </span>
+                <span
+                  className={`inline-flex min-h-8 items-center rounded-full px-3 text-xs font-bold ${
+                    st.mine ? 'bg-ink text-ink-text' : 'bg-surface-2'
+                  }`}
+                >
+                  {st.mine && <span className="mr-1.5 size-1.5 rounded-full bg-present" aria-hidden />}
+                  {st.cta}
+                </span>
               </button>
             </li>
           );

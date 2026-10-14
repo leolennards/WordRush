@@ -38,6 +38,8 @@ paid API or database — and keeps preferences, progress and statistics in `loca
 - Decorative tile backdrop in both themes; optional vibration on supported phones.
 - Correct duplicate-letter feedback, local dictionary (12,675 accepted guesses, 1,922 curated answers).
 - Physical and on-screen keyboards, invalid-word shake, flip reveals, win celebration.
+- Word Swap (Friends): take turns picking a word for each other, spectate live, nudge, running score.
+- Submit button under the keyboard: only enabled for a full, real word ("Not a real word" otherwise).
 - Cloud save: signed in with Google, progress (level, XP, achievements, bests, quests, Daily stats, today's
   Daily, Word Book) syncs live across devices; XP is a per-device counter so it adds up without double counting.
   Games in progress (Tower, Practice, Survival, Duo, Quad, Word Ladder, Daily Rush) and settings sync too,

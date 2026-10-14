@@ -113,6 +113,65 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ---- Word Swap: friends take turns picking a word for each other. ----
+    match /swaps/{id} {
+      function isPlayer() { return signedIn() && me() in resource.data.players; }
+      function next() { return request.resource.data; }
+      function scoreTotal(d) { return d.scores[d.players[0]] + d.scores[d.players[1]]; }
+      // The picker chooses a word.
+      function picks() {
+        return resource.data.state == 'picking' && resource.data.setter == me()
+          && onlyChanged(['state', 'word', 'guesses', 'live', 'nudge', 'updatedAt'])
+          && next().state == 'guessing'
+          && next().word is string && next().word.matches('^[a-z]{5}$')
+          && next().guesses.size() == 0 && next().live == '';
+      }
+      // The guesser types (live) and submits guesses one at a time; earlier guesses never change.
+      function guesses() {
+        return resource.data.state == 'guessing' && resource.data.guesser == me()
+          && onlyChanged(['guesses', 'live', 'updatedAt'])
+          && next().guesses is list && next().guesses.size() <= 6
+          && next().guesses.size() >= resource.data.guesses.size()
+          && next().guesses.size() <= resource.data.guesses.size() + 1
+          && (resource.data.guesses.size() == 0
+            || next().guesses[0:resource.data.guesses.size()] == resource.data.guesses)
+          && next().live is string && next().live.size() <= 5;
+      }
+      // The guesser ends the round: roles swap, the round advances, 1–6 points are added.
+      function finishes() {
+        return resource.data.state == 'guessing' && resource.data.guesser == me()
+          && onlyChanged(['round', 'scores', 'setter', 'guesser', 'state', 'word', 'guesses', 'live', 'history', 'nudge', 'updatedAt'])
+          && next().state == 'picking'
+          && next().round == resource.data.round + 1
+          && next().setter == resource.data.guesser && next().guesser == resource.data.setter
+          && next().word == null && next().guesses.size() == 0
+          && next().history is list && next().history.size() <= 30
+          && next().scores.keys().hasOnly(resource.data.players)
+          && next().scores[resource.data.players[0]] >= resource.data.scores[resource.data.players[0]]
+          && next().scores[resource.data.players[1]] >= resource.data.scores[resource.data.players[1]]
+          && scoreTotal(next()) - scoreTotal(resource.data) >= 1
+          && scoreTotal(next()) - scoreTotal(resource.data) <= 6;
+      }
+      function nudges() {
+        return onlyChanged(['nudge']) && next().nudge.by == me() && next().nudge.at is int;
+      }
+
+      allow get, list: if isPlayer();
+      allow create: if signedIn()
+        && next().keys().hasOnly(['players', 'createdAt', 'updatedAt', 'round', 'scores', 'setter', 'guesser', 'state', 'word', 'guesses', 'live', 'history', 'nudge'])
+        && next().players == [me(), next().guesser]
+        && next().guesser != me()
+        && areFriends(me(), next().guesser)
+        && next().setter == me()
+        && next().state == 'picking' && next().round == 1 && next().word == null
+        && next().guesses.size() == 0 && next().history.size() == 0
+        && next().scores.keys().hasOnly([me(), next().guesser]) && next().scores.size() == 2
+        && next().scores[me()] == 0 && next().scores[next().guesser] == 0;
+      allow update: if isPlayer() && (picks() || guesses() || finishes() || nudges());
+      // Either player can end the match.
+      allow delete: if isPlayer();
+    }
+
     // ---- Live races. ----
     match /races/{id} {
       allow get, list: if signedIn() && me() in resource.data.players;

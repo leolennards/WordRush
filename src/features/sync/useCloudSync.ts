@@ -38,6 +38,16 @@ import { readVersioned, writeVersioned } from '@/lib/storage/versioned';
 
 export type SyncStatus = 'off' | 'syncing' | 'synced' | 'error';
 
+export interface CloudSyncState {
+  status: SyncStatus;
+  /** When this device last finished a sync (ms). */
+  lastSyncedAt: number | null;
+  /** Why the last sync failed, if it did. */
+  error: string | null;
+  /** Sync right away. */
+  syncNow: () => void;
+}
+
 /** Debounce for pushing local changes (a game end can change several things at once). */
 const PUSH_DELAY_MS = 1500;
 
@@ -118,13 +128,15 @@ export function useCloudSync(
   daily: { game: GameState; replace: (game: GameState) => void },
   /** Called with the game saves that were just replaced by newer ones from another device. */
   onPulled: (sections: SyncSection[]) => void,
-): SyncStatus {
+): CloudSyncState {
   const { store } = useServices();
   const { cloud } = useFriends();
   const progressCtx = useProgress();
   const stats = useStats();
   const words = useWords();
   const [status, setStatus] = useState<SyncStatus>('syncing');
+  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // The latest cloud document (undefined until the first read arrives).
   const remote = useRef<SaveDoc | null | undefined>(undefined);
@@ -239,7 +251,11 @@ export function useCloudSync(
         (Object.keys(sections) as (keyof typeof sections)[]).some((k) => doc?.[k] !== sections[k]);
       if (stale) await c.write(meta.deviceId, own, { ...sections, ...(Object.keys(sessions).length ? { sessions } : {}) });
       setStatus('synced');
-    } catch {
+      setError(null);
+      setLastSyncedAt(Date.now());
+    } catch (err) {
+      console.warn('[wordskiis] cloud sync failed', err);
+      setError(err instanceof Error ? err.message : String(err));
       setStatus('error');
     } finally {
       running.current = false;
@@ -264,7 +280,11 @@ export function useCloudSync(
         remote.current = save;
         void reconcile();
       },
-      () => setStatus('error'),
+      (err) => {
+        console.warn('[wordskiis] cloud save listener failed', err);
+        setError(err.message);
+        setStatus('error');
+      },
     );
     // Re-subscribe only when the account changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -293,5 +313,6 @@ export function useCloudSync(
     };
   }, [uid, store]);
 
-  return cloud ? status : 'off';
+  const syncNow = useCallback(() => void reconcileRef.current(), []);
+  return { status: cloud ? status : 'off', lastSyncedAt, error, syncNow };
 }

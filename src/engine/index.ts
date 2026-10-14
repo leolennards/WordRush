@@ -25,3 +25,4 @@ export * from './reverse';
 export * from './bot';
 export * from './tower';
 export * from './sync';
+export * from './swap';

@@ -2,7 +2,7 @@
  * - Navigations: network first, falling back to the cached app shell.
  * - Same-origin static assets: cache first (Vite fingerprints file names).
  * Bump CACHE to invalidate everything. */
-const CACHE = 'wordskiis-v9';
+const CACHE = 'wordskiis-v10';
 const SHELL = ['/', '/index.html', '/icon.svg', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
@@ -23,6 +23,8 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  // The version file must always come from the network (it's how open tabs learn about updates).
+  if (url.pathname === '/version.json') return;
 
   if (req.mode === 'navigate') {
     event.respondWith(

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ArrowDownUp, Award, BookOpen, Bot, Castle, Footprints, CalendarClock, CalendarDays, Columns2, Heart, ScrollText, Share2, Shuffle, SlidersHorizontal, Zap } from 'lucide-react';
+import { ArrowDownUp, Award, BookOpen, Bot, Castle, Repeat2, Footprints, CalendarClock, CalendarDays, Columns2, Heart, ScrollText, Share2, Shuffle, SlidersHorizontal, Zap } from 'lucide-react';
 import type { LetterState } from '@/engine';
 import { BRAND, GAME } from '@/config/game';
 import { Dialog } from './Dialog';
@@ -31,7 +31,7 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
       <div className="space-y-5 text-[0.95rem] leading-relaxed">
         <p>
           Guess the hidden word in <strong>{GAME.maxGuesses} tries</strong>. Each guess must be a real{' '}
-          {GAME.wordLength}-letter word — type it and press <kbd className="rounded bg-surface-2 px-1.5 py-0.5 text-sm font-semibold">Enter</kbd>.
+          {GAME.wordLength}-letter word — type it and tap <kbd className="rounded bg-surface-2 px-1.5 py-0.5 text-sm font-semibold">Submit</kbd> (it lights up once it’s a real word).
           Words not in the list don’t use up a try.
         </p>
 
@@ -85,6 +85,13 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
             <span>
               <strong>Duo and Quad</strong> — two words with 7 shared guesses, or four with 9. Each key is split
               into one colour per word, in board order.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <Repeat2 className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <span>
+              <strong>Word Swap</strong> (Friends) — pick a word for a friend and watch them guess it live, then swap roles.
+              Solving scores 7 minus your guesses; stumping your friend scores 3. Nudge them when it’s their turn.
             </span>
           </li>
           <li className="flex gap-3">

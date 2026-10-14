@@ -22,6 +22,7 @@ import { buzz } from '@/lib/haptics';
 import { keepFocus } from '@/lib/accessibility/keepFocus';
 import { markStarted, secondsSinceStart } from '@/lib/storage/timers';
 import { Keyboard } from '@/components/keyboard/Keyboard';
+import { submitStateFor } from '@/components/keyboard/submit';
 import { Celebration } from '@/components/layout/Celebration';
 import { useToast } from '@/components/layout/Toasts';
 import { WordChip } from '@/components/words/WordChip';
@@ -37,7 +38,7 @@ export function LadderScreen({ inputEnabled, onHome }: LadderScreenProps) {
   const ladder = useLadder();
   const { game, input, rejection, hintWord, justCompleted } = ladder.state;
   const { settings, reducedMotion } = useSettings();
-  const { store, now } = useServices();
+  const { store, now, dictionary } = useServices();
   const { toast } = useToast();
   const { gains } = useProgress();
   const award = useAward();
@@ -116,6 +117,7 @@ export function LadderScreen({ inputEnabled, onHome }: LadderScreenProps) {
   };
   const shake = rejection && rejection.error !== 'game-over' ? rejection.nonce : 0;
   const current = ladderCurrent(game);
+  const submit = submitStateFor(input, (w) => dictionary.isAccepted(w) || w === game.target);
 
   return (
     <main id="game" className="flex min-h-0 flex-1 flex-col">
@@ -185,6 +187,7 @@ export function LadderScreen({ inputEnabled, onHome }: LadderScreenProps) {
                 target={game.target}
                 kind="input"
                 shake={shake > 0}
+                invalid={submit === 'unknown'}
                 label={`Next word: ${input ? input.toUpperCase() : 'empty'}. Change one letter of ${current.toUpperCase()}`}
               />
             </>
@@ -205,7 +208,15 @@ export function LadderScreen({ inputEnabled, onHome }: LadderScreenProps) {
         {!playing && !justCompleted ? (
           <LadderResult game={game} bestPath={ladder.bestPath} xp={gains[game.id]} onAgain={ladder.newGame} onHome={onHome} />
         ) : (
-          <Keyboard letterStates={{}} onLetter={onLetter} onDelete={ladder.remove} onEnter={onEnter} disabled={!playing} />
+          <Keyboard
+            letterStates={{}}
+            onLetter={onLetter}
+            onDelete={ladder.remove}
+            onEnter={onEnter}
+            input={input}
+            submit={submit}
+            disabled={!playing}
+          />
         )}
       </div>
     </main>
@@ -223,6 +234,7 @@ function LadderRow({
   changed = -1,
   ghost,
   shake = false,
+  invalid = false,
   label,
   animate = false,
 }: {
@@ -232,11 +244,12 @@ function LadderRow({
   changed?: number;
   ghost?: string;
   shake?: boolean;
+  invalid?: boolean;
   label: string;
   animate?: boolean;
 }) {
   const row = (
-    <div className="ladder-row" data-shake={shake || undefined} role="group" aria-label={label}>
+    <div className="ladder-row" data-shake={shake || undefined} data-invalid={invalid || undefined} role="group" aria-label={label}>
       {Array.from({ length: GAME.wordLength }, (_, i) => {
         const typed = word[i] ?? '';
         const letter = typed || (kind === 'input' && !word ? (ghost?.[i] ?? '') : '');

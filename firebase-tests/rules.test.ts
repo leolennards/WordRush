@@ -227,3 +227,65 @@ describe('cloud save game sessions', () => {
     await assertFails(setDoc(doc(google('alice'), 'saves', 'alice'), { v: 1, devices: {}, sessions: many }));
   });
 });
+
+describe('word swap', () => {
+  async function friends() {
+    await makePlayer('ann', 'AAAAAA');
+    await makePlayer('ben', 'BBBBBB');
+    await makePlayer('cat', 'CCCCCC');
+    await befriend('ann', 'ben');
+  }
+  const fresh = () => ({
+    players: ['ann', 'ben'],
+    createdAt: 1,
+    updatedAt: 1,
+    round: 1,
+    scores: { ann: 0, ben: 0 },
+    setter: 'ann',
+    guesser: 'ben',
+    state: 'picking',
+    word: null,
+    guesses: [],
+    live: '',
+    history: [],
+    nudge: null,
+  });
+
+  it('starts only between friends, with the creator picking first', async () => {
+    await friends();
+    await assertFails(setDoc(doc(db('ann'), 'swaps', 'x'), { ...fresh(), players: ['ann', 'cat'], guesser: 'cat', scores: { ann: 0, cat: 0 } }));
+    await assertFails(setDoc(doc(db('ann'), 'swaps', 'x'), { ...fresh(), setter: 'ben' }));
+    await assertFails(setDoc(doc(db('ann'), 'swaps', 'x'), { ...fresh(), scores: { ann: 9, ben: 0 } }));
+    await assertSucceeds(setDoc(doc(db('ann'), 'swaps', 'x'), fresh()));
+    await assertFails(getDoc(doc(db('cat'), 'swaps', 'x')));
+  });
+
+  it('runs a round: picker sets the word, guesser guesses one at a time, then roles swap', async () => {
+    await friends();
+    await assertSucceeds(setDoc(doc(db('ann'), 'swaps', 'x'), fresh()));
+    // Only the picker may pick.
+    await assertFails(updateDoc(doc(db('ben'), 'swaps', 'x'), { state: 'guessing', word: 'crane', guesses: [], live: '' }));
+    await assertSucceeds(updateDoc(doc(db('ann'), 'swaps', 'x'), { state: 'guessing', word: 'crane', guesses: [], live: '', updatedAt: 2 }));
+    // Only the guesser may guess, one at a time, live typing allowed.
+    await assertFails(updateDoc(doc(db('ann'), 'swaps', 'x'), { guesses: ['crane'] }));
+    await assertSucceeds(updateDoc(doc(db('ben'), 'swaps', 'x'), { live: 'sla' }));
+    await assertSucceeds(updateDoc(doc(db('ben'), 'swaps', 'x'), { guesses: ['slate'], live: '' }));
+    await assertFails(updateDoc(doc(db('ben'), 'swaps', 'x'), { guesses: ['slate', 'pious', 'crane'] }));
+    await assertFails(updateDoc(doc(db('ben'), 'swaps', 'x'), { guesses: ['other', 'crane'] }));
+    await assertSucceeds(updateDoc(doc(db('ben'), 'swaps', 'x'), { guesses: ['slate', 'crane'] }));
+    // Finishing: roles swap, round advances, at most 6 points.
+    const end = { round: 2, setter: 'ben', guesser: 'ann', state: 'picking', word: null, guesses: [], live: '', history: [], nudge: null, updatedAt: 3 };
+    await assertFails(updateDoc(doc(db('ben'), 'swaps', 'x'), { ...end, scores: { ann: 0, ben: 50 } }));
+    await assertFails(updateDoc(doc(db('ann'), 'swaps', 'x'), { ...end, scores: { ann: 0, ben: 5 } }));
+    await assertSucceeds(updateDoc(doc(db('ben'), 'swaps', 'x'), { ...end, scores: { ann: 0, ben: 5 } }));
+  });
+
+  it('lets either player nudge or end the match, but not outsiders', async () => {
+    await friends();
+    await assertSucceeds(setDoc(doc(db('ann'), 'swaps', 'x'), fresh()));
+    await assertSucceeds(updateDoc(doc(db('ben'), 'swaps', 'x'), { nudge: { by: 'ben', at: 5 } }));
+    await assertFails(updateDoc(doc(db('ben'), 'swaps', 'x'), { nudge: { by: 'ann', at: 5 } }));
+    await assertFails(deleteDoc(doc(db('cat'), 'swaps', 'x')));
+    await assertSucceeds(deleteDoc(doc(db('ben'), 'swaps', 'x')));
+  });
+});

@@ -21,6 +21,7 @@ import {
   ScrollText,
   Swords,
   Bot,
+  Repeat2,
   Castle,
   ArrowDownUp,
   VenetianMask,
@@ -74,4 +75,5 @@ export const ACHIEVEMENT_ICONS: Record<Achievement['icon'], LucideIcon> = {
   castle: Castle,
   reverse: ArrowDownUp,
   mask: VenetianMask,
+  repeat: Repeat2,
 };
