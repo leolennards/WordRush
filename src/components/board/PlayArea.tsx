@@ -2,7 +2,7 @@ import { useMemo, type ReactNode } from 'react';
 import { fibPosition, fibRows } from '@/engine';
 import type { GameSession } from '@/features/game/useGameSession';
 import { useSettings } from '@/features/settings/SettingsContext';
-import { Celebration } from '@/components/layout/Celebration';
+import { WinCelebration } from '@/components/layout/Celebration';
 import { Keyboard } from '@/components/keyboard/Keyboard';
 import { submitStateFor } from '@/components/keyboard/submit';
 import { useServices } from '@/app/services';
@@ -74,7 +74,7 @@ export function PlayArea({
             inputInvalid={submit === 'unknown'}
           />
         </div>
-        {screen.celebrating && !reducedMotion && <Celebration seed={celebrationSeed} />}
+        {screen.celebrating && !reducedMotion && <WinCelebration seed={celebrationSeed} />}
         {overlay}
       </div>
       <div className="safe-bottom pt-1 sm:pb-5">

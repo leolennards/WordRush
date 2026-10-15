@@ -1,10 +1,10 @@
 /**
  * Wordskiis coins and the shop. Every finished game earns coins alongside
- * XP; coins buy tile themes and tile styles. Balance = starter coins +
+ * XP; coins buy tile themes, tile styles and win effects. Balance = starter coins +
  * earned − spent, so it adds up across devices like XP does (earned and
  * spent are both per-device counters) and purchases merge as a set.
  */
-import type { Progress } from './progress';
+import { APPLIED_LIMIT, type Progress } from './progress';
 import { seededRandom } from './blitz';
 import { SKINS, type ShopSkinId } from './ranks';
 
@@ -20,7 +20,9 @@ export const COIN_REWARDS = {
 /** Today's deal: one item at this discount. */
 export const DEAL_DISCOUNT = 0.3;
 
-export type TileStyleId = 'classic' | 'rounded' | 'bubble' | 'glass' | 'pixel' | 'neon' | 'gem';
+export type TileStyleId =
+  | 'classic' | 'rounded' | 'bubble' | 'glass' | 'pixel' | 'neon' | 'gem'
+  | 'shimmer' | 'frost' | 'jelly' | 'blaze';
 
 export interface TileStyle {
   id: TileStyleId;
@@ -28,6 +30,7 @@ export interface TileStyle {
   description: string;
   /** Undefined = free for everyone. */
   price?: number;
+  animated?: boolean;
 }
 
 export const TILE_STYLES: readonly TileStyle[] = [
@@ -67,18 +70,65 @@ export const TILE_STYLES: readonly TileStyle[] = [
     price: 1200,
   },
   {
+    id: 'shimmer',
+    name: 'Shimmer',
+    description: 'A sweep of light glints across your tiles.',
+    price: 1000,
+    animated: true,
+  },
+  {
+    id: 'frost',
+    name: 'Frost',
+    description: 'Icy edges with twinkling sparkles.',
+    price: 1300,
+    animated: true,
+  },
+  {
     id: 'neon',
     name: 'Neon',
     description: 'Glowing outlines in the dark.',
     price: 1400,
   },
+  {
+    id: 'jelly',
+    name: 'Jelly',
+    description: 'Squishy tiles that wobble in a wave.',
+    price: 1500,
+    animated: true,
+  },
+  {
+    id: 'blaze',
+    name: 'Blaze',
+    description: 'Tiles that flicker with fire.',
+    price: 2000,
+    animated: true,
+  },
+];
+
+export type WinFxId = 'confetti' | 'hearts' | 'coins' | 'stars' | 'fireworks';
+
+export interface WinFx {
+  id: WinFxId;
+  name: string;
+  description: string;
+  /** Undefined = free for everyone. */
+  price?: number;
+}
+
+/** What bursts out of the board when you win. */
+export const WIN_EFFECTS: readonly WinFx[] = [
+  { id: 'confetti', name: 'Confetti', description: 'The classic burst of tiles.' },
+  { id: 'hearts', name: 'Love Hearts', description: 'A flutter of floating hearts.', price: 700 },
+  { id: 'coins', name: 'Coin Shower', description: 'It rains Wordskiis coins.', price: 900 },
+  { id: 'stars', name: 'Starfall', description: 'Twinkling stars shoot out and fall.', price: 1200 },
+  { id: 'fireworks', name: 'Fireworks', description: 'Rockets burst into sparks.', price: 1600 },
 ];
 
 export interface ShopItem {
-  /** `skin:<id>` or `tiles:<id>`. */
+  /** `skin:<id>`, `tiles:<id>` or `fx:<id>`. */
   id: string;
-  kind: 'skin' | 'tiles';
-  ref: ShopSkinId | TileStyleId;
+  kind: 'skin' | 'tiles' | 'fx';
+  ref: ShopSkinId | TileStyleId | WinFxId;
   name: string;
   description: string;
   price: number;
@@ -102,6 +152,16 @@ export const SHOP_ITEMS: readonly ShopItem[] = [
     name: t.name,
     description: t.description,
     price: t.price!,
+    ...(t.animated ? { animated: true } : {}),
+  })),
+  ...WIN_EFFECTS.filter((f) => f.price !== undefined).map((f): ShopItem => ({
+    id: `fx:${f.id}`,
+    kind: 'fx',
+    ref: f.id,
+    name: f.name,
+    description: f.description,
+    price: f.price!,
+    animated: true,
   })),
 ];
 
@@ -115,6 +175,12 @@ export function tileStyleUnlocked(id: TileStyleId, owned: readonly string[]): bo
   const t = TILE_STYLES.find((x) => x.id === id);
   if (!t) return false;
   return t.price === undefined || owned.includes(`tiles:${id}`);
+}
+
+export function winFxUnlocked(id: WinFxId, owned: readonly string[]): boolean {
+  const f = WIN_EFFECTS.find((x) => x.id === id);
+  if (!f) return false;
+  return f.price === undefined || owned.includes(`fx:${id}`);
 }
 
 /** Coins for one finished game, from what it earned. */
@@ -153,5 +219,29 @@ export function buyItem(p: Progress, itemId: string, day: number): BuyResult {
     ok: true,
     price,
     progress: { ...p, spent: p.spent + price, owned: [...p.owned, itemId] },
+  };
+}
+
+/** The free daily chest: once a day, the same prize for everyone that day. */
+export const CHEST = { min: 20, max: 80 } as const;
+
+const chestId = (day: number) => `chest-${day}`;
+
+export function chestCoins(day: number): number {
+  const rand = seededRandom(day * 40503 + 11);
+  rand();
+  return CHEST.min + Math.round((rand() * (CHEST.max - CHEST.min)) / 5) * 5;
+}
+
+/** Whether today's chest is still closed. Claims travel with your other synced games, so it opens once across devices. */
+export const chestReady = (p: Pick<Progress, 'applied'>, day: number) => !p.applied.includes(chestId(day));
+
+export function openChest(p: Progress, day: number): { ok: true; progress: Progress; coins: number } | { ok: false } {
+  if (!chestReady(p, day)) return { ok: false };
+  const coins = chestCoins(day);
+  return {
+    ok: true,
+    coins,
+    progress: { ...p, coins: p.coins + coins, applied: [...p.applied, chestId(day)].slice(-APPLIED_LIMIT) },
   };
 }

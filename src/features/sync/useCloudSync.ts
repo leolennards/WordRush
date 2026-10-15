@@ -74,6 +74,11 @@ function parseCounters(text: string | undefined, keys: readonly (keyof Counters)
 const parseOwned = (text: string | undefined): string[] =>
   parse(text, (d) => progressSchema.validate({ ...emptyProgress(), owned: d })?.owned ?? null) ?? [];
 
+/** Every purchase id in the cloud, including items from a newer version, so writing never drops them. */
+const rawOwned = (text: string | undefined): string[] =>
+  parse(text, (d) => (Array.isArray(d) ? d.filter((x): x is string => typeof x === 'string' && /^[a-z]+:[a-z0-9-]{1,40}$/.test(x)) : null)) ?? [];
+const ownedText = (ids: readonly string[]) => canonicalJson([...new Set(ids)].sort());
+
 /** The shared section as it's stored: purchases travel in their own field. */
 const sharedText = (s: SharedProgress) => canonicalJson({ ...s, owned: undefined });
 
@@ -279,14 +284,14 @@ export function useCloudSync(
       const shared = sharedOf(merged.progress);
       const sections = {
         shared: sharedText(shared),
-        owned: canonicalJson(shared.owned),
+        owned: ownedText([...shared.owned, ...rawOwned(doc?.owned)]),
         ...(dailyStats ? { dailyStats: canonicalJson(dailyStats) } : {}),
         ...(game ? { daily: canonicalJson(game) } : {}),
         wordbook: canonicalJson(book),
       };
       const remoteSections: Record<keyof typeof sections, string | undefined> = {
         shared: remoteShared ? sharedText(remoteShared) : undefined,
-        owned: doc?.owned === undefined ? (shared.owned.length ? undefined : sections.owned) : canonicalJson(parseOwned(doc.owned)),
+        owned: doc?.owned === undefined ? (shared.owned.length ? undefined : sections.owned) : ownedText(rawOwned(doc.owned)),
         dailyStats: normalised(doc?.dailyStats),
         daily: normalised(doc?.daily),
         wordbook: normalised(doc?.wordbook),

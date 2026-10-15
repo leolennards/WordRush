@@ -156,7 +156,7 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
 const MAX_GUESSES = 6;
 const DUO_GUESSES = 7;
 const QUAD_GUESSES = 9;
-const APPLIED_LIMIT = 300;
+export const APPLIED_LIMIT = 300;
 
 /** XP for one finished game or run. */
 export function xpFor(e: GameEvent): number {

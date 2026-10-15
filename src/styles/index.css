@@ -139,6 +139,14 @@
 
 /* Tile themes, unlocked by rank (see engine/ranks.ts). Defined before the
    colour-accessible palette so that palette always wins. */
+/* Each themed element starts from flat fills, so a preview inside a page with
+   animated tiles shows its own colours, not the page's gradient. */
+[data-skin] {
+  --fill-correct: var(--c-correct);
+  --fill-present: var(--c-present);
+  --skin-anim: initial;
+  --skin-size: initial;
+}
 /* Free themes. */
 [data-skin='mint'] { --c-correct: #0f9e8e; --c-correct-ink: #fff; --c-present: #f28a3c; --c-present-ink: #2a1200; }
 .dark[data-skin='mint'] { --c-correct: #2dd4bf; --c-correct-ink: #042f2b; --c-present: #fb9a5b; --c-present-ink: #2a1200; }
@@ -224,13 +232,62 @@
   --fill-correct: linear-gradient(120deg, #ef4444, #f59e0b, #22c55e, #3b82f6, #a855f7, #ef4444);
   --fill-present: linear-gradient(120deg, #fde047, #fb923c, #f472b6, #fb923c, #fde047);
 }
-:is([data-skin='galaxy'], [data-skin='gold'], [data-skin='rainbow']) .tile:is([data-state='correct'], [data-state='present']):not([data-anim]),
-:is([data-skin='galaxy'], [data-skin='gold'], [data-skin='rainbow']) .key:is([data-state='correct'], [data-state='present']) {
-  background-size: 300% 300%;
-  animation: skin-flow 6s ease-in-out infinite;
+[data-skin='berry'] { --c-correct: #9d2b6b; --c-correct-ink: #fff; --c-present: #f0a1c2; --c-present-ink: #4a0a2a; }
+.dark[data-skin='berry'] { --c-correct: #e889b9; --c-correct-ink: #3a0a24; --c-present: #fbcfe8; --c-present-ink: #4a0a2a; }
+[data-skin='midnight'] { --c-correct: #111827; --c-correct-ink: #fff; --c-present: #94a3b8; --c-present-ink: #0f172a; }
+.dark[data-skin='midnight'] { --c-correct: #f8fafc; --c-correct-ink: #0b0f19; --c-present: #64748b; --c-present-ink: #fff; }
+[data-skin='toxic'] {
+  --c-correct: #65a30d;
+  --c-correct-ink: #1a2e05;
+  --c-present: #9333ea;
+  --c-present-ink: #fff;
+  --fill-correct: linear-gradient(135deg, #4d7c0f, #a3e635, #d9f99d, #84cc16, #4d7c0f);
+  --fill-present: linear-gradient(135deg, #581c87, #a855f7, #d946ef, #a855f7, #581c87);
 }
-:is([data-skin='galaxy'], [data-skin='rainbow']) .tile[data-state='correct'] {
+[data-skin='lava'] {
+  --c-correct: #dc2626;
+  --c-correct-ink: #fff;
+  --c-present: #f59e0b;
+  --c-present-ink: #2a1500;
+  --fill-correct: linear-gradient(160deg, #7f1d1d, #dc2626, #f97316, #b91c1c, #7f1d1d);
+  --fill-present: linear-gradient(160deg, #b45309, #f59e0b, #fde047, #f59e0b, #b45309);
+  /* Lava rises. */
+  --skin-anim: lava-flow 5s ease-in-out infinite;
+  --skin-size: 100% 400%;
+}
+[data-skin='vapor'] {
+  --c-correct: #c026d3;
+  --c-correct-ink: #fff;
+  --c-present: #22d3ee;
+  --c-present-ink: #1e1b4b;
+  --fill-correct: linear-gradient(120deg, #db2777, #a855f7, #6366f1, #a855f7, #db2777);
+  --fill-present: linear-gradient(120deg, #22d3ee, #a5f3fc, #f0abfc, #a5f3fc, #22d3ee);
+}
+[data-skin='holo'] {
+  --c-correct: #67e8f9;
+  --c-correct-ink: #062a2a;
+  --c-present: #f9a8d4;
+  --c-present-ink: #3b0a24;
+  --fill-correct: linear-gradient(115deg, #6ee7b7, #67e8f9, #a5b4fc, #c4b5fd, #67e8f9, #6ee7b7);
+  --fill-present: linear-gradient(115deg, #f9a8d4, #fde68a, #fdba74, #f0abfc, #f9a8d4);
+  /* Holograms shimmer faster. */
+  --skin-anim: skin-flow 3s ease-in-out infinite;
+}
+:is([data-skin='galaxy'], [data-skin='gold'], [data-skin='rainbow'], [data-skin='toxic'], [data-skin='lava'], [data-skin='vapor'], [data-skin='holo']) .tile:is([data-state='correct'], [data-state='present']):not([data-anim]),
+:is([data-skin='galaxy'], [data-skin='gold'], [data-skin='rainbow'], [data-skin='toxic'], [data-skin='lava'], [data-skin='vapor'], [data-skin='holo']) .key:is([data-state='correct'], [data-state='present']) {
+  background-size: var(--skin-size, 300% 300%);
+  animation: var(--skin-anim, skin-flow 6s ease-in-out infinite);
+}
+:is([data-skin='galaxy'], [data-skin='rainbow'], [data-skin='vapor']) .tile[data-state='correct'],
+[data-skin='toxic'] .tile[data-state='present'] {
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+}
+[data-skin='toxic'] .tile[data-state='correct']:not([data-anim]) {
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.12), 0 0 14px -4px #a3e635;
+}
+@keyframes lava-flow {
+  0%, 100% { background-position: 50% 0%; }
+  50% { background-position: 50% 100%; }
 }
 @keyframes skin-flow {
   0%, 100% { background-position: 0% 50%; }
@@ -789,6 +846,42 @@ button {
   animation: none !important;
 }
 
+/* The free daily chest. */
+.chest-card {
+  background:
+    radial-gradient(90% 120% at 0% 0%, rgb(255 255 255 / 0.18), transparent 55%),
+    linear-gradient(140deg, #7c3aed, #4f46e5 55%, #0e7490);
+}
+.chest-ready {
+  animation: chest-wiggle 2.6s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+@keyframes chest-wiggle {
+  0%, 70%, 100% { transform: rotate(0) scale(1); }
+  74% { transform: rotate(-8deg) scale(1.05); }
+  80% { transform: rotate(7deg) scale(1.05); }
+  86% { transform: rotate(-5deg); }
+  92% { transform: rotate(3deg); }
+}
+.chest-glow {
+  background: radial-gradient(circle, rgb(253 230 138 / 0.75), transparent 65%);
+  animation: chest-glow 2.6s ease-in-out infinite;
+}
+@keyframes chest-glow {
+  0%, 100% { opacity: 0.35; transform: scale(0.9); }
+  50% { opacity: 0.9; transform: scale(1.1); }
+}
+.chest-badge {
+  animation: chest-badge 1.8s ease-in-out infinite;
+}
+@keyframes chest-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+[data-reduce-motion='true'] :is(.chest-ready, .chest-glow, .chest-badge) {
+  animation: none !important;
+}
+
 /* Bot Duel: "thinking" dots and a gently bobbing bot. */
 .typing-dots {
   display: inline-flex;
@@ -996,6 +1089,128 @@ button {
 }
 :is([data-tiles='neon'] .tile:not([data-style]), .tile[data-style='neon'])[data-state='absent'] {
   box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c-absent-ink) 35%, transparent);
+}
+
+/* Animated tile styles. Their effects live on ::before so animated tile
+   colours (which animate the tile itself) keep moving underneath. */
+:is([data-tiles='shimmer'] .tile:not([data-style]), .tile[data-style='shimmer']),
+:is([data-tiles='frost'] .tile:not([data-style]), .tile[data-style='frost']),
+:is([data-tiles='blaze'] .tile:not([data-style]), .tile[data-style='blaze']) {
+  isolation: isolate;
+}
+:is([data-tiles='shimmer'] .tile:not([data-style]), .tile[data-style='shimmer']) { border-radius: 0.7rem; }
+:is([data-tiles='shimmer'] .tile:not([data-style]), .tile[data-style='shimmer']):is([data-state='correct'], [data-state='present'])::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.6) 50%, transparent 62%) no-repeat;
+  background-size: 260% 100%;
+  animation: tile-shimmer 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes tile-shimmer {
+  0% { background-position: 160% 0; }
+  45%, 100% { background-position: -60% 0; }
+}
+
+:is([data-tiles='frost'] .tile:not([data-style]), .tile[data-style='frost']) { border-radius: 0.6rem; }
+:is([data-tiles='frost'] .tile:not([data-style]), .tile[data-style='frost']):is([data-state='correct'], [data-state='present'], [data-state='absent']) {
+  box-shadow:
+    inset 0 0 0 2px rgb(255 255 255 / 0.55),
+    inset 0 0 14px rgb(186 230 253 / 0.65),
+    0 4px 12px -6px rgb(14 116 144 / 0.55);
+}
+:is([data-tiles='frost'] .tile:not([data-style]), .tile[data-style='frost']):is([data-state='correct'], [data-state='present'])::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 18% 22%, #fff 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 78% 30%, #fff 0 1px, transparent 2px),
+    radial-gradient(circle at 64% 78%, #fff 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 28% 72%, #fff 0 1px, transparent 2px),
+    linear-gradient(160deg, rgb(255 255 255 / 0.35), transparent 45%);
+  animation: tile-twinkle 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes tile-twinkle {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+:is([data-tiles='jelly'] .tile:not([data-style]), .tile[data-style='jelly']) { border-radius: 32%; }
+:is([data-tiles='jelly'] .tile:not([data-style]), .tile[data-style='jelly']):is([data-state='correct'], [data-state='present']):not([data-anim]) {
+  box-shadow:
+    inset 0 -4px 0 rgb(0 0 0 / 0.14),
+    inset 0 3px 6px rgb(255 255 255 / 0.35);
+  animation: tile-jelly 3s ease-in-out infinite;
+}
+/* With animated tile colours, run both animations. */
+:is([data-skin='galaxy'], [data-skin='gold'], [data-skin='rainbow'], [data-skin='toxic'], [data-skin='lava'], [data-skin='vapor'], [data-skin='holo'])
+  :is([data-tiles='jelly'] .tile:not([data-style]), .tile[data-style='jelly']):is([data-state='correct'], [data-state='present']):not([data-anim]) {
+  animation: var(--skin-anim, skin-flow 6s ease-in-out infinite), tile-jelly 3s ease-in-out infinite;
+}
+:is([data-skin='aurora'], [data-skin='prism'])
+  :is([data-tiles='jelly'] .tile:not([data-style]), .tile[data-style='jelly']):is([data-state='correct'], [data-state='present']):not([data-anim]) {
+  animation: skin-flow 7s ease-in-out infinite, tile-jelly 3s ease-in-out infinite;
+}
+@keyframes tile-jelly {
+  0%, 60%, 100% { transform: scale(1, 1); }
+  66% { transform: scale(1.1, 0.9); }
+  74% { transform: scale(0.93, 1.07); }
+  82% { transform: scale(1.04, 0.97); }
+  90% { transform: scale(0.99, 1.01); }
+}
+
+:is([data-tiles='blaze'] .tile:not([data-style]), .tile[data-style='blaze']) { border-radius: 0.55rem 0.55rem 0.8rem 0.8rem; }
+:is([data-tiles='blaze'] .tile:not([data-style]), .tile[data-style='blaze']):is([data-state='correct'], [data-state='present']) {
+  box-shadow:
+    inset 0 -3px 0 rgb(0 0 0 / 0.18),
+    0 0 14px -3px #f97316,
+    0 -2px 10px -4px #facc15;
+}
+:is([data-tiles='blaze'] .tile:not([data-style]), .tile[data-style='blaze']):is([data-state='correct'], [data-state='present'])::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(40% 55% at 30% 105%, rgb(253 224 71 / 0.85), transparent 70%),
+    radial-gradient(45% 70% at 70% 108%, rgb(249 115 22 / 0.8), transparent 72%),
+    radial-gradient(70% 60% at 50% 115%, rgb(220 38 38 / 0.55), transparent 75%);
+  transform-origin: 50% 100%;
+  animation: tile-flicker 1.4s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes tile-flicker {
+  0% { transform: scaleY(0.85) scaleX(1); opacity: 0.75; }
+  35% { transform: scaleY(1.15) scaleX(0.96); opacity: 1; }
+  60% { transform: scaleY(0.95) scaleX(1.03); opacity: 0.85; }
+  100% { transform: scaleY(1.25) scaleX(0.98); opacity: 1; }
+}
+
+/* A wave across the row: each tile a beat after the one before. */
+:is([data-tiles] .tile:not([data-style]), .tile[data-style]):nth-child(2):not([data-anim]),
+:is([data-tiles] .tile:not([data-style]), .tile[data-style]):nth-child(2)::before { animation-delay: 0.12s; }
+:is([data-tiles] .tile:not([data-style]), .tile[data-style]):nth-child(3):not([data-anim]),
+:is([data-tiles] .tile:not([data-style]), .tile[data-style]):nth-child(3)::before { animation-delay: 0.24s; }
+:is([data-tiles] .tile:not([data-style]), .tile[data-style]):nth-child(4):not([data-anim]),
+:is([data-tiles] .tile:not([data-style]), .tile[data-style]):nth-child(4)::before { animation-delay: 0.36s; }
+:is([data-tiles] .tile:not([data-style]), .tile[data-style]):nth-child(5):not([data-anim]),
+:is([data-tiles] .tile:not([data-style]), .tile[data-style]):nth-child(5)::before { animation-delay: 0.48s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tile::before { animation: none !important; }
+  .tile:not([data-anim]) { animation-iteration-count: 1 !important; }
+}
+[data-reduce-motion='true'] .tile::before,
+[data-reduce-motion='true'] .tile:not([data-anim]) {
+  animation: none !important;
 }
 
 /* Non-colour cue in the colour-accessible mode. */

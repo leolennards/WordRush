@@ -2,7 +2,7 @@
  * - Navigations: network first, falling back to the cached app shell.
  * - Same-origin static assets: cache first (Vite fingerprints file names).
  * Bump CACHE to invalidate everything. */
-const CACHE = 'wordskiis-v12';
+const CACHE = 'wordskiis-v13';
 const SHELL = ['/', '/index.html', '/icon.svg', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {

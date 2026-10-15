@@ -26,7 +26,7 @@ import { markStarted, secondsSinceStart } from '@/lib/storage/timers';
 import { Board } from '@/components/board/Board';
 import { Keyboard } from '@/components/keyboard/Keyboard';
 import { submitStateFor } from '@/components/keyboard/submit';
-import { Celebration } from '@/components/layout/Celebration';
+import { WinCelebration } from '@/components/layout/Celebration';
 import { useToast } from '@/components/layout/Toasts';
 import { WordChip } from '@/components/words/WordChip';
 import { Button } from '@/components/ui';
@@ -192,7 +192,7 @@ export function MultiScreen({ mode, avoidAnswer, inputEnabled, onHome }: MultiSc
             </section>
           );
         })}
-        {justCompleted && !revealing && won && !reducedMotion && <Celebration seed={multi.state.number} />}
+        {justCompleted && !revealing && won && !reducedMotion && <WinCelebration seed={multi.state.number} />}
       </div>
 
       <div className="safe-bottom pt-1 sm:pb-5">

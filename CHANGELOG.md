@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.13.0 — 2026-10-15 (more shop: animated styles, win effects, daily chest)
+
+- **Daily chest:** a free chest in the shop opens once a day for 20–80 coins (once across your devices with
+  cloud save). Home shows a "Free chest" badge while it's waiting.
+- **Win effects:** a new shop section for what bursts out when you win: Love Hearts, Coin Shower, Starfall and
+  Fireworks (Confetti stays free). Tap Watch to see one play. Choose in Settings → Tile theme.
+- **6 new tile colours:** Berry Smoothie, Midnight Ink, and the animated Toxic, Lava Lamp, Vaporwave and
+  Hologram.
+- **4 new animated tile styles:** Shimmer (a glint sweeps across), Frost (icy edges, twinkling sparkles), Jelly
+  (tiles wobble in a wave) and Blaze (flickering flames). They run together with animated tile colours.
+- Fixed shop previews taking on the gradient of an animated theme you were using.
+- Cloud save keeps purchases it doesn't recognise yet, so an older app on another device can't drop them.
+- **Android app 1.13.0** (versionCode 14).
+
 ## 1.12.1 — 2026-10-15 (cloud save fix)
 
 - **Fixed a cloud-save loop:** two devices could hold the same progress with keys in a different order (for

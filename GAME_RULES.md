@@ -194,9 +194,16 @@ the next game. Hard-mode results are marked with `*` when shared.
 
 - Every finished game earns Wordskiis coins: a fifth of the XP it earned, plus 20 per achievement,
   25 per level gained and 100 for a new rank. Everyone starts with 150 coins.
-- The shop sells tile colours (Citrus, Sakura, Arctic, Matcha, Retro, Coral Reef, Cyberpunk, and the
-  animated Galaxy, Solid Gold and Rainbow) and tile styles (Soft, Bubble, Pixel, Glass, Gem, Neon), from
-  300 to 3,000 coins. Classic tiles are free. Buying takes two taps and switches the item on.
+- The daily chest in the shop opens once a day (once across all your devices with cloud save) for
+  20–80 free coins; the amount is the same for everyone that day.
+- The shop sells:
+  - Tile colours: Citrus, Sakura, Berry Smoothie, Arctic, Matcha, Midnight Ink, Retro, Coral Reef, Cyberpunk,
+    and the animated Galaxy, Toxic, Lava Lamp, Vaporwave, Solid Gold, Hologram and Rainbow.
+  - Tile styles: Soft, Bubble, Pixel, Glass, Gem, Neon, and the animated Shimmer, Frost, Jelly and Blaze.
+  - Win effects (what bursts out when you win): Love Hearts, Coin Shower, Starfall and Fireworks.
+    Confetti is free.
+- Prices run from 300 to 3,000 coins. Classic tiles are free. Buying takes two taps and switches the item on.
+- Reduce motion (or the system setting) stills animated tiles and turns win effects off.
 - One item a day is today's deal at 30% off (the same for everyone; changes at 00:00 UTC).
 - With cloud save, coins add up across devices like XP, and purchases follow your account.
 

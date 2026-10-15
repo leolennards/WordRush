@@ -1,9 +1,21 @@
 import type { ReactNode } from 'react';
 import { Check, Lock } from 'lucide-react';
-import { SKINS, TILE_STYLES, owns, skinUnlocked, tileStyleUnlocked, type Skin, type TileStyle } from '@/engine';
+import {
+  SKINS,
+  TILE_STYLES,
+  WIN_EFFECTS,
+  owns,
+  skinUnlocked,
+  tileStyleUnlocked,
+  winFxUnlocked,
+  type Skin,
+  type TileStyle,
+  type WinFx,
+} from '@/engine';
 import { useProgress } from '@/features/progress/ProgressContext';
 import { useSettings } from '@/features/settings/SettingsContext';
 import { Coin } from '@/components/shop/Coin';
+import { FxIcon } from '@/components/shop/FxIcon';
 
 const PREVIEW = [
   { l: 't', s: 'correct' },
@@ -13,7 +25,7 @@ const PREVIEW = [
   { l: 's', s: 'present' },
 ] as const;
 
-/** Tile themes (free, by rank, from the shop) and tile styles, with a live preview. */
+/** Tile themes (free, by rank, from the shop), tile styles and win effects, with a live preview. */
 export function ThemePicker({ level, onShop }: { level: number; onShop?: () => void }) {
   const { settings, update } = useSettings();
   const { progress } = useProgress();
@@ -102,6 +114,36 @@ export function ThemePicker({ level, onShop }: { level: number; onShop?: () => v
     );
   };
 
+  const effect = (f: WinFx) => {
+    const unlocked = winFxUnlocked(f.id, progress.owned);
+    const on = settings.winFx === f.id;
+    return (
+      <button
+        key={f.id}
+        type="button"
+        role="radio"
+        aria-checked={on}
+        aria-label={unlocked ? `${f.name} win effect` : `${f.name} win effect, ${f.price} coins in the shop`}
+        disabled={!unlocked}
+        onClick={() => update({ winFx: f.id })}
+        className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition active:scale-[0.97] ${
+          on ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
+        } disabled:cursor-not-allowed`}
+      >
+        <span className={`grid size-7 place-items-center ${unlocked ? '' : 'opacity-35 grayscale'}`} aria-hidden>
+          <FxIcon id={f.id} />
+        </span>
+        <span className={`text-center text-xs leading-tight font-semibold ${unlocked ? '' : 'text-muted'}`}>{f.name}</span>
+        {on && <OnMark />}
+        {!unlocked && (
+          <span className="tabular flex items-center gap-0.5 text-[0.65rem] text-subtle">
+            <Coin className="size-3" /> {f.price}
+          </span>
+        )}
+      </button>
+    );
+  };
+
   const ownedShop = shop.filter((s) => owns(progress, `skin:${s.id}`)).length;
 
   return (
@@ -129,6 +171,9 @@ export function ThemePicker({ level, onShop }: { level: number; onShop?: () => v
       </Group>
       <Group title="Tile style" label="Tile styles">
         {TILE_STYLES.map(style)}
+      </Group>
+      <Group title="Win effect" label="Win effects">
+        {WIN_EFFECTS.map(effect)}
       </Group>
       {onShop && (
         <button

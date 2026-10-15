@@ -1,17 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import {
   SHOP_ITEMS,
+  CHEST,
   STARTER_COINS,
+  WIN_EFFECTS,
   applyEvent,
   buyItem,
+  chestCoins,
+  chestReady,
   coinBalance,
   dailyDeal,
   emptyProgress,
   mergeShared,
+  openChest,
   sharedOf,
   skinUnlocked,
   swapChoices,
   tileStyleUnlocked,
+  winFxUnlocked,
   wordDifficulty,
   type GameEvent,
 } from '@/engine';
@@ -98,6 +104,19 @@ describe('shop', () => {
     expect(tileStyleUnlocked('neon', ['tiles:neon'])).toBe(true);
   });
 
+  it('sells win effects, with confetti free for everyone', () => {
+    expect(winFxUnlocked('confetti', [])).toBe(true);
+    expect(winFxUnlocked('fireworks', [])).toBe(false);
+    expect(winFxUnlocked('fireworks', ['fx:fireworks'])).toBe(true);
+    const paid = WIN_EFFECTS.filter((f) => f.price !== undefined);
+    expect(SHOP_ITEMS.filter((i) => i.kind === 'fx').map((i) => i.id)).toEqual(paid.map((f) => `fx:${f.id}`));
+  });
+
+  it('gives every item a unique id and a price', () => {
+    expect(new Set(SHOP_ITEMS.map((i) => i.id)).size).toBe(SHOP_ITEMS.length);
+    for (const i of SHOP_ITEMS) expect(i.price).toBeGreaterThan(0);
+  });
+
   it('keeps purchases from every device when syncing', () => {
     const a = sharedOf({ ...emptyProgress(), owned: ['skin:citrus'] });
     const b = sharedOf({
@@ -115,6 +134,29 @@ describe('shop', () => {
       owned: ['skin:gold', 'bogus', 'skin:gold'],
     });
     expect(p).toMatchObject({ coins: 40, spent: 10, owned: ['skin:gold'] });
+  });
+});
+
+describe('daily chest', () => {
+  it('opens once a day for a fixed handful of coins', () => {
+    const coins = chestCoins(10);
+    expect(coins).toBeGreaterThanOrEqual(CHEST.min);
+    expect(coins).toBeLessThanOrEqual(CHEST.max);
+    expect(chestCoins(10)).toBe(coins);
+    const r = openChest(emptyProgress(), 10);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(coinBalance(r.progress)).toBe(STARTER_COINS + coins);
+    expect(chestReady(r.progress, 10)).toBe(false);
+    expect(openChest(r.progress, 10)).toEqual({ ok: false });
+    expect(chestReady(r.progress, 11)).toBe(true);
+  });
+
+  it('stays open on another device once synced', () => {
+    const r = openChest(emptyProgress(), 3);
+    if (!r.ok) throw new Error('chest should open');
+    const other = mergeShared(sharedOf(emptyProgress()), sharedOf(r.progress));
+    expect(chestReady(other, 3)).toBe(false);
   });
 });
 

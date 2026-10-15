@@ -25,7 +25,9 @@ export type SkinId =
   | ShopSkinId;
 
 /** Tile themes sold in the shop for coins. */
-export type ShopSkinId = 'citrus' | 'sakura' | 'arctic' | 'matcha' | 'retro' | 'coral' | 'cyber' | 'galaxy' | 'gold' | 'rainbow';
+export type ShopSkinId =
+  | 'citrus' | 'sakura' | 'berry' | 'arctic' | 'matcha' | 'midnight' | 'retro' | 'coral' | 'cyber'
+  | 'galaxy' | 'toxic' | 'lava' | 'vapor' | 'gold' | 'holo' | 'rainbow';
 
 export const RANKS: readonly Rank[] = [
   { id: 'rookie', name: 'Rookie', minLevel: 1, from: '#9aa1ad', to: '#6b7280', ink: '#ffffff', effects: 0 },
@@ -82,13 +84,19 @@ export const SKINS: readonly Skin[] = [
   }),
   { id: 'citrus', name: 'Citrus', minLevel: 1, swatch: ['#65a30d', '#f97316'], price: 400 },
   { id: 'sakura', name: 'Sakura', minLevel: 1, swatch: ['#e85d9a', '#86c27a'], price: 400 },
+  { id: 'berry', name: 'Berry Smoothie', minLevel: 1, swatch: ['#9d2b6b', '#f0a1c2'], price: 450 },
   { id: 'arctic', name: 'Arctic', minLevel: 1, swatch: ['#0ea5e9', '#a5b4fc'], price: 500 },
   { id: 'matcha', name: 'Matcha', minLevel: 1, swatch: ['#5f8f3e', '#d9a066'], price: 500 },
+  { id: 'midnight', name: 'Midnight Ink', minLevel: 1, swatch: ['#111827', '#94a3b8'], price: 550 },
   { id: 'retro', name: 'Retro', minLevel: 1, swatch: ['#2a9d8f', '#e9c46a'], price: 600 },
   { id: 'coral', name: 'Coral Reef', minLevel: 1, swatch: ['#f43f5e', '#14b8a6'], price: 600 },
   { id: 'cyber', name: 'Cyberpunk', minLevel: 1, swatch: ['#d946ef', '#a3e635'], price: 900 },
   { id: 'galaxy', name: 'Galaxy', minLevel: 1, swatch: ['#6366f1', '#ec4899'], animated: true, price: 1600 },
+  { id: 'toxic', name: 'Toxic', minLevel: 1, swatch: ['#84cc16', '#a855f7'], animated: true, price: 1700 },
+  { id: 'lava', name: 'Lava Lamp', minLevel: 1, swatch: ['#dc2626', '#f59e0b'], animated: true, price: 1800 },
+  { id: 'vapor', name: 'Vaporwave', minLevel: 1, swatch: ['#ec4899', '#22d3ee'], animated: true, price: 1900 },
   { id: 'gold', name: 'Solid Gold', minLevel: 1, swatch: ['#d4a017', '#9ca3af'], animated: true, price: 2200 },
+  { id: 'holo', name: 'Hologram', minLevel: 1, swatch: ['#a5f3fc', '#f0abfc'], animated: true, price: 2600 },
   { id: 'rainbow', name: 'Rainbow', minLevel: 1, swatch: ['#ef4444', '#3b82f6'], animated: true, price: 3000 },
 ];
 

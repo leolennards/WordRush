@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ArrowDownUp, Award, BookOpen, Bot, Castle, Repeat2, Footprints, CalendarClock, CalendarDays, Columns2, Heart, ScrollText, Share2, Shuffle, SlidersHorizontal, Zap } from 'lucide-react';
+import { ArrowDownUp, Award, BookOpen, Bot, Castle, Repeat2, Footprints, CalendarClock, CalendarDays, Columns2, Heart, ScrollText, Share2, Shuffle, SlidersHorizontal, Zap, ShoppingBag } from 'lucide-react';
 import type { LetterState } from '@/engine';
 import { BRAND, GAME } from '@/config/game';
 import { Dialog } from './Dialog';
@@ -158,6 +158,13 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
             <span>
               <strong>Level up</strong> — every game earns XP. Climb through ten ranks, from Rookie to Wordskiis
               Legend at level 100, each with its own emblem and new tile themes to unlock.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <ShoppingBag className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <span>
+              <strong>Coins and the shop</strong> — every game earns coins, and the daily chest gives free ones. Spend
+              them on tile colours, animated tile styles and win effects.
             </span>
           </li>
           <li className="flex gap-3">

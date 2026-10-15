@@ -4,7 +4,7 @@ import type { Stats } from '@/engine/stats';
 import { emptyProgress, type Progress } from '@/engine/progress';
 import type { QuestState } from '@/engine/quests';
 import { SKINS, type SkinId } from '@/engine/ranks';
-import { TILE_STYLES, shopItem, type TileStyleId } from '@/engine/shop';
+import { TILE_STYLES, WIN_EFFECTS, shopItem, type TileStyleId, type WinFxId } from '@/engine/shop';
 import type { SurvivalRun } from '@/engine/survival';
 import type { MultiState } from '@/engine/multi';
 import type { LadderState } from '@/engine/ladder';
@@ -52,6 +52,8 @@ export interface Settings {
   skin: SkinId;
   /** Tile shape and finish (free or bought in the shop). */
   tileStyle: TileStyleId;
+  /** What bursts out when you win (free or bought in the shop). */
+  winFx: WinFxId;
   /** Whether the first-visit help has been shown. */
   seenHelp: boolean;
 }
@@ -68,6 +70,7 @@ export const DEFAULT_SETTINGS: Settings = {
   modLiar: false,
   skin: 'classic',
   tileStyle: 'classic',
+  winFx: 'confetti',
   seenHelp: false,
 };
 
@@ -90,6 +93,7 @@ export const settingsSchema: Schema<Settings> = {
       modLiar: bool('modLiar'),
       skin: SKINS.some((x) => x.id === d.skin) ? (d.skin as SkinId) : 'classic',
       tileStyle: TILE_STYLES.some((x) => x.id === d.tileStyle) ? (d.tileStyle as TileStyleId) : 'classic',
+      winFx: WIN_EFFECTS.some((x) => x.id === d.winFx) ? (d.winFx as WinFxId) : 'confetti',
       seenHelp: bool('seenHelp'),
     };
   },

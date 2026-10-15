@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, m } from 'motion/react';
-import { ArrowLeft, Check, Clock3, Sparkles, Tag } from 'lucide-react';
+import { ArrowLeft, Check, Clock3, Play, Sparkles, Tag } from 'lucide-react';
 import { GAME } from '@/config/game';
 import {
   COIN_REWARDS,
@@ -13,6 +14,7 @@ import {
   type ShopItem,
   type SkinId,
   type TileStyleId,
+  type WinFxId,
 } from '@/engine';
 import { useServices } from '@/app/services';
 import { useProgress } from '@/features/progress/ProgressContext';
@@ -22,10 +24,15 @@ import { playCue } from '@/lib/audio/sound';
 import { buzz } from '@/lib/haptics';
 import { useToast } from '@/components/layout/Toasts';
 import { Segmented } from '@/components/ui';
+import { Celebration } from '@/components/layout/Celebration';
 import { Coin } from './Coin';
 import { Rolling } from './CoinChip';
+import { DailyChest } from './DailyChest';
+import { FxIcon } from './FxIcon';
 
-type Tab = 'skin' | 'tiles';
+type Tab = ShopItem['kind'];
+
+const KIND_LABEL: Record<Tab, string> = { skin: 'tile colours', tiles: 'tile style', fx: 'win effect' };
 
 const PREVIEW = [
   { l: 'w', s: 'correct' },
@@ -57,9 +64,15 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
     return () => window.clearTimeout(t);
   }, [confirming]);
 
-  const equipped = (item: ShopItem) => (item.kind === 'skin' ? settings.skin === item.ref : settings.tileStyle === item.ref);
+  const equipped = (item: ShopItem) =>
+    item.kind === 'skin' ? settings.skin === item.ref : item.kind === 'tiles' ? settings.tileStyle === item.ref : settings.winFx === item.ref;
   const equip = (item: ShopItem) =>
-    item.kind === 'skin' ? update({ skin: item.ref as SkinId }) : update({ tileStyle: item.ref as TileStyleId });
+    item.kind === 'skin'
+      ? update({ skin: item.ref as SkinId })
+      : item.kind === 'tiles'
+        ? update({ tileStyle: item.ref as TileStyleId })
+        : update({ winFx: item.ref as WinFxId });
+  const reducedMotion = settings.reduceMotion;
 
   const press = (item: ShopItem) => {
     if (owns(progress, item.id)) {
@@ -85,7 +98,7 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
         kind: 'achievement',
         eyebrow: 'New in your collection',
         title: item.name,
-        detail: item.kind === 'skin' ? 'Tile colours, now on' : 'Tile style, now on',
+        detail: item.kind === 'skin' ? 'Tile colours, now on' : item.kind === 'tiles' ? 'Tile style, now on' : 'Plays when you win',
         icon: Sparkles,
       },
     });
@@ -147,6 +160,8 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
           </p>
         </m.section>
 
+        <DailyChest />
+
         {/* Today's deal */}
         <m.section
           initial={{ opacity: 0, y: 8 }}
@@ -162,15 +177,13 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
               </p>
               <p className="mt-0.5 text-lg font-extrabold">
                 {deal.item.name}{' '}
-                <span className="text-sm font-semibold text-muted">
-                  {deal.item.kind === 'skin' ? 'tile colours' : 'tile style'}
-                </span>
+                <span className="text-sm font-semibold text-muted">{KIND_LABEL[deal.item.kind]}</span>
               </p>
               <p className="tabular flex items-center gap-1 text-xs text-muted">
                 <Clock3 className="size-3" aria-hidden /> New deal in {countdown}
               </p>
             </div>
-            <Preview item={deal.item} dark={dark} skin={settings.skin} />
+            <Preview item={deal.item} dark={dark} skin={settings.skin} reducedMotion={reducedMotion} />
             <BuyButton
               item={deal.item}
               price={deal.price}
@@ -190,8 +203,9 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
             value={tab}
             onChange={setTab}
             options={[
-              { value: 'skin', label: 'Tile colours' },
-              { value: 'tiles', label: 'Tile styles' },
+              { value: 'skin', label: 'Colours' },
+              { value: 'tiles', label: 'Styles' },
+              { value: 'fx', label: 'Win effects' },
             ]}
           />
         </div>
@@ -235,7 +249,7 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
                     </span>
                   )}
                   <div className="mt-4 mb-3 flex justify-center">
-                    <Preview item={item} dark={dark} skin={settings.skin} />
+                    <Preview item={item} dark={dark} skin={settings.skin} reducedMotion={reducedMotion} />
                   </div>
                   <p className="font-bold">{item.name}</p>
                   <p className="mb-3 text-xs leading-snug text-muted">{item.description}</p>
@@ -259,7 +273,7 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
         </AnimatePresence>
 
         <p className="mt-6 text-center text-xs text-subtle">
-          Rank themes unlock as you level up. Find everything you own in Settings → Tile themes.
+          Rank themes unlock as you level up. Find everything you own in Settings → Tile theme.
         </p>
       </div>
     </main>
@@ -267,7 +281,8 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
 }
 
 /** Five tiles in the item's colours (or style), in your current colours/style otherwise. */
-function Preview({ item, dark, skin }: { item: ShopItem; dark: boolean; skin: SkinId }) {
+function Preview({ item, dark, skin, reducedMotion }: { item: ShopItem; dark: boolean; skin: SkinId; reducedMotion: boolean }) {
+  if (item.kind === 'fx') return <FxPreview item={item} reducedMotion={reducedMotion} />;
   const isSkin = item.kind === 'skin';
   return (
     <div
@@ -288,6 +303,40 @@ function Preview({ item, dark, skin }: { item: ShopItem; dark: boolean; skin: Sk
         </span>
       ))}
     </div>
+  );
+}
+
+/** A win effect: tap to watch it play over the screen, as it does when you win. */
+function FxPreview({ item, reducedMotion }: { item: ShopItem; reducedMotion: boolean }) {
+  const [play, setPlay] = useState(0);
+  const fx = item.ref as WinFxId;
+  useEffect(() => {
+    if (!play) return;
+    const t = window.setTimeout(() => setPlay(0), 2600);
+    return () => window.clearTimeout(t);
+  }, [play]);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setPlay((n) => n + 1)}
+        className="group grid aspect-[5/1] w-full max-w-[12.5rem] place-items-center rounded-xl bg-surface-2 transition hover:bg-surface-3 active:scale-[0.97]"
+        aria-label={`Watch ${item.name}`}
+      >
+        <span className="flex items-center gap-2 text-xs font-bold text-muted group-hover:text-text">
+          <FxIcon id={fx} className="size-5" />
+          <Play className="size-3.5 fill-current" aria-hidden /> Watch
+        </span>
+      </button>
+      {play > 0 &&
+        !reducedMotion &&
+        createPortal(
+          <div className="pointer-events-none fixed inset-0 z-50" key={play}>
+            <Celebration seed={play * 7 + item.price} fx={fx} />
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }
 

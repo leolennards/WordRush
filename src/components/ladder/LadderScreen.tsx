@@ -23,7 +23,7 @@ import { keepFocus } from '@/lib/accessibility/keepFocus';
 import { markStarted, secondsSinceStart } from '@/lib/storage/timers';
 import { Keyboard } from '@/components/keyboard/Keyboard';
 import { submitStateFor } from '@/components/keyboard/submit';
-import { Celebration } from '@/components/layout/Celebration';
+import { WinCelebration } from '@/components/layout/Celebration';
 import { useToast } from '@/components/layout/Toasts';
 import { WordChip } from '@/components/words/WordChip';
 import { Button } from '@/components/ui';
@@ -201,7 +201,7 @@ export function LadderScreen({ inputEnabled, onHome }: LadderScreenProps) {
           </p>
           <LadderRow word={game.target} target={game.target} kind="target" label={`Target word ${game.target.toUpperCase()}`} />
         </div>
-        {justCompleted && game.status === 'won' && !reducedMotion && <Celebration seed={ladder.state.number} />}
+        {justCompleted && game.status === 'won' && !reducedMotion && <WinCelebration seed={ladder.state.number} />}
       </div>
 
       <div className="safe-bottom pt-1 sm:pb-5">

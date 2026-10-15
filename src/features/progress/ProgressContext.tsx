@@ -6,6 +6,7 @@ import {
   applyEvent,
   buyItem,
   dayIndexFor,
+  openChest,
   emptyProgress,
   type ApplyResult,
   type BuyResult,
@@ -28,6 +29,8 @@ interface ProgressContextValue {
   refresh: () => void;
   /** Buys a shop item with coins. */
   buy: (itemId: string) => BuyResult;
+  /** Opens today's free coin chest; returns the coins, or null if it's already open. */
+  claimChest: () => number | null;
 }
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
@@ -68,10 +71,18 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     [load, store, now],
   );
 
+  const claimChest = useCallback(() => {
+    const result = openChest(load(), dayIndexFor(now(), GAME.dailyEpoch));
+    if (!result.ok) return null;
+    writeVersioned(store, KEYS.progress, progressSchema, result.progress);
+    setProgress(result.progress);
+    return result.coins;
+  }, [load, store, now]);
+
   const refresh = useCallback(() => setProgress(load()), [load]);
   const value = useMemo(
-    () => ({ progress, record, gains, celebrateRank, refresh, buy }),
-    [progress, record, gains, celebrateRank, refresh, buy],
+    () => ({ progress, record, gains, celebrateRank, refresh, buy, claimChest }),
+    [progress, record, gains, celebrateRank, refresh, buy, claimChest],
   );
   return (
     <ProgressContext.Provider value={value}>

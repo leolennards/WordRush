@@ -12,6 +12,7 @@ import {
   levelFor,
   skinUnlocked,
   tileStyleUnlocked,
+  winFxUnlocked,
   nextHintPosition,
   type GameState,
   type SoloMode,
@@ -128,7 +129,8 @@ function Wordskiis() {
   useEffect(() => {
     if (!skinUnlocked(settings.skin, playerLevel, progress.owned)) update({ skin: 'classic' });
     if (!tileStyleUnlocked(settings.tileStyle, progress.owned)) update({ tileStyle: 'classic' });
-  }, [settings.skin, settings.tileStyle, playerLevel, progress.owned, update]);
+    if (!winFxUnlocked(settings.winFx, progress.owned)) update({ winFx: 'confetti' });
+  }, [settings.skin, settings.tileStyle, settings.winFx, playerLevel, progress.owned, update]);
   const award = useAward();
   const words = useWords();
 
