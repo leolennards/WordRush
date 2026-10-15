@@ -200,6 +200,14 @@ describe('cloud save', () => {
     await assertFails(setDoc(doc(google('bob'), 'saves', 'alice'), save));
   });
 
+  it('stores coins per device and shop purchases', async () => {
+    await assertSucceeds(
+      setDoc(doc(google('alice'), 'saves', 'alice'), { ...save, wallet: { phone: '{"coins":40,"spent":0}' }, owned: '["skin:gold"]' }),
+    );
+    await assertFails(setDoc(doc(google('alice'), 'saves', 'alice'), { ...save, wallet: 'lots' }));
+    await assertFails(setDoc(doc(google('alice'), 'saves', 'alice'), { ...save, owned: 'x'.repeat(4001) }));
+  });
+
   it('keeps guests and signed-out visitors out', async () => {
     await assertFails(setDoc(doc(db('guest'), 'saves', 'guest'), save));
     await assertFails(getDoc(doc(db(null), 'saves', 'alice')));

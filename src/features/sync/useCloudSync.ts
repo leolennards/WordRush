@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  COUNTERS,
+  DEVICE_COUNTERS,
+  WALLET_COUNTERS,
+  canonicalJson,
+  countersJson,
   emptyProgress,
   decideSection,
   mergeDaily,
@@ -60,12 +63,35 @@ const parse = <T>(text: string | undefined, check: (d: unknown) => T | null): T 
   }
 };
 
-function parseCounters(text: string): Counters {
-  const out = zeroCounters();
+/** Reads the counters in `keys` from a device's cloud entry into `out`. */
+function parseCounters(text: string | undefined, keys: readonly (keyof Counters)[], out = zeroCounters()): Counters {
   const d = parse(text, (x) => (x && typeof x === 'object' ? (x as Record<string, unknown>) : null));
-  if (d) for (const k of COUNTERS) if (typeof d[k] === 'number' && d[k] >= 0) out[k] = Math.floor(d[k] as number);
+  if (d) for (const k of keys) if (typeof d[k] === 'number' && d[k] >= 0) out[k] = Math.floor(d[k] as number);
   return out;
 }
+
+/** Shop purchases from the cloud (only items this version knows). */
+const parseOwned = (text: string | undefined): string[] =>
+  parse(text, (d) => progressSchema.validate({ ...emptyProgress(), owned: d })?.owned ?? null) ?? [];
+
+/** The shared section as it's stored: purchases travel in their own field. */
+const sharedText = (s: SharedProgress) => canonicalJson({ ...s, owned: undefined });
+
+/** The same data, ignoring key order: a text section from the cloud, normalised. */
+const normalised = (text: string | undefined) => {
+  if (text === undefined) return undefined;
+  try {
+    return canonicalJson(JSON.parse(text));
+  } catch {
+    return text;
+  }
+};
+
+/** At most this many writes a minute; a runaway loop can't use up the daily quota. */
+const WRITE_LIMITS = [
+  { count: 8, windowMs: 60_000 },
+  { count: 40, windowMs: 3_600_000 },
+] as const;
 
 function parseShared(text: string | undefined): SharedProgress | null {
   return parse(text, (d) => {
@@ -142,6 +168,10 @@ export function useCloudSync(
   const remote = useRef<SaveDoc | null | undefined>(undefined);
   const running = useRef(false);
   const again = useRef(false);
+  const writes = useRef<number[]>([]);
+  const [retry, setRetry] = useState(0);
+  const cooldown = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(cooldown.current), []);
   const latest = useRef({ cloud, daily, progressCtx, stats, words, onPulled });
   useEffect(() => {
     latest.current = { cloud, daily, progressCtx, stats, words, onPulled };
@@ -164,13 +194,17 @@ export function useCloudSync(
       // Progress: per-device counters + merged shared parts.
       const localProgress = readVersioned(store, KEYS.progress, progressSchema) ?? emptyProgress();
       const devices: Record<string, Counters> = {};
-      for (const [id, text] of Object.entries(doc?.devices ?? {})) devices[id] = parseCounters(text);
+      for (const id of new Set([...Object.keys(doc?.devices ?? {}), ...Object.keys(doc?.wallet ?? {})])) {
+        devices[id] = parseCounters(doc?.wallet?.[id], WALLET_COUNTERS, parseCounters(doc?.devices?.[id], DEVICE_COUNTERS));
+      }
+      const remoteShared = parseShared(doc?.shared);
+      if (remoteShared) remoteShared.owned = [...new Set([...remoteShared.owned, ...parseOwned(doc?.owned)])].sort();
       const merged = reconcileProgress({
         local: localProgress,
         base,
         devices,
         deviceId: meta.deviceId,
-        remoteShared: parseShared(doc?.shared),
+        remoteShared,
       });
 
       // Statistics, today's Daily and the Word Book.
@@ -238,18 +272,50 @@ export function useCloudSync(
       if (pulled.length) pulledCb(pulled);
 
       // Push anything the cloud doesn't have yet.
-      const own = JSON.stringify(merged.own);
+      // Compared by content, not text: two devices can hold the same data with keys in a different order,
+      // and comparing text would have them rewrite each other's copy forever.
+      const own = countersJson(merged.own, DEVICE_COUNTERS);
+      const ownWallet = countersJson(merged.own, WALLET_COUNTERS);
+      const shared = sharedOf(merged.progress);
       const sections = {
-        shared: JSON.stringify(sharedOf(merged.progress)),
-        ...(dailyStats ? { dailyStats: JSON.stringify(dailyStats) } : {}),
-        ...(game ? { daily: JSON.stringify(game) } : {}),
-        wordbook: JSON.stringify(book),
+        shared: sharedText(shared),
+        owned: canonicalJson(shared.owned),
+        ...(dailyStats ? { dailyStats: canonicalJson(dailyStats) } : {}),
+        ...(game ? { daily: canonicalJson(game) } : {}),
+        wordbook: canonicalJson(book),
       };
+      const remoteSections: Record<keyof typeof sections, string | undefined> = {
+        shared: remoteShared ? sharedText(remoteShared) : undefined,
+        owned: doc?.owned === undefined ? (shared.owned.length ? undefined : sections.owned) : canonicalJson(parseOwned(doc.owned)),
+        dailyStats: normalised(doc?.dailyStats),
+        daily: normalised(doc?.daily),
+        wordbook: normalised(doc?.wordbook),
+      };
+      const sameShare = (text: string | undefined, keys: readonly (keyof Counters)[]) =>
+        keys.every((k) => parseCounters(text, keys)[k] === merged.own[k]);
       const stale =
-        doc?.devices?.[meta.deviceId] !== own ||
+        !doc?.devices?.[meta.deviceId] ||
+        !sameShare(doc.devices[meta.deviceId], DEVICE_COUNTERS) ||
+        (WALLET_COUNTERS.some((k) => merged.own[k] > 0) && !sameShare(doc?.wallet?.[meta.deviceId], WALLET_COUNTERS)) ||
         Object.keys(sessions).length > 0 ||
-        (Object.keys(sections) as (keyof typeof sections)[]).some((k) => doc?.[k] !== sections[k]);
-      if (stale) await c.write(meta.deviceId, own, { ...sections, ...(Object.keys(sessions).length ? { sessions } : {}) });
+        (Object.keys(sections) as (keyof typeof sections)[]).some((k) => remoteSections[k] !== sections[k]);
+      if (stale) {
+        const now = Date.now();
+        writes.current = writes.current.filter((t) => now - t < 3_600_000);
+        const hit = WRITE_LIMITS.find((l) => writes.current.filter((t) => now - t < l.windowMs).length >= l.count);
+        if (hit) {
+          // Too many writes in a row: wait, then try once more.
+          window.clearTimeout(cooldown.current);
+          cooldown.current = window.setTimeout(() => setRetry((n) => n + 1), hit.windowMs / 4);
+          throw new Error('Syncing paused for a bit (lots of changes at once).');
+        }
+        writes.current.push(now);
+        await c.write(meta.deviceId, own, {
+          ...sections,
+          wallet: { [meta.deviceId]: ownWallet },
+          ...(Object.keys(sessions).length ? { sessions } : {}),
+        });
+      }
       setStatus('synced');
       setError(null);
       setLastSyncedAt(Date.now());
@@ -269,6 +335,11 @@ export function useCloudSync(
   useEffect(() => {
     reconcileRef.current = reconcile;
   });
+
+  // Try again after a pause.
+  useEffect(() => {
+    if (retry > 0) void reconcileRef.current();
+  }, [retry]);
 
   // Follow the cloud document while signed in.
   const uid = cloud?.uid ?? null;

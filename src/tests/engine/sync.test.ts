@@ -120,3 +120,21 @@ describe('game save sections', () => {
     expect(decideSection(snap(5, '3'), snap(9, '3'), weigh)).toBe('none');
   });
 });
+
+describe('cloud save text is stable', () => {
+  it('gives the same text for the same data in any key order', async () => {
+    const { canonicalJson } = await import('@/engine');
+    expect(canonicalJson({ b: 1, a: { d: [2, { y: 1, x: 2 }], c: 3 } })).toBe(canonicalJson({ a: { c: 3, d: [2, { x: 2, y: 1 }] }, b: 1 }));
+    expect(canonicalJson(['b', 'a'])).not.toBe(canonicalJson(['a', 'b']));
+  });
+
+  it('two devices whose quests and achievements are in different orders agree after one merge each', async () => {
+    const { canonicalJson, emptyProgress, mergeShared, sharedOf } = await import('@/engine');
+    const a = sharedOf({ ...emptyProgress(), unlocked: { x: 1, y: 2 }, quests: { day: 4, progress: { rush: 1, blitz: 0 } } });
+    const b = sharedOf({ ...emptyProgress(), unlocked: { y: 2, x: 1 }, quests: { day: 4, progress: { blitz: 0, rush: 1 } } });
+    const onA = mergeShared(a, b);
+    const onB = mergeShared(b, onA);
+    expect(canonicalJson(onA)).toBe(canonicalJson(onB));
+    expect(JSON.stringify(onA)).not.toBe(JSON.stringify(onB)); // why comparing plain text looped
+  });
+});

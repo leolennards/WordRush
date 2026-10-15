@@ -16,7 +16,11 @@ import type { QuestState } from './quests';
 import type { Stats } from './stats';
 import type { GameState } from './types';
 
-export const COUNTERS = ['xp', 'wins', 'practiceWins', 'duoWins', 'quadWins', 'duelWins', 'wordsPlayed', 'questsDone', 'coins', 'spent'] as const;
+/** Counters stored in each device's `devices` entry (the original set, so older app versions read the same text). */
+export const DEVICE_COUNTERS = ['xp', 'wins', 'practiceWins', 'duoWins', 'quadWins', 'duelWins', 'wordsPlayed', 'questsDone'] as const;
+/** Counters stored in each device's `wallet` entry (coins came later; kept apart so older versions never see them). */
+export const WALLET_COUNTERS = ['coins', 'spent'] as const;
+export const COUNTERS = [...DEVICE_COUNTERS, ...WALLET_COUNTERS] as const;
 export const BESTS = ['bestBlitz', 'bestSurvival', 'bestTower', 'bestReverse'] as const;
 
 export type Counter = (typeof COUNTERS)[number];
@@ -33,7 +37,8 @@ export interface SharedProgress {
   owned: string[];
 }
 
-const APPLIED_LIMIT = 300;
+/** Larger than progress's own list, so merging two devices' lists rarely has to cut any. */
+const APPLIED_LIMIT = 800;
 
 export const zeroCounters = (): Counters => Object.fromEntries(COUNTERS.map((k) => [k, 0])) as Counters;
 
@@ -73,7 +78,7 @@ export function mergeShared(a: SharedProgress, b: SharedProgress | null): Shared
   const seen = new Set<string>();
   const applied = [...b.applied, ...a.applied].filter((id) => !seen.has(id) && (seen.add(id), true)).slice(-APPLIED_LIMIT);
   const bests = Object.fromEntries(BESTS.map((k) => [k, Math.max(a.bests[k] ?? 0, b.bests[k] ?? 0)])) as Record<Best, number>;
-  const owned = [...new Set([...a.owned, ...(b.owned ?? [])])];
+  const owned = [...new Set([...a.owned, ...(b.owned ?? [])])].sort();
   return { unlocked, applied, bests, quests: mergeQuests(a.quests, b.quests), owned };
 }
 
@@ -98,6 +103,28 @@ export function reconcileProgress(params: {
   for (const [id, c] of Object.entries(params.devices)) if (id !== params.deviceId) others = addCounters(others, c);
   const shared = mergeShared(sharedOf(params.local), params.remoteShared);
   return { progress: composeProgress(addCounters(own, others), shared), own, others };
+}
+
+/** The counters in `keys` as JSON, in that order (what goes in a device's cloud entry). */
+export const countersJson = (c: Counters, keys: readonly Counter[]) => JSON.stringify(Object.fromEntries(keys.map((k) => [k, c[k] ?? 0])));
+
+/**
+ * JSON with object keys sorted, so two devices holding the same data always
+ * produce the same text (merges can build objects in different key orders).
+ */
+export function canonicalJson(value: unknown): string {
+  const sort = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.map(sort);
+    if (v && typeof v === 'object') {
+      return Object.fromEntries(
+        Object.keys(v as object)
+          .sort()
+          .map((k) => [k, sort((v as Record<string, unknown>)[k])]),
+      );
+    }
+    return v;
+  };
+  return JSON.stringify(sort(value));
 }
 
 /** Statistics: keep the side that has seen the most recent game (then the one with more games). */

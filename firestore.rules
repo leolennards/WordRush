@@ -83,10 +83,12 @@ service cloud.firestore {
       allow get: if signedIn() && me() == uid;
       allow list: if false;
       allow create, update: if withGoogle() && me() == uid
-        && request.resource.data.keys().hasOnly(['v', 'devices', 'shared', 'dailyStats', 'practiceStats', 'daily', 'wordbook', 'sessions', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['v', 'devices', 'wallet', 'owned', 'shared', 'dailyStats', 'practiceStats', 'daily', 'wordbook', 'sessions', 'updatedAt'])
         && (!('sessions' in request.resource.data) || (request.resource.data.sessions is map && request.resource.data.sessions.size() <= 16))
         && request.resource.data.v == 1
         && request.resource.data.devices is map && request.resource.data.devices.size() <= 25
+        && (!('wallet' in request.resource.data) || (request.resource.data.wallet is map && request.resource.data.wallet.size() <= 25))
+        && smallString(request.resource.data, 'owned', 4000)
         && smallString(request.resource.data, 'shared', 40000)
         && smallString(request.resource.data, 'dailyStats', 4000)
         && smallString(request.resource.data, 'practiceStats', 4000)

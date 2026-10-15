@@ -403,6 +403,10 @@ export interface SaveDoc {
   wordbook?: string;
   /** Whole game saves (Tower, Practice, settings…), newest wins: section → JSON { at, data }. */
   sessions?: Record<string, string>;
+  /** Each device's own coins earned and spent (JSON), by device id. */
+  wallet?: Record<string, string>;
+  /** Shop items bought (JSON array). */
+  owned?: string;
 }
 
 export function watchSave(uid: string, cb: (save: SaveDoc | null) => void, onError?: (e: Error) => void) {

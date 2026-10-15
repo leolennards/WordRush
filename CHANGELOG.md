@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.12.1 — 2026-10-15 (cloud save fix)
+
+- **Fixed a cloud-save loop:** two devices could hold the same progress with keys in a different order (for
+  example today's quests), see each other's copy as different, and rewrite it back and forth until the
+  daily Firestore quota ran out. Saves are now compared by content and written in a stable form.
+- A safety limit (8 writes a minute, 40 an hour per device) pauses syncing briefly if anything ever loops.
+- Coins and shop purchases are stored in their own fields (`wallet`, `owned`), so devices on older
+  versions never fight over them.
+- **Android app 1.12.1** (versionCode 13).
+
 ## 1.12.0 — 2026-10-15 (coins, shop, three-word Swap)
 
 - **Wordskiis coins:** every game now earns coins alongside XP (a fifth of its XP, plus 20 per achievement,

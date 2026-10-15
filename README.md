@@ -42,7 +42,7 @@ paid API or database — and keeps preferences, progress and statistics in `loca
 - Wordskiis coins from every game, and a shop with tile colours, tile styles and a daily deal.
 - Submit button under the keyboard: only enabled for a full, real word ("Not a real word" otherwise).
 - Cloud save: signed in with Google, progress (level, XP, achievements, bests, quests, Daily stats, today's
-  Daily, Word Book) syncs live across devices; XP is a per-device counter so it adds up without double counting.
+  Daily, Word Book) syncs live across devices; XP and coins are per-device counters so they add up without double counting.
   Games in progress (Tower, Practice, Survival, Duo, Quad, Word Ladder, Daily Rush) and settings sync too,
   newest change wins.
 - Records: personal bests across every mode (Blitz, Survival, Tower, Reverse, bots beaten, Duo/Quad wins…).
