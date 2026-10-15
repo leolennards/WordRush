@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.12.0 — 2026-10-15 (coins, shop, three-word Swap)
+
+- **Wordskiis coins:** every game now earns coins alongside XP (a fifth of its XP, plus 20 per achievement,
+  25 per level and 100 for a new rank). Everyone starts with 150. The balance sits in the header, rolls up
+  and floats "+N" when coins come in, and opens the shop.
+- **Shop:** 10 tile colours (including the animated Galaxy, Solid Gold and Rainbow) and 6 tile styles (Soft,
+  Bubble, Pixel, Glass, Gem, Neon), each with a live preview, plus a daily deal at 30% off. Buying takes two
+  taps, bursts coins and switches the item on. Everything you own is also in Settings → Tile theme.
+- **Word Swap:** the picker now chooses one of three offered words (rated Easy / Medium / Tricky) instead of
+  typing any word. The three are fixed per round, so refreshing doesn't reroll them.
+- Fixed the Ocean theme using its dark-mode colours in light mode.
+- Cloud save carries coins and purchases (coins add up per device, like XP).
+- **Android app 1.12.0** (versionCode 12).
+
 ## 1.11.0 — 2026-10-14 (Word Swap, Submit button, update prompt)
 
 - **Word Swap (Friends):** pick a word for a friend and watch them guess it live (every guess and keystroke),

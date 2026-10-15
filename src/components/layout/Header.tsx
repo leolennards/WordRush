@@ -3,6 +3,7 @@ import { BRAND } from '@/config/game';
 import type { SoloMode } from '@/engine';
 import { IconButton, Segmented } from '@/components/ui';
 import { useSettings } from '@/features/settings/SettingsContext';
+import { CoinChip } from '@/components/shop/CoinChip';
 import { Logo } from './Logo';
 
 interface HeaderProps {
@@ -17,6 +18,7 @@ interface HeaderProps {
   onHelp: () => void;
   onStats: () => void;
   onSettings: () => void;
+  onShop: () => void;
 }
 
 export function ModeTabs({ mode, onModeChange }: { mode: SoloMode; onModeChange: (mode: SoloMode) => void }) {
@@ -34,7 +36,7 @@ export function ModeTabs({ mode, onModeChange }: { mode: SoloMode; onModeChange:
   );
 }
 
-export function Header({ mode, onHome, onFriends, friendsBadge = 0, onModeChange, onHelp, onStats, onSettings }: HeaderProps) {
+export function Header({ mode, onHome, onFriends, friendsBadge = 0, onModeChange, onHelp, onStats, onSettings, onShop }: HeaderProps) {
   const { resolvedTheme, update } = useSettings();
   const nextTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
 
@@ -51,7 +53,7 @@ export function Header({ mode, onHome, onFriends, friendsBadge = 0, onModeChange
           }}
         >
           <Logo />
-          <span className="text-[1.3rem] font-extrabold tracking-tight">
+          <span className="text-[1.3rem] font-extrabold tracking-tight max-[389px]:sr-only">
             {BRAND.wordmark[0]}
             <span className="text-accent">{BRAND.wordmark[1]}</span>
           </span>
@@ -64,6 +66,7 @@ export function Header({ mode, onHome, onFriends, friendsBadge = 0, onModeChange
         )}
 
         <div className="flex items-center">
+          <CoinChip onClick={onShop} />
           {onFriends && (
             <IconButton
               label={friendsBadge > 0 ? `Friends (${friendsBadge} waiting)` : 'Friends'}
@@ -78,7 +81,7 @@ export function Header({ mode, onHome, onFriends, friendsBadge = 0, onModeChange
               )}
             </IconButton>
           )}
-          <IconButton label="How to play" onClick={onHelp}>
+          <IconButton label="How to play" onClick={onHelp} className="max-[459px]:hidden">
             <CircleHelp className="size-[1.35rem]" aria-hidden />
           </IconButton>
           <IconButton label="Statistics" onClick={onStats}>
@@ -87,7 +90,7 @@ export function Header({ mode, onHome, onFriends, friendsBadge = 0, onModeChange
           <IconButton
             label={`Switch to ${nextTheme} theme`}
             onClick={() => update({ theme: nextTheme })}
-            className="max-[419px]:hidden"
+            className="max-[559px]:hidden"
           >
             {resolvedTheme === 'dark' ? <Sun className="size-[1.3rem]" aria-hidden /> : <Moon className="size-[1.3rem]" aria-hidden />}
           </IconButton>

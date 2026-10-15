@@ -90,7 +90,7 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
           <li className="flex gap-3">
             <Repeat2 className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
             <span>
-              <strong>Word Swap</strong> (Friends) — pick a word for a friend and watch them guess it live, then swap roles.
+              <strong>Word Swap</strong> (Friends) — pick one of three words for a friend and watch them guess it live, then swap roles.
               Solving scores 7 minus your guesses; stumping your friend scores 3. Nudge them when it’s their turn.
             </span>
           </li>

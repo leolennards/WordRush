@@ -6,7 +6,7 @@ import { RankBadge } from './RankBadge';
 import { ThemePicker } from './ThemePicker';
 
 /** Every rank with its emblem, and the tile themes they unlock. */
-export function RanksDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function RanksDialog({ open, onClose, onShop }: { open: boolean; onClose: () => void; onShop?: () => void }) {
   const { progress } = useProgress();
   const { level, into, span } = levelFor(progress.xp);
   const { rank, next } = rankFor(level);
@@ -75,7 +75,7 @@ export function RanksDialog({ open, onClose }: { open: boolean; onClose: () => v
           <h3 id="skins-list" className="mb-2 text-sm font-bold">
             Tile themes
           </h3>
-          <ThemePicker level={level} />
+          <ThemePicker level={level} onShop={onShop} />
         </section>
       </div>
     </Dialog>

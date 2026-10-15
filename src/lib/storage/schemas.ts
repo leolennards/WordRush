@@ -4,6 +4,7 @@ import type { Stats } from '@/engine/stats';
 import { emptyProgress, type Progress } from '@/engine/progress';
 import type { QuestState } from '@/engine/quests';
 import { SKINS, type SkinId } from '@/engine/ranks';
+import { TILE_STYLES, shopItem, type TileStyleId } from '@/engine/shop';
 import type { SurvivalRun } from '@/engine/survival';
 import type { MultiState } from '@/engine/multi';
 import type { LadderState } from '@/engine/ladder';
@@ -47,8 +48,10 @@ export interface Settings {
   modFog: boolean;
   modBlind: boolean;
   modLiar: boolean;
-  /** Tile theme (unlocked by rank). */
+  /** Tile theme (free, unlocked by rank or bought in the shop). */
   skin: SkinId;
+  /** Tile shape and finish (free or bought in the shop). */
+  tileStyle: TileStyleId;
   /** Whether the first-visit help has been shown. */
   seenHelp: boolean;
 }
@@ -64,6 +67,7 @@ export const DEFAULT_SETTINGS: Settings = {
   modBlind: false,
   modLiar: false,
   skin: 'classic',
+  tileStyle: 'classic',
   seenHelp: false,
 };
 
@@ -85,6 +89,7 @@ export const settingsSchema: Schema<Settings> = {
       modBlind: bool('modBlind'),
       modLiar: bool('modLiar'),
       skin: SKINS.some((x) => x.id === d.skin) ? (d.skin as SkinId) : 'classic',
+      tileStyle: TILE_STYLES.some((x) => x.id === d.tileStyle) ? (d.tileStyle as TileStyleId) : 'classic',
       seenHelp: bool('seenHelp'),
     };
   },
@@ -252,6 +257,9 @@ export const progressSchema: Schema<Progress> = {
       questsDone: nonNegInt(d.questsDone) ? d.questsDone : 0,
       quests: validateQuests(d.quests),
       applied: Array.isArray(d.applied) ? d.applied.filter((x): x is string => typeof x === 'string') : [],
+      coins: nonNegInt(d.coins) ? d.coins : 0,
+      spent: nonNegInt(d.spent) ? d.spent : 0,
+      owned: Array.isArray(d.owned) ? [...new Set(d.owned.filter((x): x is string => typeof x === 'string' && shopItem(x) !== null))] : [],
     };
   },
 };

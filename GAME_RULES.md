@@ -139,8 +139,10 @@ the next game. Hard-mode results are marked with `*` when shared.
 
 ## Word Swap (Friends)
 
-- One match per pair of friends. The player who starts picks first. The picker chooses any accepted
-  five-letter word; the guesser gets 6 guesses. The picker can watch every guess and keystroke live.
+- One match per pair of friends. The player who starts picks first. The picker chooses one of three
+  words offered for that round (each marked Easy, Medium or Tricky by how common its letters are). The
+  three are the same on every device and after a refresh, and never repeat a word already played in the
+  match. The guesser gets 6 guesses. The picker can watch every guess and keystroke live.
 - Scoring per round: a solve scores 7 − guesses for the guesser (6 for a first-guess solve); if the guesser
   fails, the picker scores 3. Then roles swap and the round number goes up.
 - Either player can nudge the other once a minute. Either player can end the match.
@@ -188,6 +190,16 @@ the next game. Hard-mode results are marked with `*` when shared.
 - Reaching a rank can unlock a tile theme (Ocean, Sunset, Forest, Neon, Royal, Ember, Aurora, Prism).
   The colour-accessible palette always takes priority over themes.
 
+## Coins and the shop
+
+- Every finished game earns Wordskiis coins: a fifth of the XP it earned, plus 20 per achievement,
+  25 per level gained and 100 for a new rank. Everyone starts with 150 coins.
+- The shop sells tile colours (Citrus, Sakura, Arctic, Matcha, Retro, Coral Reef, Cyberpunk, and the
+  animated Galaxy, Solid Gold and Rainbow) and tile styles (Soft, Bubble, Pixel, Glass, Gem, Neon), from
+  300 to 3,000 coins. Classic tiles are free. Buying takes two taps and switches the item on.
+- One item a day is today's deal at 30% off (the same for everyone; changes at 00:00 UTC).
+- With cloud save, coins add up across devices like XP, and purchases follow your account.
+
 ## Levels and achievements
 
 - XP per game: a win earns 50 + 15 × (6 − guesses), +25 in hard mode, +40 for the Daily Challenge,
@@ -195,7 +207,7 @@ the next game. Hard-mode results are marked with `*` when shared.
 - Level *n* starts at 20 × n × (n − 1) + 60 × (n − 1) XP (level 2 at 100, level 3 at 240, level 100 at
   about 204,000), so each level costs 40 XP more than the one before.
 - Each finished game is counted once by its id, so refreshes never award XP twice.
-- 40 achievements, including Tower, Bot Duel, Reverse and Fibber ones, Word Ladder and rank ones, Duo, Quad, Survival, mods, Daily Rush and daily-quest ones (first win, solving in 1/2/6 guesses, streaks of 3/7/30, hard mode, under 60 s,
+- 42 achievements, including Word Swap ones, Tower, Bot Duel, Reverse and Fibber ones, Word Ladder and rank ones, Duo, Quad, Survival, mods, Daily Rush and daily-quest ones (first win, solving in 1/2/6 guesses, streaks of 3/7/30, hard mode, under 60 s,
   Practice and total wins, Blitz scores, level 5). Solve time runs from the first letter typed.
 
 ## Statistics

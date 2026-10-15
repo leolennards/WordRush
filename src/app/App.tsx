@@ -11,6 +11,7 @@ import {
   hintsUsed,
   levelFor,
   skinUnlocked,
+  tileStyleUnlocked,
   nextHintPosition,
   type GameState,
   type SoloMode,
@@ -62,6 +63,7 @@ const LadderScreen = lazy(() => import('@/components/ladder/LadderScreen').then(
 const DuelScreen = lazy(() => import('@/components/duel/DuelScreen').then((m) => ({ default: m.DuelScreen })));
 const TowerScreen = lazy(() => import('@/components/tower/TowerScreen').then((m) => ({ default: m.TowerScreen })));
 const ReverseScreen = lazy(() => import('@/components/reverse/ReverseScreen').then((m) => ({ default: m.ReverseScreen })));
+const ShopScreen = lazy(() => import('@/components/shop/ShopScreen').then((m) => ({ default: m.ShopScreen })));
 const SwapScreen = lazy(() => import('@/components/swap/SwapScreen').then((m) => ({ default: m.SwapScreen })));
 const SurvivalScreen = lazy(() => import('@/components/survival/SurvivalScreen').then((m) => ({ default: m.SurvivalScreen })));
 
@@ -121,11 +123,12 @@ function Wordskiis() {
   const friends = useFriends();
   const { toast } = useToast();
   const { progress, gains } = useProgress();
-  // A tile theme can only stay on while its rank is reached (e.g. after resetting progress).
+  // A tile theme or style can only stay on while it's unlocked (e.g. after resetting progress).
   const playerLevel = levelFor(progress.xp).level;
   useEffect(() => {
-    if (!skinUnlocked(settings.skin, playerLevel)) update({ skin: 'classic' });
-  }, [settings.skin, playerLevel, update]);
+    if (!skinUnlocked(settings.skin, playerLevel, progress.owned)) update({ skin: 'classic' });
+    if (!tileStyleUnlocked(settings.tileStyle, progress.owned)) update({ tileStyle: 'classic' });
+  }, [settings.skin, settings.tileStyle, playerLevel, progress.owned, update]);
   const award = useAward();
   const words = useWords();
 
@@ -253,6 +256,7 @@ function Wordskiis() {
   const goTower = useCallback(() => go('tower'), [go]);
   const goReverse = useCallback(() => go('reverse'), [go]);
   const goSurvival = useCallback(() => go('survival'), [go]);
+  const goShop = useCallback(() => go('shop'), [go]);
   const openChallenge = useCallback((id: string) => go('challenge', id), [go]);
   const openRace = useCallback((id: string) => go('race', id), [go]);
   const openSwap = useCallback((id: string) => go('swap', id), [go]);
@@ -328,6 +332,7 @@ function Wordskiis() {
             return r && r.day === todayIndex ? r.solved : null;
           })()}
           onSurvival={goSurvival}
+          onShop={goShop}
           onAchievements={() => setDialog('achievements')}
           onRanks={() => setDialog('ranks')}
           onWordBook={words.showBook}
@@ -377,6 +382,8 @@ function Wordskiis() {
     content = (
       <ChallengeScreen id={route.id} inputEnabled={dialog === null} onBack={goFriends} onOpenChallenge={openChallenge} />
     );
+  } else if (view === 'shop') {
+    content = <ShopScreen onBack={goHome} />;
   } else if (view === 'swap' && route.id) {
     content = <SwapScreen id={route.id} inputEnabled={dialog === null} onBack={goFriends} />;
   } else if (view === 'race' && route.id) {
@@ -442,6 +449,7 @@ function Wordskiis() {
           onHelp={() => setDialog('help')}
           onStats={() => setDialog('stats')}
           onSettings={() => setDialog('settings')}
+          onShop={goShop}
         />
         <UpdateBar show={updateAvailable} />
         <h1 className="sr-only">
@@ -470,6 +478,7 @@ function Wordskiis() {
           hardModeLocked={game.guesses.length > 0 && game.status === 'playing'}
           onReset={onReset}
         onThemes={() => setDialog('ranks')}
+        onShop={goShop}
         sync={sync}
           storagePersistent={services.store.persistent}
         />
@@ -488,7 +497,7 @@ function Wordskiis() {
           xp={gains[game.id]}
         />
         <AchievementsDialog open={dialog === 'achievements'} onClose={closeDialog} />
-      <RanksDialog open={dialog === 'ranks'} onClose={closeDialog} />
+      <RanksDialog open={dialog === 'ranks'} onClose={closeDialog} onShop={goShop} />
       <ModsDialog
         open={dialog === 'mods'}
         onClose={closeDialog}

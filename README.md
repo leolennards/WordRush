@@ -34,11 +34,12 @@ paid API or database — and keeps preferences, progress and statistics in `loca
   A full-screen moment celebrates each new rank.
 - Tile themes: Classic plus three free ones (Mint, Candy, Lavender), chosen with a live preview in Settings.
 - Tile themes unlocked by rank: Ocean, Sunset, Forest, Neon, Royal, Ember and the animated Aurora and Prism.
-- Levels, XP and 40 achievements; XP rewards fewer guesses, hard mode and the Daily Challenge.
+- Levels, XP and 42 achievements; XP rewards fewer guesses, hard mode and the Daily Challenge.
 - Decorative tile backdrop in both themes; optional vibration on supported phones.
 - Correct duplicate-letter feedback, local dictionary (12,675 accepted guesses, 1,922 curated answers).
 - Physical and on-screen keyboards, invalid-word shake, flip reveals, win celebration.
-- Word Swap (Friends): take turns picking a word for each other, spectate live, nudge, running score.
+- Word Swap (Friends): take turns picking one of three offered words for each other, spectate live, nudge, running score.
+- Wordskiis coins from every game, and a shop with tile colours, tile styles and a daily deal.
 - Submit button under the keyboard: only enabled for a full, real word ("Not a real word" otherwise).
 - Cloud save: signed in with Google, progress (level, XP, achievements, bests, quests, Daily stats, today's
   Daily, Word Book) syncs live across devices; XP is a per-device counter so it adds up without double counting.

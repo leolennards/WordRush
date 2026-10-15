@@ -8,7 +8,7 @@
  *
  * Everything else merges by keeping the best of both: personal bests (max),
  * achievements (union, earliest time), applied game ids (union), daily
- * statistics (the side that has seen the most recent day), today's daily game
+ * statistics (the side that has seen the most recent day), shop purchases (union), today's daily game
  * (the further-along board) and the Word Book (union, newest play wins).
  */
 import { emptyProgress, type Progress } from './progress';
@@ -16,7 +16,7 @@ import type { QuestState } from './quests';
 import type { Stats } from './stats';
 import type { GameState } from './types';
 
-export const COUNTERS = ['xp', 'wins', 'practiceWins', 'duoWins', 'quadWins', 'duelWins', 'wordsPlayed', 'questsDone'] as const;
+export const COUNTERS = ['xp', 'wins', 'practiceWins', 'duoWins', 'quadWins', 'duelWins', 'wordsPlayed', 'questsDone', 'coins', 'spent'] as const;
 export const BESTS = ['bestBlitz', 'bestSurvival', 'bestTower', 'bestReverse'] as const;
 
 export type Counter = (typeof COUNTERS)[number];
@@ -29,6 +29,8 @@ export interface SharedProgress {
   applied: string[];
   bests: Record<Best, number>;
   quests: QuestState | null;
+  /** Shop items bought on any device. */
+  owned: string[];
 }
 
 const APPLIED_LIMIT = 300;
@@ -52,6 +54,7 @@ export function sharedOf(p: Progress): SharedProgress {
     applied: p.applied,
     bests: Object.fromEntries(BESTS.map((k) => [k, p[k]])) as Record<Best, number>,
     quests: p.quests,
+    owned: p.owned,
   };
 }
 
@@ -70,11 +73,12 @@ export function mergeShared(a: SharedProgress, b: SharedProgress | null): Shared
   const seen = new Set<string>();
   const applied = [...b.applied, ...a.applied].filter((id) => !seen.has(id) && (seen.add(id), true)).slice(-APPLIED_LIMIT);
   const bests = Object.fromEntries(BESTS.map((k) => [k, Math.max(a.bests[k] ?? 0, b.bests[k] ?? 0)])) as Record<Best, number>;
-  return { unlocked, applied, bests, quests: mergeQuests(a.quests, b.quests) };
+  const owned = [...new Set([...a.owned, ...(b.owned ?? [])])];
+  return { unlocked, applied, bests, quests: mergeQuests(a.quests, b.quests), owned };
 }
 
 export function composeProgress(counters: Counters, shared: SharedProgress): Progress {
-  return { ...emptyProgress(), ...counters, ...shared.bests, unlocked: shared.unlocked, applied: shared.applied, quests: shared.quests };
+  return { ...emptyProgress(), ...counters, ...shared.bests, unlocked: shared.unlocked, applied: shared.applied, quests: shared.quests, owned: shared.owned };
 }
 
 /**

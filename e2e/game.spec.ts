@@ -120,3 +120,36 @@ test('rejection toasts are actually visible, not just announced', async ({ page 
   await expect(toast).toBeVisible();
   await expect(toast).toHaveCSS('opacity', '1');
 });
+
+test('earns coins and spends them in the shop on a new tile style', async ({ page }) => {
+  await page.clock.setFixedTime(NOW);
+  await page.addInitScript(() => {
+    if (localStorage.getItem('wordskiis:progress')) return;
+    localStorage.setItem('wordskiis:settings', JSON.stringify({ v: 1, data: { seenHelp: true } }));
+    localStorage.setItem(
+      'wordskiis:progress',
+      JSON.stringify({ v: 1, data: { xp: 0, unlocked: {}, applied: [], coins: 1000, spent: 0, owned: [] } }),
+    );
+  });
+  await page.goto('/');
+
+  // The balance (150 starter coins + 1000) sits in the header and opens the shop.
+  await page.getByRole('button', { name: '1150 coins — open the shop' }).click();
+  await expect(page).toHaveURL(/#shop$/);
+  await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
+
+  // Buying takes two taps: one to pick, one to confirm.
+  await page.getByRole('radio', { name: 'Tile styles' }).click();
+  await page.getByRole('button', { name: /^Buy Soft for \d+ coins$/ }).click();
+  await page.getByRole('button', { name: /^Confirm buying Soft/ }).click();
+  await expect(page.getByRole('button', { name: 'Soft is on' })).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-tiles', 'rounded');
+  await expect(page.getByRole('button', { name: /coins — open the shop$/ })).not.toHaveAccessibleName('1150 coins — open the shop');
+
+  // Too expensive for what's left: the button says so and stays disabled.
+  await expect(page.getByRole('button', { name: /^Neon: \d+ coins, you need \d+ more$/ })).toBeDisabled();
+
+  // It's in Settings too, and survives a reload.
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-tiles', 'rounded');
+});

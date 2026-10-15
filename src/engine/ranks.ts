@@ -19,7 +19,13 @@ export interface Rank {
   unlocks?: SkinId;
 }
 
-export type SkinId = 'classic' | 'mint' | 'candy' | 'lavender' | 'ocean' | 'sunset' | 'forest' | 'neon' | 'royal' | 'ember' | 'aurora' | 'prism';
+export type SkinId =
+  | 'classic' | 'mint' | 'candy' | 'lavender'
+  | 'ocean' | 'sunset' | 'forest' | 'neon' | 'royal' | 'ember' | 'aurora' | 'prism'
+  | ShopSkinId;
+
+/** Tile themes sold in the shop for coins. */
+export type ShopSkinId = 'citrus' | 'sakura' | 'arctic' | 'matcha' | 'retro' | 'coral' | 'cyber' | 'galaxy' | 'gold' | 'rainbow';
 
 export const RANKS: readonly Rank[] = [
   { id: 'rookie', name: 'Rookie', minLevel: 1, from: '#9aa1ad', to: '#6b7280', ink: '#ffffff', effects: 0 },
@@ -50,6 +56,8 @@ export interface Skin {
   animated?: boolean;
   /** Available to everyone from the start. */
   free?: boolean;
+  /** Sold in the shop for this many coins (no level needed). */
+  price?: number;
 }
 
 export const SKINS: readonly Skin[] = [
@@ -58,7 +66,7 @@ export const SKINS: readonly Skin[] = [
   { id: 'candy', name: 'Candy', minLevel: 1, swatch: ['#ec4899', '#38bdf8'], free: true },
   { id: 'lavender', name: 'Lavender', minLevel: 1, swatch: ['#7c6cf2', '#f5b945'], free: true },
   ...RANKS.filter((r) => r.unlocks).map((r): Skin => {
-    type RankSkin = Exclude<SkinId, 'classic' | 'mint' | 'candy' | 'lavender'>;
+    type RankSkin = Exclude<SkinId, 'classic' | 'mint' | 'candy' | 'lavender' | ShopSkinId>;
     const meta: Record<RankSkin, { name: string; swatch: [string, string]; animated?: boolean }> = {
       ocean: { name: 'Ocean', swatch: ['#0e8fb8', '#f2b65a'] },
       sunset: { name: 'Sunset', swatch: ['#e0533f', '#f7c548'] },
@@ -72,6 +80,22 @@ export const SKINS: readonly Skin[] = [
     const id = r.unlocks as RankSkin;
     return { id, minLevel: r.minLevel, ...meta[id] };
   }),
+  { id: 'citrus', name: 'Citrus', minLevel: 1, swatch: ['#65a30d', '#f97316'], price: 400 },
+  { id: 'sakura', name: 'Sakura', minLevel: 1, swatch: ['#e85d9a', '#86c27a'], price: 400 },
+  { id: 'arctic', name: 'Arctic', minLevel: 1, swatch: ['#0ea5e9', '#a5b4fc'], price: 500 },
+  { id: 'matcha', name: 'Matcha', minLevel: 1, swatch: ['#5f8f3e', '#d9a066'], price: 500 },
+  { id: 'retro', name: 'Retro', minLevel: 1, swatch: ['#2a9d8f', '#e9c46a'], price: 600 },
+  { id: 'coral', name: 'Coral Reef', minLevel: 1, swatch: ['#f43f5e', '#14b8a6'], price: 600 },
+  { id: 'cyber', name: 'Cyberpunk', minLevel: 1, swatch: ['#d946ef', '#a3e635'], price: 900 },
+  { id: 'galaxy', name: 'Galaxy', minLevel: 1, swatch: ['#6366f1', '#ec4899'], animated: true, price: 1600 },
+  { id: 'gold', name: 'Solid Gold', minLevel: 1, swatch: ['#d4a017', '#9ca3af'], animated: true, price: 2200 },
+  { id: 'rainbow', name: 'Rainbow', minLevel: 1, swatch: ['#ef4444', '#3b82f6'], animated: true, price: 3000 },
 ];
 
-export const skinUnlocked = (skin: SkinId, level: number) => level >= (SKINS.find((s) => s.id === skin)?.minLevel ?? 1);
+/** Whether a tile theme can be used: free, reached by rank, or bought in the shop. */
+export function skinUnlocked(skin: SkinId, level: number, owned: readonly string[] = []): boolean {
+  const s = SKINS.find((x) => x.id === skin);
+  if (!s) return false;
+  if (s.price !== undefined) return owned.includes(`skin:${s.id}`);
+  return level >= s.minLevel;
+}

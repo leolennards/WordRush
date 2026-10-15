@@ -6,6 +6,7 @@
 import { QUEST_XP, advanceQuests, questsFor, type Quest, type QuestState } from './quests';
 import type { Mod } from './types';
 import { rankFor, type Rank } from './ranks';
+import { coinsFor } from './shop';
 
 /** XP multiplier for each mod on a won game. */
 export const MOD_BONUS: Record<Mod, number> = { fog: 0.3, blind: 0.25, liar: 0.4 };
@@ -69,6 +70,11 @@ export interface Progress {
   quests: QuestState | null;
   /** Recently applied event ids (bounded). */
   applied: string[];
+  /** Wordskiis coins earned and spent in total (balance: see coinBalance). */
+  coins: number;
+  spent: number;
+  /** Shop items bought (`skin:<id>`, `tiles:<id>`). */
+  owned: string[];
 }
 
 export const emptyProgress = (): Progress => ({
@@ -87,6 +93,9 @@ export const emptyProgress = (): Progress => ({
   questsDone: 0,
   quests: null,
   applied: [],
+  coins: 0,
+  spent: 0,
+  owned: [],
 });
 
 export interface Achievement {
@@ -204,6 +213,8 @@ export interface ApplyResult {
   rankUp: Rank | null;
   /** Daily quests this event completed (their XP is included in xpGained). */
   questsCompleted: Quest[];
+  /** Wordskiis coins this event earned. */
+  coinsGained: number;
 }
 
 /** A run-based mode (Blitz, Survival) has no single win; everything else does. */
@@ -215,7 +226,7 @@ const isRun = (e: GameEvent) => e.mode === 'blitz' || e.mode === 'survival' || e
  */
 export function applyEvent(progress: Progress, e: GameEvent, now: number, day = 0): ApplyResult {
   if (progress.applied.includes(e.id)) {
-    return { progress, xpGained: 0, unlocked: [], levelUp: null, rankUp: null, questsCompleted: [] };
+    return { progress, xpGained: 0, unlocked: [], levelUp: null, rankUp: null, questsCompleted: [], coinsGained: 0 };
   }
 
   const quests = advanceQuests(progress.quests, day, e);
@@ -236,6 +247,9 @@ export function applyEvent(progress: Progress, e: GameEvent, now: number, day = 
     questsDone: progress.questsDone + quests.completed.length,
     quests: quests.state,
     applied: [...progress.applied, e.id].slice(-APPLIED_LIMIT),
+    coins: progress.coins,
+    spent: progress.spent,
+    owned: progress.owned,
   };
 
   const unlocked: Achievement[] = [];
@@ -250,12 +264,16 @@ export function applyEvent(progress: Progress, e: GameEvent, now: number, day = 
   const after = levelFor(next.xp).level;
   const rankBefore = rankFor(before).rank;
   const rankAfter = rankFor(after).rank;
+  const rankUp = rankAfter.id !== rankBefore.id;
+  const coinsGained = coinsFor(xpGained, unlocked.length, Math.max(0, after - before), rankUp);
+  next.coins += coinsGained;
   return {
     progress: next,
+    coinsGained,
     xpGained,
     unlocked,
     levelUp: after > before ? after : null,
-    rankUp: rankAfter.id !== rankBefore.id ? rankAfter : null,
+    rankUp: rankUp ? rankAfter : null,
     questsCompleted: quests.completed,
   };
 }

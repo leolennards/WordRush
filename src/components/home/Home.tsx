@@ -25,7 +25,8 @@ import {
   Zap,
 } from 'lucide-react';
 import { BRAND, GAME } from '@/config/game';
-import { ACHIEVEMENTS, effectiveStreak, winPercentage, type GameState, type Progress, type Stats } from '@/engine';
+import { ACHIEVEMENTS, SHOP_ITEMS, coinBalance, effectiveStreak, owns, winPercentage, type GameState, type Progress, type Stats } from '@/engine';
+import { Coin } from '@/components/shop/Coin';
 import { LevelBar } from '@/components/progress/LevelBar';
 import { MiniBoard } from './MiniBoard';
 import { QuestsCard } from './QuestsCard';
@@ -57,6 +58,7 @@ interface HomeProps {
   onAchievements: () => void;
   onRanks: () => void;
   onWordBook: () => void;
+  onShop: () => void;
   wordCount: number;
   progress: Progress;
   onFriends: () => void;
@@ -309,6 +311,32 @@ export function Home(props: HomeProps) {
           <m.div {...rise(3)}>
             <QuestsCard progress={props.progress} todayIndex={props.todayIndex} countdown={props.countdown} />
           </m.div>
+
+          {/* Shop */}
+          <m.button
+            {...rise(4)}
+            type="button"
+            onClick={props.onShop}
+            aria-label={`Shop — ${coinBalance(props.progress)} coins`}
+            className="feature-card group relative flex items-center gap-4 overflow-hidden rounded-[var(--radius-card)] p-4 text-left text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.99]"
+            data-tone="shop"
+          >
+            <span className="feature-card-shine" aria-hidden />
+            <span className="relative transition-transform group-hover:scale-110 group-hover:-rotate-12">
+              <Coin className="size-12 drop-shadow-md" spin />
+            </span>
+            <span className="relative min-w-0 flex-1">
+              <span className="flex items-center gap-2 text-lg leading-tight font-extrabold">
+                Shop
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[0.6rem] font-bold tracking-wide uppercase">New</span>
+              </span>
+              <span className="block text-[0.8rem] leading-snug text-white/85">
+                <strong className="tabular">{coinBalance(props.progress).toLocaleString()}</strong> coins ·{' '}
+                {SHOP_ITEMS.filter((i) => owns(props.progress, i.id)).length}/{SHOP_ITEMS.length} themes and styles
+              </span>
+            </span>
+            <ChevronRight className="relative size-5 text-white/80 transition-transform group-hover:translate-x-0.5" aria-hidden />
+          </m.button>
         </div>
 
         <div className="flex flex-col gap-4">

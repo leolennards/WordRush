@@ -148,15 +148,7 @@
 .dark[data-skin='lavender'] { --c-correct: #a5a0ff; --c-correct-ink: #1b1554; --c-present: #f5c15a; --c-present-ink: #2a1a00; }
 
 [data-skin='ocean'] { --c-correct: #0e8fb8; --c-correct-ink: #fff; --c-present: #f2b65a; --c-present-ink: #2b1c00; }
-.dark/* Free themes. */
-[data-skin='mint'] { --c-correct: #0f9e8e; --c-correct-ink: #fff; --c-present: #f28a3c; --c-present-ink: #2a1200; }
-.dark[data-skin='mint'] { --c-correct: #2dd4bf; --c-correct-ink: #042f2b; --c-present: #fb9a5b; --c-present-ink: #2a1200; }
-[data-skin='candy'] { --c-correct: #db2777; --c-correct-ink: #fff; --c-present: #0284c7; --c-present-ink: #fff; }
-.dark[data-skin='candy'] { --c-correct: #f472b6; --c-correct-ink: #3b0720; --c-present: #38bdf8; --c-present-ink: #04202e; }
-[data-skin='lavender'] { --c-correct: #6d5ce8; --c-correct-ink: #fff; --c-present: #eaa92b; --c-present-ink: #2b1c00; }
-.dark[data-skin='lavender'] { --c-correct: #a5a0ff; --c-correct-ink: #1b1554; --c-present: #f5c15a; --c-present-ink: #2a1a00; }
-
-[data-skin='ocean'] { --c-correct: #38bdf8; --c-correct-ink: #04202e; --c-present: #f6c56f; --c-present-ink: #2a1a00; }
+.dark[data-skin='ocean'] { --c-correct: #38bdf8; --c-correct-ink: #04202e; --c-present: #f6c56f; --c-present-ink: #2a1a00; }
 [data-skin='sunset'] { --c-correct: #e0533f; --c-correct-ink: #fff; --c-present: #f7c548; --c-present-ink: #2b1c00; }
 .dark[data-skin='sunset'] { --c-correct: #ff7a62; --c-correct-ink: #2a0a04; --c-present: #ffd36b; --c-present-ink: #2a1a00; }
 [data-skin='forest'] { --c-correct: #2f7d4a; --c-correct-ink: #fff; --c-present: #c9963a; --c-present-ink: #2b1c00; }
@@ -191,6 +183,53 @@
   animation: skin-flow 7s ease-in-out infinite;
 }
 [data-skin='prism'] .tile[data-state='correct'] {
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+}
+/* Shop themes (bought with coins). */
+[data-skin='citrus'] { --c-correct: #4d7c0f; --c-correct-ink: #fff; --c-present: #ea6a0c; --c-present-ink: #fff; }
+.dark[data-skin='citrus'] { --c-correct: #a3e635; --c-correct-ink: #1a2e05; --c-present: #fb923c; --c-present-ink: #2a1000; }
+[data-skin='sakura'] { --c-correct: #d9467f; --c-correct-ink: #fff; --c-present: #6aa85c; --c-present-ink: #fff; }
+.dark[data-skin='sakura'] { --c-correct: #f9a8d4; --c-correct-ink: #4a0b2a; --c-present: #9bd38c; --c-present-ink: #0f2a0a; }
+[data-skin='arctic'] { --c-correct: #0284c7; --c-correct-ink: #fff; --c-present: #7c83db; --c-present-ink: #fff; }
+.dark[data-skin='arctic'] { --c-correct: #7dd3fc; --c-correct-ink: #052033; --c-present: #c7d2fe; --c-present-ink: #1e1b4b; }
+[data-skin='matcha'] { --c-correct: #557f37; --c-correct-ink: #fff; --c-present: #c08a4f; --c-present-ink: #fff; }
+.dark[data-skin='matcha'] { --c-correct: #9cc27a; --c-correct-ink: #15240a; --c-present: #e2b583; --c-present-ink: #2e1a05; }
+[data-skin='retro'] { --c-correct: #23867a; --c-correct-ink: #fff; --c-present: #e9c46a; --c-present-ink: #2b2000; }
+.dark[data-skin='retro'] { --c-correct: #4fc3b3; --c-correct-ink: #04261f; --c-present: #f4d58d; --c-present-ink: #2b2000; }
+[data-skin='coral'] { --c-correct: #e11d48; --c-correct-ink: #fff; --c-present: #0d9488; --c-present-ink: #fff; }
+.dark[data-skin='coral'] { --c-correct: #fb7185; --c-correct-ink: #3b0613; --c-present: #2dd4bf; --c-present-ink: #042f2b; }
+[data-skin='cyber'] { --c-correct: #c026d3; --c-correct-ink: #fff; --c-present: #65a30d; --c-present-ink: #fff; }
+.dark[data-skin='cyber'] { --c-correct: #e879f9; --c-correct-ink: #2e0535; --c-present: #bef264; --c-present-ink: #1a2e05; }
+[data-skin='galaxy'] {
+  --c-correct: #6366f1;
+  --c-correct-ink: #fff;
+  --c-present: #db2777;
+  --c-present-ink: #fff;
+  --fill-correct: linear-gradient(135deg, #312e81, #6366f1, #0ea5e9, #6366f1, #312e81);
+  --fill-present: linear-gradient(135deg, #9d174d, #ec4899, #a855f7, #ec4899, #9d174d);
+}
+[data-skin='gold'] {
+  --c-correct: #b8860b;
+  --c-correct-ink: #2a1d00;
+  --c-present: #8a94a6;
+  --c-present-ink: #111827;
+  --fill-correct: linear-gradient(135deg, #a16207, #fde68a, #d4a017, #fef3c7, #a16207);
+  --fill-present: linear-gradient(135deg, #6b7280, #e5e7eb, #9ca3af, #f3f4f6, #6b7280);
+}
+[data-skin='rainbow'] {
+  --c-correct: #7c3aed;
+  --c-correct-ink: #fff;
+  --c-present: #f59e0b;
+  --c-present-ink: #2a1500;
+  --fill-correct: linear-gradient(120deg, #ef4444, #f59e0b, #22c55e, #3b82f6, #a855f7, #ef4444);
+  --fill-present: linear-gradient(120deg, #fde047, #fb923c, #f472b6, #fb923c, #fde047);
+}
+:is([data-skin='galaxy'], [data-skin='gold'], [data-skin='rainbow']) .tile:is([data-state='correct'], [data-state='present']):not([data-anim]),
+:is([data-skin='galaxy'], [data-skin='gold'], [data-skin='rainbow']) .key:is([data-state='correct'], [data-state='present']) {
+  background-size: 300% 300%;
+  animation: skin-flow 6s ease-in-out infinite;
+}
+:is([data-skin='galaxy'], [data-skin='rainbow']) .tile[data-state='correct'] {
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
 }
 @keyframes skin-flow {
@@ -720,6 +759,36 @@ button {
   display: none;
 }
 
+/* Shop: the coin balance, today's deal and coins. */
+.shop-hero,
+.feature-card[data-tone='shop'] {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgb(255 255 255 / 0.22), transparent 50%),
+    linear-gradient(150deg, #d97706, #b45309 45%, #7c2d12);
+}
+.deal-card {
+  background: linear-gradient(120deg, var(--c-present), var(--c-danger), #a855f7, var(--c-present));
+  background-size: 300% 300%;
+  animation: skin-flow 6s ease-in-out infinite;
+}
+.coin-spin {
+  animation: coin-spin 2.4s ease-in-out infinite;
+}
+@keyframes coin-spin {
+  0%, 70% { transform: rotateY(0); }
+  100% { transform: rotateY(360deg); }
+}
+.buy-button[data-confirm] {
+  animation: buy-pulse 0.9s ease-in-out infinite;
+}
+@keyframes buy-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-present) 55%, transparent); }
+  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--c-present) 0%, transparent); }
+}
+[data-reduce-motion='true'] :is(.deal-card, .coin-spin, .buy-button) {
+  animation: none !important;
+}
+
 /* Bot Duel: "thinking" dots and a gently bobbing bot. */
 .typing-dots {
   display: inline-flex;
@@ -858,6 +927,75 @@ button {
 .tile[data-state='absent'] {
   --tile-bg: var(--c-absent);
   --tile-ink: var(--c-absent-ink);
+}
+
+/* Tile styles (bought in the shop). On <html> as data-tiles; a preview tile
+   can carry its own data-style, which then wins over the page's style. */
+.tile[data-style='classic'] { border-radius: 0.5rem; }
+:is([data-tiles='rounded'] .tile:not([data-style]), .tile[data-style='rounded']) { border-radius: 30%; }
+:is([data-tiles='bubble'] .tile:not([data-style]), .tile[data-style='bubble']) { border-radius: 50%; }
+:is([data-tiles='pixel'] .tile:not([data-style]), .tile[data-style='pixel']) {
+  border-radius: 0;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-weight: 800;
+}
+:is([data-tiles='pixel'] .tile:not([data-style]), .tile[data-style='pixel']):is([data-state='correct'], [data-state='present'], [data-state='absent']) {
+  box-shadow:
+    inset -4px -4px 0 rgb(0 0 0 / 0.28),
+    inset 4px 4px 0 rgb(255 255 255 / 0.22);
+}
+:is([data-tiles='glass'] .tile:not([data-style]), .tile[data-style='glass']),
+:is([data-tiles='gem'] .tile:not([data-style]), .tile[data-style='gem']) {
+  isolation: isolate;
+}
+:is([data-tiles='glass'] .tile:not([data-style]), .tile[data-style='glass']):is([data-state='correct'], [data-state='present'], [data-state='absent']) {
+  box-shadow:
+    inset 0 -3px 0 rgb(0 0 0 / 0.14),
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    0 6px 14px -8px rgb(0 0 0 / 0.5);
+}
+:is([data-tiles='glass'] .tile:not([data-style]), .tile[data-style='glass']):is([data-state='correct'], [data-state='present'], [data-state='absent'])::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 3px 3px 52% 3px;
+  border-radius: 0.35rem 0.35rem 40% 40%;
+  background: linear-gradient(rgb(255 255 255 / 0.45), rgb(255 255 255 / 0.05));
+  pointer-events: none;
+}
+:is([data-tiles='gem'] .tile:not([data-style]), .tile[data-style='gem']) { border-radius: 22%; }
+:is([data-tiles='gem'] .tile:not([data-style]), .tile[data-style='gem']):is([data-state='correct'], [data-state='present'], [data-state='absent']) {
+  box-shadow:
+    inset 0 0 0 2px rgb(255 255 255 / 0.18),
+    inset 6px 6px 10px -6px rgb(255 255 255 / 0.55),
+    inset -6px -6px 10px -6px rgb(0 0 0 / 0.4);
+}
+:is([data-tiles='gem'] .tile:not([data-style]), .tile[data-style='gem']):is([data-state='correct'], [data-state='present'])::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 0.32) 0 22%, transparent 22% 50%, rgb(0 0 0 / 0.12) 50% 72%, transparent 72%),
+    linear-gradient(45deg, transparent 0 60%, rgb(255 255 255 / 0.16) 60% 74%, transparent 74%);
+  pointer-events: none;
+}
+:is([data-tiles='neon'] .tile:not([data-style]), .tile[data-style='neon']):is([data-state='correct'], [data-state='present']):not([data-anim]) {
+  --tone: var(--c-correct);
+  background: color-mix(in srgb, var(--tone) 14%, transparent);
+  color: var(--tone);
+  box-shadow:
+    inset 0 0 0 2px var(--tone),
+    inset 0 0 14px -4px var(--tone),
+    0 0 16px -3px var(--tone);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--tone) 70%, transparent);
+}
+:is([data-tiles='neon'] .tile:not([data-style]), .tile[data-style='neon'])[data-state='present']:not([data-anim]) {
+  --tone: var(--c-present);
+}
+:is([data-tiles='neon'] .tile:not([data-style]), .tile[data-style='neon'])[data-state='absent'] {
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c-absent-ink) 35%, transparent);
 }
 
 /* Non-colour cue in the colour-accessible mode. */

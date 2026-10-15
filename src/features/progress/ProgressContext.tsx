@@ -2,7 +2,17 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 import { useServices } from '@/app/services';
 import { GAME } from '@/config/game';
 import { RankUpOverlay } from '@/components/progress/RankUpOverlay';
-import { applyEvent, dayIndexFor, type Rank, emptyProgress, type ApplyResult, type GameEvent, type Progress } from '@/engine';
+import {
+  applyEvent,
+  buyItem,
+  dayIndexFor,
+  emptyProgress,
+  type ApplyResult,
+  type BuyResult,
+  type GameEvent,
+  type Progress,
+  type Rank,
+} from '@/engine';
 import { KEYS, progressSchema } from '@/lib/storage/schemas';
 import { readVersioned, writeVersioned } from '@/lib/storage/versioned';
 
@@ -16,6 +26,8 @@ interface ProgressContextValue {
   celebrateRank: (rank: Rank, level: number) => void;
   /** Re-reads progress from storage (after a cloud sync). */
   refresh: () => void;
+  /** Buys a shop item with coins. */
+  buy: (itemId: string) => BuyResult;
 }
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
@@ -44,10 +56,22 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     [load, store, now],
   );
 
+  const buy = useCallback(
+    (itemId: string) => {
+      const result = buyItem(load(), itemId, dayIndexFor(now(), GAME.dailyEpoch));
+      if (result.ok) {
+        writeVersioned(store, KEYS.progress, progressSchema, result.progress);
+        setProgress(result.progress);
+      }
+      return result;
+    },
+    [load, store, now],
+  );
+
   const refresh = useCallback(() => setProgress(load()), [load]);
   const value = useMemo(
-    () => ({ progress, record, gains, celebrateRank, refresh }),
-    [progress, record, gains, celebrateRank, refresh],
+    () => ({ progress, record, gains, celebrateRank, refresh, buy }),
+    [progress, record, gains, celebrateRank, refresh, buy],
   );
   return (
     <ProgressContext.Provider value={value}>

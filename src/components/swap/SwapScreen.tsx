@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, m } from 'motion/react';
-import { ArrowLeft, Bell, BellRing, Crown, Dices, Eye, Hourglass, Loader2, Send, Trash2 } from 'lucide-react';
+import { ArrowLeft, Bell, BellRing, Crown, Eye, Hourglass, Loader2, Send, Trash2 } from 'lucide-react';
 import { GAME } from '@/config/game';
 import {
   NUDGE_COOLDOWN_MS,
   SWAP,
   canNudge,
   createGame,
-  pickPracticeAnswer,
   roundOver,
   submitGuess,
   swapLeader,
   swapRows,
   swapTurn,
+  swapChoices,
+  wordDifficulty,
   type Dictionary,
   type GameState,
   type Swap,
@@ -24,12 +25,9 @@ import { useGameScreen } from '@/features/game/useGameScreen';
 import { useAward } from '@/features/progress/useAward';
 import { useProgress } from '@/features/progress/ProgressContext';
 import { useSettings } from '@/features/settings/SettingsContext';
-import { usePhysicalKeyboard } from '@/hooks/usePhysicalKeyboard';
 import { notifyPermission, requestNotifyPermission, type NotifyPermission } from '@/lib/notify';
 import { Board } from '@/components/board/Board';
 import { PlayArea } from '@/components/board/PlayArea';
-import { Keyboard } from '@/components/keyboard/Keyboard';
-import { submitStateFor } from '@/components/keyboard/submit';
 import { useToast } from '@/components/layout/Toasts';
 import { Avatar } from '@/components/friends/Avatar';
 import { WordChip } from '@/components/words/WordChip';
@@ -277,80 +275,103 @@ function EndMatch({ onEnd }: { onEnd: () => Promise<void> }) {
   );
 }
 
-/** Pick a word for your friend to guess. */
+/** Pick one of three words for your friend to guess. */
 function PickWord({ swap, name, inputEnabled }: { swap: Swap; name: string; inputEnabled: boolean }) {
   const f = useFriends();
-  const { dictionary, random } = useServices();
+  const { dictionary } = useServices();
   const { toast } = useToast();
-  const [word, setWord] = useState('');
+  const choices = useMemo(() => swapChoices(swap, dictionary.answers), [swap, dictionary.answers]);
+  const [chosen, setChosen] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const submit = submitStateFor(word, (w) => dictionary.isAccepted(w));
 
-  const send = async (w = word) => {
-    if (sending || submitStateFor(w, (x) => dictionary.isAccepted(x)) !== 'ready') return;
+  const send = async () => {
+    if (sending || !chosen) return;
     setSending(true);
     try {
-      await f.pickSwapWord(swap.id, w);
+      await f.pickSwapWord(swap.id, chosen);
       toast(`Sent! ${name} is up.`, { tone: 'success' });
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Couldn’t send your word');
       setSending(false);
     }
   };
-  const type = (l: string) => setWord((w) => (w.length < GAME.wordLength ? w + l : w));
-  const remove = () => setWord((w) => w.slice(0, -1));
-  usePhysicalKeyboard({ onLetter: type, onDelete: remove, onEnter: () => void send() }, inputEnabled && !sending);
-  const surprise = () => setWord(pickPracticeAnswer(dictionary.answers, [], random));
+  // Keys 1–3 choose, Enter sends.
+  useEffect(() => {
+    if (!inputEnabled || sending) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const n = Number(e.key);
+      if (n >= 1 && n <= choices.length) setChosen(choices[n - 1]!);
+      else if (e.key === 'Enter' && chosen) void send();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
 
   return (
-    <>
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4">
-        <div className="text-center">
-          <p className="text-lg font-extrabold">Pick a word for {name}</p>
-          <p className="text-sm text-muted">They’ll get {SWAP.maxGuesses} guesses. You can watch them live.</p>
-        </div>
-        <div className="ladder-row" data-invalid={submit === 'unknown' || undefined} role="group" aria-label={`Your word: ${word ? word.toUpperCase() : 'empty'}`}>
-          {Array.from({ length: GAME.wordLength }, (_, i) => (
-            <m.span
-              key={`${i}-${word[i] ?? ''}`}
-              className="tile ladder-tile"
-              data-state={word[i] ? 'tbd' : 'empty'}
-              initial={word[i] ? { scale: 0.85 } : false}
-              animate={{ scale: 1 }}
-              aria-hidden
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 overflow-y-auto px-4 py-4">
+      <div className="text-center">
+        <p className="text-lg font-extrabold">Pick a word for {name}</p>
+        <p className="text-sm text-muted">Choose one of three. They’ll get {SWAP.maxGuesses} guesses, and you can watch live.</p>
+      </div>
+      <div role="radiogroup" aria-label="Words to choose from" className="flex w-full max-w-[22rem] flex-col gap-2.5">
+        {choices.map((w, i) => {
+          const on = chosen === w;
+          const level = wordDifficulty(w);
+          return (
+            <m.button
+              key={w}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              aria-label={`${w.toUpperCase()}, ${DIFFICULTY[level].label}`}
+              onClick={() => setChosen(w)}
+              disabled={sending}
+              initial={{ opacity: 0, y: 14, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: on ? 1.03 : 1 }}
+              transition={{ delay: chosen ? 0 : i * 0.08, type: 'spring', stiffness: 420, damping: 26 }}
+              className={`relative flex items-center gap-3 rounded-2xl border bg-surface p-3 text-left shadow-sm transition-colors ${
+                on ? 'border-accent ring-2 ring-accent/35' : 'border-border hover:border-border-strong'
+              }`}
             >
-              {word[i] ?? ''}
-            </m.span>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={surprise}
-          className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1.5 text-sm font-semibold transition hover:bg-surface-3 active:scale-95"
-        >
-          <Dices className="size-4" aria-hidden /> Surprise me
-        </button>
-        <NotifyPrompt />
+              <span className="flex gap-1" aria-hidden>
+                {[...w].map((l, k) => (
+                  <m.span
+                    key={k}
+                    className="tile size-9 text-base!"
+                    data-state={on ? 'correct' : 'tbd'}
+                    animate={on ? { rotateX: [0, 90, 0] } : { rotateX: 0 }}
+                    transition={{ delay: on ? k * 0.06 : 0, duration: 0.36 }}
+                  >
+                    {l}
+                  </m.span>
+                ))}
+              </span>
+              <span className="ml-auto flex flex-col items-end gap-1">
+                <span className={`rounded-full px-2 py-0.5 text-[0.65rem] font-bold tracking-wide uppercase ${DIFFICULTY[level].className}`}>
+                  {DIFFICULTY[level].label}
+                </span>
+                <span className="text-[0.65rem] text-subtle">Key {i + 1}</span>
+              </span>
+            </m.button>
+          );
+        })}
       </div>
-      <div className="safe-bottom pt-1 sm:pb-5">
-        <Keyboard
-          letterStates={{}}
-          onLetter={type}
-          onDelete={remove}
-          onEnter={() => void send()}
-          input={word}
-          submit={submit}
-          disabled={sending}
-        />
-        {submit === 'ready' && (
-          <p className="mt-1.5 flex items-center justify-center gap-1 text-xs text-muted">
-            <Send className="size-3" aria-hidden /> Submit sends {word.toUpperCase()} to {name}
-          </p>
-        )}
-      </div>
-    </>
+      {chosen && <WordChip word={chosen} won />}
+      <Button variant="primary" onClick={() => void send()} disabled={!chosen || sending} className="w-full max-w-[22rem]">
+        {sending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Send className="size-4" aria-hidden />}
+        {chosen ? `Send ${chosen.toUpperCase()} to ${name}` : 'Choose a word'}
+      </Button>
+      <NotifyPrompt />
+    </div>
   );
 }
+
+const DIFFICULTY = {
+  easy: { label: 'Easy', className: 'bg-correct/15 text-correct' },
+  medium: { label: 'Medium', className: 'bg-present/20 text-text' },
+  tricky: { label: 'Tricky', className: 'bg-danger/15 text-danger' },
+} as const;
 
 /** Waiting for the other player to pick; offers a nudge. */
 function Waiting({ swap, me, name }: { swap: Swap; me: string; name: string }) {

@@ -7,6 +7,7 @@
  */
 import { evaluateGuess } from './evaluate';
 import type { LetterState } from './types';
+import { seededRandom } from './blitz';
 
 export const SWAP = { maxGuesses: 6, stumpPoints: 3, historyLimit: 30 } as const;
 
@@ -117,3 +118,43 @@ export const swapRows = (s: Pick<SwapDoc, 'word' | 'guesses'>): LetterState[][] 
 export const NUDGE_COOLDOWN_MS = 60_000;
 export const canNudge = (s: Pick<SwapDoc, 'nudge'>, me: string, now: number) =>
   !s.nudge || s.nudge.by !== me || now - s.nudge.at >= NUDGE_COOLDOWN_MS;
+
+/** How many words the picker chooses between each round. */
+export const SWAP_CHOICES = 3;
+
+function hashId(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+
+/**
+ * The words the picker chooses from this round: the same on every device and
+ * after a refresh (so there's no rerolling), and never a word already played
+ * in this match.
+ */
+export function swapChoices(s: Pick<Swap, 'id' | 'round' | 'history'>, answers: readonly string[], count = SWAP_CHOICES): string[] {
+  const used = new Set(s.history.map((h) => h.word));
+  const pool = answers.filter((w) => !used.has(w));
+  const rand = seededRandom(hashId(s.id) + s.round * 7919);
+  const out: string[] = [];
+  while (out.length < Math.min(count, pool.length)) {
+    const w = pool[Math.floor(rand() * pool.length)]!;
+    if (!out.includes(w)) out.push(w);
+  }
+  return out;
+}
+
+/** Letters from most to least common in five-letter English words. */
+const LETTER_ORDER = 'earotlisncuydhpmgbfkwvzxqj';
+
+export type WordDifficulty = 'easy' | 'medium' | 'tricky';
+
+/** A rough guess at how hard a word is to find: rarer letters and repeats make it harder. */
+export function wordDifficulty(word: string): WordDifficulty {
+  const letters = [...word];
+  const avg = letters.reduce((sum, l) => sum + Math.max(0, LETTER_ORDER.indexOf(l)), 0) / letters.length;
+  const repeats = letters.length - new Set(letters).size;
+  const score = avg + repeats * 3;
+  return score < 7 ? 'easy' : score < 10 ? 'medium' : 'tricky';
+}

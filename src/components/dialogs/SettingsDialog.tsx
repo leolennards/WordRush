@@ -21,10 +21,12 @@ interface SettingsDialogProps {
   storagePersistent: boolean;
   /** Opens tile themes (Ranks and themes). */
   onThemes: () => void;
+  /** Opens the shop. */
+  onShop: () => void;
   sync: CloudSyncState;
 }
 
-export function SettingsDialog({ open, onClose, hardModeLocked, onReset, storagePersistent, onThemes, sync }: SettingsDialogProps) {
+export function SettingsDialog({ open, onClose, hardModeLocked, onReset, storagePersistent, onThemes, onShop, sync }: SettingsDialogProps) {
   const { settings, update } = useSettings();
   const [confirming, setConfirming] = useState(false);
   const [themesOpen, setThemesOpen] = useState(false);
@@ -62,7 +64,7 @@ export function SettingsDialog({ open, onClose, hardModeLocked, onReset, storage
             <span>
               <span className="block font-semibold">Tile theme</span>
               <span className="mt-0.5 block text-sm text-muted">
-                {SKINS.find((s) => s.id === settings.skin)?.name ?? 'Classic'} · 4 free, more unlock as you rank up
+                {SKINS.find((s) => s.id === settings.skin)?.name ?? 'Classic'} · 4 free, more by rank or in the shop
               </span>
             </span>
             <Button variant="secondary" onClick={() => setThemesOpen((o) => !o)} aria-expanded={themesOpen}>
@@ -75,7 +77,7 @@ export function SettingsDialog({ open, onClose, hardModeLocked, onReset, storage
           </div>
           {themesOpen && (
             <div className="mt-3">
-              <ThemePicker level={levelFor(progress.xp).level} />
+              <ThemePicker level={levelFor(progress.xp).level} onShop={onShop} />
               <button type="button" onClick={onThemes} className="mt-3 text-sm font-semibold text-accent hover:underline">
                 See all ranks
               </button>

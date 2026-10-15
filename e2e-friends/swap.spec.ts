@@ -20,15 +20,19 @@ test('Word Swap: pick a word, watch your friend guess it live, score, then swap 
   await ben.page.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(ann.page.getByRole('list').getByText('Ben', { exact: true })).toBeVisible();
 
-  // Ann starts a Word Swap and picks a word. Submit only works for a real word.
+  // Ann starts a Word Swap and picks one of the three words offered.
   await ann.page.getByRole('button', { name: 'Swap', exact: true }).click();
   await expect(ann.page).toHaveURL(/#swap\//);
   await expect(ann.page.getByText('Pick a word for Ben', { exact: true })).toBeVisible();
-  await ann.page.keyboard.type('qxzvj');
-  await expect(ann.page.getByRole('button', { name: 'Not a real word' })).toBeDisabled();
-  for (let i = 0; i < 5; i++) await ann.page.keyboard.press('Backspace');
-  await ann.page.keyboard.type('crane');
-  await ann.page.getByRole('button', { name: 'Submit' }).click();
+  const choices = ann.page.getByRole('radiogroup', { name: 'Words to choose from' }).getByRole('radio');
+  await expect(choices).toHaveCount(3);
+  await expect(ann.page.getByRole('button', { name: 'Choose a word' })).toBeDisabled();
+  const labels = await choices.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? ''));
+  const index = labels.findIndex((l) => !l.startsWith('SLATE'));
+  const word = labels[index]!.slice(0, 5).toLowerCase();
+  await choices.nth(index).click();
+  await expect(choices.nth(index)).toHaveAttribute('aria-checked', 'true');
+  await ann.page.getByRole('button', { name: `Send ${word.toUpperCase()} to Ben` }).click();
 
   // Ben hears about it and sees it waiting for him.
   await expect(ben.page.getByText('Ann picked a word for you. Your turn to guess!').first()).toBeVisible({ timeout: 15_000 });
@@ -47,7 +51,7 @@ test('Word Swap: pick a word, watch your friend guess it live, score, then swap 
     { timeout: 10_000 },
   );
   await ben.page.waitForTimeout(1700);
-  await ben.page.keyboard.type('crane');
+  await ben.page.keyboard.type(word);
   await ben.page.keyboard.press('Enter');
 
   // Ben solved it in 2: 5 points. Round 2: roles swap, Ben picks.
