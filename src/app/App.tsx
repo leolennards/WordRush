@@ -7,12 +7,16 @@ import {
   challengeNumber,
   dateForDayIndex,
   effectiveStreak,
+  freezesHeld,
+  frozenDays,
+  missedDays,
   encodeRows,
   hintsUsed,
   levelFor,
   skinUnlocked,
   tileStyleUnlocked,
   winFxUnlocked,
+  cosmeticUnlocked,
   nextHintPosition,
   type GameState,
   type SoloMode,
@@ -52,6 +56,7 @@ import { WordsProvider, useWords } from '@/features/words/WordsContext';
 import { useCloudSync } from '@/features/sync/useCloudSync';
 import { useUpdateAvailable } from '@/hooks/useUpdateAvailable';
 import { UpdateBar } from '@/components/layout/UpdateBar';
+import { GiftInbox } from '@/components/shop/GiftInbox';
 import { Backdrop } from '@/components/layout/Backdrop';
 import { AchievementsDialog } from '@/components/dialogs/AchievementsDialog';
 import { ModsDialog } from '@/components/dialogs/ModsDialog';
@@ -123,14 +128,30 @@ function Wordskiis() {
   const stats = useStats();
   const friends = useFriends();
   const { toast } = useToast();
-  const { progress, gains } = useProgress();
+  const progressCtx = useProgress();
+  const { progress, gains } = progressCtx;
   // A tile theme or style can only stay on while it's unlocked (e.g. after resetting progress).
   const playerLevel = levelFor(progress.xp).level;
   useEffect(() => {
     if (!skinUnlocked(settings.skin, playerLevel, progress.owned)) update({ skin: 'classic' });
     if (!tileStyleUnlocked(settings.tileStyle, progress.owned)) update({ tileStyle: 'classic' });
     if (!winFxUnlocked(settings.winFx, progress.owned)) update({ winFx: 'confetti' });
-  }, [settings.skin, settings.tileStyle, settings.winFx, playerLevel, progress.owned, update]);
+    if (!cosmeticUnlocked('keys', settings.keySkin, progress.owned)) update({ keySkin: 'classic' });
+    if (!cosmeticUnlocked('sound', settings.soundPack, progress.owned)) update({ soundPack: 'classic' });
+    if (!cosmeticUnlocked('frame', settings.frame, progress.owned)) update({ frame: 'none' });
+    if (!cosmeticUnlocked('badge', settings.badge, progress.owned)) update({ badge: 'none' });
+  }, [
+    settings.skin,
+    settings.tileStyle,
+    settings.winFx,
+    settings.keySkin,
+    settings.soundPack,
+    settings.frame,
+    settings.badge,
+    playerLevel,
+    progress.owned,
+    update,
+  ]);
   const award = useAward();
   const words = useWords();
 
@@ -178,7 +199,7 @@ function Wordskiis() {
       hardMode: g.hardMode,
       hints: hintsUsed(g),
       seconds: secondsSinceStart(services.store, g.id, services.now().getTime()),
-      ...(g.mode === 'daily' ? { streak: effectiveStreak(stats.daily, todayIndex) } : {}),
+      ...(g.mode === 'daily' ? { streak: effectiveStreak(stats.daily, todayIndex, frozenDays(progress.owned)) } : {}),
       words: [{ answer: g.answer, won: g.status === 'won' }],
       ...(g.mods?.length ? { mods: g.mods } : {}),
     });
@@ -194,7 +215,27 @@ function Wordskiis() {
   // ----- Share today's daily result with friends (colours only, never letters) -----
   const dailyGame = daily.session.game;
   const { publishDaily, status: friendsStatus } = friends;
-  const dailyStreak = effectiveStreak(stats.daily, todayIndex);
+  const dailyStreak = effectiveStreak(stats.daily, todayIndex, frozenDays(progress.owned));
+
+  // A streak freeze covers missed Daily Challenges automatically (once this device has the latest save).
+  const { spendFreezes } = progressCtx;
+  const missed = missedDays(stats.daily, todayIndex, progress.owned);
+  const missedKey = missed.join(',');
+  const syncSettled = sync.status === 'off' || sync.status === 'synced' || sync.status === 'error';
+  useEffect(() => {
+    if (!missedKey || !syncSettled) return;
+    const days = missedKey.split(',').map(Number);
+    if (days.length > freezesHeld(progress.owned)) return;
+    if (spendFreezes(days)) {
+      const streak = stats.daily.currentStreak;
+      toast(
+        days.length === 1
+          ? `A streak freeze saved your ${streak}-day streak!`
+          : `${days.length} streak freezes saved your ${streak}-day streak!`,
+        { tone: 'success', duration: 5000 },
+      );
+    }
+  }, [missedKey, syncSettled, progress.owned, spendFreezes, stats.daily.currentStreak, toast]);
   useEffect(() => {
     if (friendsStatus !== 'ready' || dailyGame.dayIndex === null) return;
     publishDaily({
@@ -454,6 +495,7 @@ function Wordskiis() {
           onShop={goShop}
         />
         <UpdateBar show={updateAvailable} />
+        <GiftInbox />
         <h1 className="sr-only">
           {BRAND.name} — {BRAND.tagline}
         </h1>

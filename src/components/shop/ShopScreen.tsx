@@ -1,21 +1,26 @@
-import { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, m } from 'motion/react';
-import { ArrowLeft, Check, Clock3, Play, Sparkles, Tag } from 'lucide-react';
+import { ArrowLeft, Check, Clock3, Package, Snowflake, Sparkles, Tag } from 'lucide-react';
 import { GAME } from '@/config/game';
 import {
   COIN_REWARDS,
+  FREEZE_PRICE,
+  MAX_FREEZES,
+  MYSTERY_PRICE,
   SHOP_ITEMS,
   coinBalance,
   dailyDeal,
   dayIndexFor,
+  freezesHeld,
+  mysteryPool,
+  onSale,
   owns,
   priceFor,
+  seasonDaysLeft,
+  type ItemKind,
   type ShopItem,
-  type SkinId,
-  type TileStyleId,
-  type WinFxId,
 } from '@/engine';
+import type { Settings } from '@/lib/storage/schemas';
 import { useServices } from '@/app/services';
 import { useProgress } from '@/features/progress/ProgressContext';
 import { useSettings } from '@/features/settings/SettingsContext';
@@ -23,39 +28,38 @@ import { useCountdown } from '@/hooks/useToday';
 import { playCue } from '@/lib/audio/sound';
 import { buzz } from '@/lib/haptics';
 import { useToast } from '@/components/layout/Toasts';
-import { Segmented } from '@/components/ui';
-import { Celebration } from '@/components/layout/Celebration';
 import { Coin } from './Coin';
 import { Rolling } from './CoinChip';
 import { DailyChest } from './DailyChest';
-import { FxIcon } from './FxIcon';
+import { ItemPreview } from './Previews';
+import { KIND_DETAIL, KIND_LABEL, SETTING_FOR } from './kinds';
+import { Reveal, type Prize } from './Reveal';
 
-type Tab = ShopItem['kind'];
+const TABS: { value: ItemKind; label: string }[] = [
+  { value: 'skin', label: 'Colours' },
+  { value: 'tiles', label: 'Styles' },
+  { value: 'keys', label: 'Keyboards' },
+  { value: 'sound', label: 'Sounds' },
+  { value: 'fx', label: 'Win effects' },
+  { value: 'frame', label: 'Frames' },
+  { value: 'badge', label: 'Badges' },
+];
 
-const KIND_LABEL: Record<Tab, string> = { skin: 'tile colours', tiles: 'tile style', fx: 'win effect' };
-
-const PREVIEW = [
-  { l: 'w', s: 'correct' },
-  { l: 'o', s: 'present' },
-  { l: 'r', s: 'absent' },
-  { l: 'd', s: 'correct' },
-  { l: 's', s: 'present' },
-] as const;
-
-/** The shop: spend Wordskiis coins on tile colours and tile styles. */
+/** The shop: spend Wordskiis coins on looks, sounds, effects and extras. */
 export function ShopScreen({ onBack }: { onBack: () => void }) {
-  const { progress, buy } = useProgress();
-  const { settings, update, resolvedTheme } = useSettings();
+  const { progress, buy, buyFreeze, openMystery } = useProgress();
+  const { settings, update } = useSettings();
   const { now } = useServices();
   const { toast } = useToast();
   const countdown = useCountdown(now);
-  const day = dayIndexFor(now(), GAME.dailyEpoch);
-  const deal = useMemo(() => dailyDeal(day), [day]);
-  const [tab, setTab] = useState<Tab>('skin');
+  const date = now();
+  const day = dayIndexFor(date, GAME.dailyEpoch);
+  const deal = dailyDeal(day);
+  const [tab, setTab] = useState<ItemKind>('skin');
   const [confirming, setConfirming] = useState<string | null>(null);
   const [burst, setBurst] = useState<{ id: string; key: number } | null>(null);
+  const [mystery, setMystery] = useState<Prize | null>(null);
   const balance = coinBalance(progress);
-  const dark = resolvedTheme === 'dark';
 
   // A confirm tap expires after a few seconds.
   useEffect(() => {
@@ -64,48 +68,96 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
     return () => window.clearTimeout(t);
   }, [confirming]);
 
-  const equipped = (item: ShopItem) =>
-    item.kind === 'skin' ? settings.skin === item.ref : item.kind === 'tiles' ? settings.tileStyle === item.ref : settings.winFx === item.ref;
-  const equip = (item: ShopItem) =>
-    item.kind === 'skin'
-      ? update({ skin: item.ref as SkinId })
-      : item.kind === 'tiles'
-        ? update({ tileStyle: item.ref as TileStyleId })
-        : update({ winFx: item.ref as WinFxId });
-  const reducedMotion = settings.reduceMotion;
+  const equipped = (item: ShopItem) => settings[SETTING_FOR[item.kind]] === item.ref;
+  const equip = (item: ShopItem) => update({ [SETTING_FOR[item.kind]]: item.ref } as Partial<Settings>);
+  const celebrate = () => {
+    if (settings.sound) playCue('win');
+    if (settings.haptics) buzz('win');
+  };
+
+  /** Two taps: the first asks, the second confirms. Returns true on the confirming tap. */
+  const confirmed = (id: string) => {
+    if (confirming !== id) {
+      setConfirming(id);
+      return false;
+    }
+    setConfirming(null);
+    return true;
+  };
 
   const press = (item: ShopItem) => {
     if (owns(progress, item.id)) {
       equip(item);
       return;
     }
-    if (confirming !== item.id) {
-      setConfirming(item.id);
-      return;
-    }
-    setConfirming(null);
+    if (!confirmed(item.id)) return;
     const result = buy(item.id);
     if (!result.ok) {
-      toast(result.reason === 'funds' ? 'Not enough coins yet' : 'You already own that');
+      toast(
+        result.reason === 'funds'
+          ? 'Not enough coins yet'
+          : result.reason === 'season'
+            ? 'That one’s not on sale right now'
+            : 'You already own that',
+      );
       return;
     }
     equip(item);
-    setBurst({ id: item.id, key: Date.now() });
-    if (settings.sound) playCue('win');
-    if (settings.haptics) buzz('win');
+    setBurst((b) => ({ id: item.id, key: (b?.key ?? 0) + 1 }));
+    celebrate();
     toast(`Unlocked: ${item.name}`, {
       reward: {
         kind: 'achievement',
         eyebrow: 'New in your collection',
         title: item.name,
-        detail: item.kind === 'skin' ? 'Tile colours, now on' : item.kind === 'tiles' ? 'Tile style, now on' : 'Plays when you win',
+        detail: item.kind === 'sound' && !settings.sound ? 'Turn on sound effects in Settings to hear it' : KIND_DETAIL[item.kind],
         icon: Sparkles,
       },
     });
   };
 
-  const items = SHOP_ITEMS.filter((i) => i.kind === tab);
+  const pressFreeze = () => {
+    if (!confirmed('freeze')) return;
+    const why = buyFreeze();
+    if (why) {
+      toast(why === 'full' ? `You can hold ${MAX_FREEZES} freezes at a time` : 'Not enough coins yet');
+      return;
+    }
+    celebrate();
+    toast('Streak freeze ready: a missed Daily won’t break your streak', { tone: 'success' });
+  };
+
+  const pressMystery = () => {
+    if (!confirmed('mystery')) return;
+    const result = openMystery();
+    if (result === 'empty') toast('You already own everything a box can hold!');
+    else if (result === 'funds') toast('Not enough coins yet');
+    else setMystery({ item: result, coins: 0 });
+  };
+
+  const seasonal = SHOP_ITEMS.filter((i) => i.season && onSale(i, date));
+  const season = seasonal[0]?.season;
+  // Limited-time items have their own section while on sale, and join your collection afterwards.
+  const items = SHOP_ITEMS.filter((i) => i.kind === tab && (!i.season || owns(progress, i.id)));
   const ownedCount = SHOP_ITEMS.filter((i) => owns(progress, i.id)).length;
+  const held = freezesHeld(progress.owned);
+  const boxLeft = mysteryPool(progress).length;
+
+  const card = (item: ShopItem, i: number) => (
+    <ItemCard
+      key={item.id}
+      item={item}
+      index={i}
+      price={priceFor(item, day)}
+      deal={deal.item.id === item.id}
+      owned={owns(progress, item.id)}
+      equipped={equipped(item)}
+      confirming={confirming === item.id}
+      balance={balance}
+      burst={burst?.id === item.id ? burst.key : null}
+      onPress={() => press(item)}
+    />
+  );
 
   return (
     <main id="game" className="min-h-0 flex-1 overflow-y-auto">
@@ -136,15 +188,7 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
         >
           <span className="feature-card-shine" aria-hidden />
           <div className="relative flex items-center gap-4">
-            <m.span
-              animate={{ rotateY: [0, 360] }}
-              transition={{
-                duration: 3.2,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                repeatDelay: 1.5,
-              }}
-            >
+            <m.span animate={{ rotateY: [0, 360] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1.5 }}>
               <Coin className="size-14 drop-shadow-lg" />
             </m.span>
             <div className="min-w-0">
@@ -156,11 +200,32 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
           </div>
           <p className="relative mt-3 text-[0.8rem] leading-snug text-white/85">
             Every game pays out coins with its XP, plus {COIN_REWARDS.achievement} per achievement, {COIN_REWARDS.level} per level
-            and {COIN_REWARDS.rank} for a new rank.
+            and {COIN_REWARDS.rank} for a new rank. Bonuses: {COIN_REWARDS.firstGuess} for a first-guess solve,{' '}
+            {COIN_REWARDS.allQuests} for finishing all three quests and {COIN_REWARDS.streakWeek} for every week of Daily streak.
           </p>
         </m.section>
 
         <DailyChest />
+
+        {/* Limited time */}
+        {season && (
+          <m.section
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="season-card mt-4 rounded-[var(--radius-card)] p-4"
+            data-season={season.name.toLowerCase()}
+            aria-label={`${season.name} specials`}
+          >
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <h3 className="text-lg font-extrabold">{season.name} specials</h3>
+              <p className="tabular flex items-center gap-1 text-xs font-semibold opacity-85">
+                <Clock3 className="size-3" aria-hidden /> Limited time · {seasonDaysLeft(season, date)} days left
+              </p>
+            </div>
+            <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">{seasonal.map(card)}</ul>
+          </m.section>
+        )}
 
         {/* Today's deal */}
         <m.section
@@ -176,14 +241,13 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
                 <Tag className="size-3.5" aria-hidden /> Today’s deal · 30% off
               </p>
               <p className="mt-0.5 text-lg font-extrabold">
-                {deal.item.name}{' '}
-                <span className="text-sm font-semibold text-muted">{KIND_LABEL[deal.item.kind]}</span>
+                {deal.item.name} <span className="text-sm font-semibold text-muted">{KIND_LABEL[deal.item.kind]}</span>
               </p>
               <p className="tabular flex items-center gap-1 text-xs text-muted">
                 <Clock3 className="size-3" aria-hidden /> New deal in {countdown}
               </p>
             </div>
-            <Preview item={deal.item} dark={dark} skin={settings.skin} reducedMotion={reducedMotion} />
+            <ItemPreview item={deal.item} />
             <BuyButton
               item={deal.item}
               price={deal.price}
@@ -197,18 +261,37 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
           </div>
         </m.section>
 
-        <div className="mt-6 flex justify-center">
-          <Segmented<Tab>
-            label="Shop section"
-            value={tab}
-            onChange={setTab}
-            options={[
-              { value: 'skin', label: 'Colours' },
-              { value: 'tiles', label: 'Styles' },
-              { value: 'fx', label: 'Win effects' },
-            ]}
+        {/* Extras */}
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Extra
+            tone="mystery"
+            icon={<Package className="size-7" aria-hidden />}
+            title="Mystery box"
+            text={
+              boxLeft
+                ? `A random item you don’t own yet (${boxLeft} left). It could be worth up to 3,000 coins!`
+                : 'You own everything a box can hold.'
+            }
+            price={MYSTERY_PRICE}
+            action={confirming === 'mystery' ? 'Tap to confirm' : 'Open a box'}
+            confirming={confirming === 'mystery'}
+            disabled={!boxLeft || balance < MYSTERY_PRICE}
+            onPress={pressMystery}
+          />
+          <Extra
+            tone="freeze"
+            icon={<Snowflake className="size-7" aria-hidden />}
+            title="Streak freeze"
+            text={`Covers a missed Daily Challenge so your streak carries on. You have ${held} of ${MAX_FREEZES}.`}
+            price={FREEZE_PRICE}
+            action={held >= MAX_FREEZES ? 'Fully stocked' : confirming === 'freeze' ? 'Tap to confirm' : 'Buy a freeze'}
+            confirming={confirming === 'freeze'}
+            disabled={held >= MAX_FREEZES || balance < FREEZE_PRICE}
+            onPress={pressFreeze}
           />
         </div>
+
+        <ShopTabs value={tab} onChange={setTab} />
 
         <AnimatePresence mode="popLayout">
           <m.ul
@@ -219,124 +302,175 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
             transition={{ duration: 0.22 }}
             className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3"
           >
-            {items.map((item, i) => {
-              const owned = owns(progress, item.id);
-              const on = equipped(item);
-              const price = priceFor(item, day);
-              return (
-                <m.li
-                  key={item.id}
-                  initial={{ opacity: 0, y: 12, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{
-                    delay: i * 0.03,
-                    duration: 0.3,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  className={`shop-card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border bg-surface p-3 transition ${
-                    on ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
-                  }`}
-                  data-owned={owned || undefined}
-                >
-                  {item.animated && (
-                    <span className="absolute top-2 right-2 rounded-full bg-present/20 px-1.5 py-px text-[0.6rem] font-bold tracking-wide uppercase">
-                      Animated
-                    </span>
-                  )}
-                  {deal.item.id === item.id && !owned && (
-                    <span className="absolute top-2 left-2 rounded-full bg-danger px-1.5 py-px text-[0.6rem] font-bold tracking-wide text-white uppercase">
-                      −30%
-                    </span>
-                  )}
-                  <div className="mt-4 mb-3 flex justify-center">
-                    <Preview item={item} dark={dark} skin={settings.skin} reducedMotion={reducedMotion} />
-                  </div>
-                  <p className="font-bold">{item.name}</p>
-                  <p className="mb-3 text-xs leading-snug text-muted">{item.description}</p>
-                  <div className="mt-auto">
-                    <BuyButton
-                      item={item}
-                      price={price}
-                      was={price !== item.price ? item.price : undefined}
-                      owned={owned}
-                      equipped={on}
-                      confirming={confirming === item.id}
-                      balance={balance}
-                      onPress={() => press(item)}
-                    />
-                  </div>
-                  <AnimatePresence>{burst?.id === item.id && <CoinBurst key={burst.key} />}</AnimatePresence>
-                </m.li>
-              );
-            })}
+            {items.map(card)}
           </m.ul>
         </AnimatePresence>
 
         <p className="mt-6 text-center text-xs text-subtle">
-          Rank themes unlock as you level up. Find everything you own in Settings → Tile theme.
+          Rank themes unlock as you level up. Switch between everything you own in Settings → Tile theme. Send gifts from a
+          friend’s card on the Friends page.
         </p>
       </div>
+      {mystery && <Reveal kind="mystery" eyebrow="Mystery box" prize={mystery} onUse={equip} onClose={() => setMystery(null)} />}
     </main>
   );
 }
 
-/** Five tiles in the item's colours (or style), in your current colours/style otherwise. */
-function Preview({ item, dark, skin, reducedMotion }: { item: ShopItem; dark: boolean; skin: SkinId; reducedMotion: boolean }) {
-  if (item.kind === 'fx') return <FxPreview item={item} reducedMotion={reducedMotion} />;
-  const isSkin = item.kind === 'skin';
+/** The shop's sections, scrollable sideways on a phone. */
+function ShopTabs({ value, onChange }: { value: ItemKind; onChange: (v: ItemKind) => void }) {
+  const active = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    active.current?.scrollIntoView?.({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  }, [value]);
   return (
     <div
-      className={`grid w-full max-w-[12.5rem] grid-cols-5 gap-1 ${dark ? 'dark' : ''}`}
-      data-skin={isSkin ? item.ref : skin}
-      role="img"
-      aria-label={`Preview of ${item.name}`}
+      role="radiogroup"
+      aria-label="Shop section"
+      className="no-scrollbar -mx-4 mt-6 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:flex-wrap sm:justify-center"
     >
-      {PREVIEW.map((t, i) => (
-        <span
-          key={i}
-          className="tile aspect-square w-full text-sm!"
-          data-state={t.s}
-          {...(!isSkin ? { 'data-style': item.ref } : {})}
-          aria-hidden
-        >
-          {t.l}
-        </span>
-      ))}
+      {TABS.map((t) => {
+        const on = t.value === value;
+        return (
+          <button
+            key={t.value}
+            ref={on ? active : undefined}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            onClick={() => onChange(t.value)}
+            className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition ${
+              on ? 'bg-ink text-ink-text shadow-sm' : 'bg-surface-2 text-muted hover:text-text'
+            }`}
+          >
+            {t.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-/** A win effect: tap to watch it play over the screen, as it does when you win. */
-function FxPreview({ item, reducedMotion }: { item: ShopItem; reducedMotion: boolean }) {
-  const [play, setPlay] = useState(0);
-  const fx = item.ref as WinFxId;
-  useEffect(() => {
-    if (!play) return;
-    const t = window.setTimeout(() => setPlay(0), 2600);
-    return () => window.clearTimeout(t);
-  }, [play]);
+function ItemCard({
+  item,
+  index,
+  price,
+  deal,
+  owned,
+  equipped,
+  confirming,
+  balance,
+  burst,
+  onPress,
+}: {
+  item: ShopItem;
+  index: number;
+  price: number;
+  deal: boolean;
+  owned: boolean;
+  equipped: boolean;
+  confirming: boolean;
+  balance: number;
+  burst: number | null;
+  onPress: () => void;
+}) {
   return (
-    <>
+    <m.li
+      initial={{ opacity: 0, y: 12, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay: index * 0.03, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      className={`shop-card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border bg-surface p-3 text-text transition ${
+        equipped ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
+      }`}
+      data-owned={owned || undefined}
+    >
+      {item.season && !owned ? (
+        <span className="absolute top-2 right-2 rounded-full bg-danger/15 px-1.5 py-px text-[0.6rem] font-bold tracking-wide text-danger uppercase">
+          Limited
+        </span>
+      ) : (
+        item.animated && (
+          <span className="absolute top-2 right-2 rounded-full bg-present/20 px-1.5 py-px text-[0.6rem] font-bold tracking-wide uppercase">
+            Animated
+          </span>
+        )
+      )}
+      {deal && !owned && (
+        <span className="absolute top-2 left-2 rounded-full bg-danger px-1.5 py-px text-[0.6rem] font-bold tracking-wide text-white uppercase">
+          −30%
+        </span>
+      )}
+      <div className="mt-4 mb-3 flex justify-center">
+        <ItemPreview item={item} />
+      </div>
+      <p className="font-bold">{item.name}</p>
+      <p className="mb-3 text-xs leading-snug text-muted">{item.description}</p>
+      <div className="mt-auto">
+        <BuyButton
+          item={item}
+          price={price}
+          was={price !== item.price ? item.price : undefined}
+          owned={owned}
+          equipped={equipped}
+          confirming={confirming}
+          balance={balance}
+          onPress={onPress}
+        />
+      </div>
+      <AnimatePresence>{burst !== null && <CoinBurst key={burst} />}</AnimatePresence>
+    </m.li>
+  );
+}
+
+/** A special: the mystery box or a streak freeze. */
+function Extra({
+  tone,
+  icon,
+  title,
+  text,
+  price,
+  action,
+  confirming,
+  disabled,
+  onPress,
+}: {
+  tone: 'mystery' | 'freeze';
+  icon: ReactNode;
+  title: string;
+  text: string;
+  price: number;
+  action: string;
+  confirming: boolean;
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  const what = title.toLowerCase();
+  return (
+    <section className="extra-card flex flex-col gap-3 rounded-[var(--radius-card)] p-4 text-white shadow-md" data-tone={tone} aria-label={title}>
+      <div className="flex items-start gap-3">
+        <span className={`grid size-12 shrink-0 place-items-center rounded-2xl bg-white/20 ${tone === 'mystery' && !disabled ? 'mystery-wobble' : ''}`}>
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <p className="font-extrabold">{title}</p>
+          <p className="text-[0.8rem] leading-snug text-white/85">{text}</p>
+        </div>
+      </div>
       <button
         type="button"
-        onClick={() => setPlay((n) => n + 1)}
-        className="group grid aspect-[5/1] w-full max-w-[12.5rem] place-items-center rounded-xl bg-surface-2 transition hover:bg-surface-3 active:scale-[0.97]"
-        aria-label={`Watch ${item.name}`}
+        onClick={onPress}
+        disabled={disabled}
+        aria-label={confirming ? `Confirm buying a ${what} for ${price} coins` : `Buy a ${what} for ${price} coins`}
+        className="buy-button mt-auto inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-3 text-sm font-extrabold text-slate-900 transition hover:bg-white/90 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
+        data-confirm={confirming || undefined}
       >
-        <span className="flex items-center gap-2 text-xs font-bold text-muted group-hover:text-text">
-          <FxIcon id={fx} className="size-5" />
-          <Play className="size-3.5 fill-current" aria-hidden /> Watch
-        </span>
-      </button>
-      {play > 0 &&
-        !reducedMotion &&
-        createPortal(
-          <div className="pointer-events-none fixed inset-0 z-50" key={play}>
-            <Celebration seed={play * 7 + item.price} fx={fx} />
-          </div>,
-          document.body,
+        {action}
+        {!confirming && (
+          <span className="tabular inline-flex items-center gap-1 opacity-80">
+            · <Coin className="size-4" /> {price}
+          </span>
         )}
-    </>
+      </button>
+    </section>
   );
 }
 
@@ -436,11 +570,7 @@ function CoinBurst() {
       Array.from({ length: 12 }, (_, i) => {
         const angle = (i / 12) * Math.PI * 2;
         const dist = 60 + (i % 3) * 18;
-        return {
-          x: Math.cos(angle) * dist,
-          y: Math.sin(angle) * dist - 20,
-          r: (i % 2 ? 1 : -1) * (180 + i * 20),
-        };
+        return { x: Math.cos(angle) * dist, y: Math.sin(angle) * dist - 20, r: (i % 2 ? 1 : -1) * (180 + i * 20) };
       }),
     [],
   );

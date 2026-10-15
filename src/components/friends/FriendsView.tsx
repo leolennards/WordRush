@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { m } from 'motion/react';
-import { Check, Cloud, Copy, Crown, Flame, Loader2, LogOut, Pencil, Repeat2, Share2, Smartphone, Swords, Timer, Trash2, UserPlus, Users, X, Zap } from 'lucide-react';
+import { Check, Cloud, Copy, Crown, Flame, Gift, Loader2, LogOut, Pencil, Repeat2, Share2, Smartphone, Swords, Timer, Trash2, UserPlus, Users, X, Zap } from 'lucide-react';
 import { BRAND, GAME } from '@/config/game';
 import { compareChallenge, decodeRows, formatFriendCode, swapLeader, swapTurn, type GameState, type Swap } from '@/engine';
 import { useFriends } from '@/features/friends/FriendsContext';
@@ -10,6 +10,7 @@ import { useToast } from '@/components/layout/Toasts';
 import { MiniBoard } from '@/components/home/MiniBoard';
 import { Button } from '@/components/ui';
 import { Avatar } from './Avatar';
+import { GiftDialog } from './GiftDialog';
 import { GoogleButton } from './GoogleButton';
 
 interface FriendsViewProps {
@@ -537,6 +538,7 @@ function FriendRow({
   const { toast } = useToast();
   const [busy, setBusy] = useState<'challenge' | 'race' | 'swap' | 'remove' | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [gifting, setGifting] = useState(false);
   const name = friend.profile?.name ?? 'Loading…';
   const daily = friend.profile?.daily;
   const playedToday = daily && daily.dayIndex === todayIndex && daily.rows.length > 0;
@@ -584,6 +586,14 @@ function FriendRow({
           {busy === 'race' ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Zap className="size-4" aria-hidden />}
           Race
         </Button>
+        <button
+          type="button"
+          onClick={() => setGifting(true)}
+          className="grid size-10 shrink-0 place-items-center rounded-xl bg-surface-2 text-pink-500 transition hover:bg-surface-3 active:scale-95"
+          aria-label={`Send ${name} a gift`}
+        >
+          <Gift className="size-4" aria-hidden />
+        </button>
         {confirmRemove ? (
           <Button
             variant="danger"
@@ -609,6 +619,7 @@ function FriendRow({
           </button>
         )}
       </div>
+      <GiftDialog friend={gifting ? friend.uid : null} name={name} onClose={() => setGifting(false)} />
     </li>
   );
 }

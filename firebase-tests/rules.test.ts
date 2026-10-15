@@ -297,3 +297,51 @@ describe('word swap', () => {
     await assertSucceeds(deleteDoc(doc(db('ben'), 'swaps', 'x')));
   });
 });
+
+describe('profile looks', () => {
+  it('lets players show a frame and badge, with short ids only', async () => {
+    await makePlayer('alice', 'AAAAAA');
+    await assertSucceeds(updateDoc(doc(db('alice'), 'players', 'alice'), { frame: 'gold', badge: 'crown' }));
+    await assertSucceeds(updateDoc(doc(db('alice'), 'players', 'alice'), { frame: null, badge: null }));
+    await assertFails(updateDoc(doc(db('alice'), 'players', 'alice'), { frame: '<script>' }));
+    await assertFails(updateDoc(doc(db('alice'), 'players', 'alice'), { badge: 'x'.repeat(13) }));
+    await assertFails(updateDoc(doc(db('bob'), 'players', 'alice'), { frame: 'gold' }));
+  });
+});
+
+describe('gifts', () => {
+  beforeEach(async () => {
+    await makePlayer('alice', 'AAAAAA');
+    await makePlayer('bob', 'BBBBBB');
+    await makePlayer('carol', 'CCCCCC');
+    await befriend('alice', 'bob');
+  });
+  const coins = (from: string, to: string, amount = 100) => ({ from, to, kind: 'coins', coins: amount, createdAt: 1, claimed: false });
+
+  it('sends coins or an item to a friend only', async () => {
+    await assertSucceeds(setDoc(doc(db('alice'), 'gifts', 'g1'), coins('alice', 'bob')));
+    await assertSucceeds(
+      setDoc(doc(db('alice'), 'gifts', 'g2'), { from: 'alice', to: 'bob', kind: 'item', item: 'skin:galaxy', createdAt: 1, claimed: false }),
+    );
+    await assertFails(setDoc(doc(db('alice'), 'gifts', 'g3'), coins('alice', 'carol')));
+    await assertFails(setDoc(doc(db('alice'), 'gifts', 'g4'), coins('bob', 'alice')));
+    await assertFails(setDoc(doc(db('alice'), 'gifts', 'g5'), coins('alice', 'alice')));
+  });
+
+  it('only allows the set coin amounts and no extra fields', async () => {
+    await assertFails(setDoc(doc(db('alice'), 'gifts', 'g1'), coins('alice', 'bob', 100000)));
+    await assertFails(setDoc(doc(db('alice'), 'gifts', 'g2'), { ...coins('alice', 'bob'), claimed: true }));
+    await assertFails(setDoc(doc(db('alice'), 'gifts', 'g3'), { ...coins('alice', 'bob'), item: 'skin:gold' }));
+  });
+
+  it('only the recipient opens it, once; outsiders can’t read it', async () => {
+    await assertSucceeds(setDoc(doc(db('alice'), 'gifts', 'g1'), coins('alice', 'bob')));
+    await assertSucceeds(getDocs(query(collection(db('bob'), 'gifts'), where('to', '==', 'bob'), where('claimed', '==', false))));
+    await assertFails(getDoc(doc(db('carol'), 'gifts', 'g1')));
+    await assertFails(updateDoc(doc(db('alice'), 'gifts', 'g1'), { claimed: true }));
+    await assertFails(updateDoc(doc(db('bob'), 'gifts', 'g1'), { coins: 500 }));
+    await assertSucceeds(updateDoc(doc(db('bob'), 'gifts', 'g1'), { claimed: true }));
+    await assertFails(updateDoc(doc(db('bob'), 'gifts', 'g1'), { claimed: true }));
+    await assertFails(deleteDoc(doc(db('bob'), 'gifts', 'g1')));
+  });
+});

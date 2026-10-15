@@ -163,8 +163,10 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
           <li className="flex gap-3">
             <ShoppingBag className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
             <span>
-              <strong>Coins and the shop</strong> — every game earns coins, and the daily chest gives free ones. Spend
-              them on tile colours, animated tile styles and win effects.
+              <strong>Coins and the shop</strong> — every game earns coins (with bonuses for first-guess solves, all
+              quests and weekly streaks), and the daily chest gives free ones. Spend them on tile colours and styles,
+              keyboards, sounds, win effects, avatar frames and badges, mystery boxes and streak freezes, or send a
+              friend a gift.
             </span>
           </li>
           <li className="flex gap-3">

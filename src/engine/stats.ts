@@ -44,7 +44,14 @@ export interface GameResult {
   guesses: number;
 }
 
-export function recordResult(stats: Stats, result: GameResult): Stats {
+/** Whether every day strictly between two days is covered by a streak freeze. */
+function bridged(from: number, to: number, frozen: ReadonlySet<number>): boolean {
+  for (let d = from + 1; d < to; d++) if (!frozen.has(d)) return false;
+  return true;
+}
+
+/** `frozen`: Daily days covered by a streak freeze, which don't break a streak. */
+export function recordResult(stats: Stats, result: GameResult, frozen: ReadonlySet<number> = new Set()): Stats {
   if (stats.lastRecordedKey !== null && result.key <= stats.lastRecordedKey) return stats;
 
   const distribution = [...stats.distribution];
@@ -52,7 +59,8 @@ export function recordResult(stats: Stats, result: GameResult): Stats {
   if (result.won) {
     const slot = result.guesses - 1;
     if (slot >= 0 && slot < distribution.length) distribution[slot] = (distribution[slot] ?? 0) + 1;
-    currentStreak = stats.lastWonKey === result.key - 1 ? stats.currentStreak + 1 : 1;
+    const continues = stats.lastWonKey !== null && stats.lastWonKey < result.key && bridged(stats.lastWonKey, result.key, frozen);
+    currentStreak = continues ? stats.currentStreak + 1 : 1;
   }
 
   return {
@@ -72,9 +80,10 @@ export function recordResult(stats: Stats, result: GameResult): Stats {
  * nor yesterday's challenge was won, the streak has lapsed even though no loss
  * was recorded.
  */
-export function effectiveStreak(stats: Stats, currentKey?: number): number {
+export function effectiveStreak(stats: Stats, currentKey?: number, frozen: ReadonlySet<number> = new Set()): number {
   if (currentKey === undefined) return stats.currentStreak;
-  if (stats.lastWonKey === null || stats.lastWonKey < currentKey - 1) return 0;
+  if (stats.lastWonKey === null) return 0;
+  if (stats.lastWonKey < currentKey - 1 && !bridged(stats.lastWonKey, currentKey, frozen)) return 0;
   return stats.currentStreak;
 }
 

@@ -3,6 +3,7 @@ import { useServices } from '@/app/services';
 import { DEFAULT_SETTINGS, KEYS, settingsSchema, type Settings } from '@/lib/storage/schemas';
 import { readVersioned, writeVersioned } from '@/lib/storage/versioned';
 import { usePrefersDark, usePrefersReducedMotion } from '@/hooks/useMediaQuery';
+import { setSoundPack } from '@/lib/audio/sound';
 
 interface SettingsContextValue {
   settings: Settings;
@@ -47,9 +48,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     root.dataset.reduceMotion = String(settings.reduceMotion);
     root.dataset.skin = settings.skin;
     root.dataset.tiles = settings.tileStyle;
+    root.dataset.keys = settings.keySkin;
+    setSoundPack(settings.soundPack);
     const meta = document.querySelector('meta[name="theme-color"]');
     meta?.setAttribute('content', resolvedTheme === 'dark' ? '#0c0f15' : '#f6f3ec');
-  }, [resolvedTheme, settings.highContrast, settings.reduceMotion, settings.skin, settings.tileStyle]);
+  }, [resolvedTheme, settings.highContrast, settings.reduceMotion, settings.skin, settings.tileStyle, settings.keySkin, settings.soundPack]);
 
   const reload = useCallback(
     () => setSettings(readVersioned(store, KEYS.settings, settingsSchema) ?? DEFAULT_SETTINGS),

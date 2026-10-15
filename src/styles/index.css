@@ -273,8 +273,33 @@
   /* Holograms shimmer faster. */
   --skin-anim: skin-flow 3s ease-in-out infinite;
 }
-:is([data-skin='galaxy'], [data-skin='gold'], [data-skin='rainbow'], [data-skin='toxic'], [data-skin='lava'], [data-skin='vapor'], [data-skin='holo']) .tile:is([data-state='correct'], [data-state='present']):not([data-anim]),
-:is([data-skin='galaxy'], [data-skin='gold'], [data-skin='rainbow'], [data-skin='toxic'], [data-skin='lava'], [data-skin='vapor'], [data-skin='holo']) .key:is([data-state='correct'], [data-state='present']) {
+[data-skin='haunted'] {
+  --c-correct: #ea580c;
+  --c-correct-ink: #fff;
+  --c-present: #7c3aed;
+  --c-present-ink: #fff;
+  --fill-correct: linear-gradient(140deg, #9a3412, #f97316, #fdba74, #f97316, #9a3412);
+  --fill-present: linear-gradient(140deg, #3b0764, #7c3aed, #a3e635, #7c3aed, #3b0764);
+}
+[data-skin='candycane'] {
+  --c-correct: #dc2626;
+  --c-correct-ink: #fff;
+  --c-present: #15803d;
+  --c-present-ink: #fff;
+  --fill-correct: repeating-linear-gradient(135deg, #dc2626 0 10px, #fef2f2 10px 16px, #dc2626 16px 26px);
+  --fill-present: repeating-linear-gradient(135deg, #15803d 0 10px, #f0fdf4 10px 16px, #15803d 16px 26px);
+  --skin-anim: cane-slide 2.5s linear infinite;
+  --skin-size: 200% 200%;
+}
+[data-skin='candycane'] .tile:is([data-state='correct'], [data-state='present']) {
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
+}
+@keyframes cane-slide {
+  from { background-position: 0 0; }
+  to { background-position: 37px 0; }
+}
+:is([data-skin='galaxy'], [data-skin='gold'], [data-skin='rainbow'], [data-skin='toxic'], [data-skin='lava'], [data-skin='vapor'], [data-skin='holo'], [data-skin='haunted'], [data-skin='candycane']) .tile:is([data-state='correct'], [data-state='present']):not([data-anim]),
+:is([data-skin='galaxy'], [data-skin='gold'], [data-skin='rainbow'], [data-skin='toxic'], [data-skin='lava'], [data-skin='vapor'], [data-skin='holo'], [data-skin='haunted'], [data-skin='candycane']) .key:is([data-state='correct'], [data-state='present']) {
   background-size: var(--skin-size, 300% 300%);
   animation: var(--skin-anim, skin-flow 6s ease-in-out infinite);
 }
@@ -846,6 +871,37 @@ button {
   animation: none !important;
 }
 
+/* Shop: limited-time specials, the mystery box and streak freezes. */
+.season-card {
+  color: #fff;
+  background: linear-gradient(140deg, #4c1d95, #7c2d12 70%, #ea580c);
+}
+.season-card[data-season='winter'] {
+  background: linear-gradient(140deg, #0c4a6e, #1e3a8a 60%, #0ea5e9);
+}
+.extra-card[data-tone='mystery'] {
+  background:
+    radial-gradient(100% 120% at 100% 0%, rgb(255 255 255 / 0.2), transparent 55%),
+    linear-gradient(140deg, #c026d3, #7c3aed 55%, #4338ca);
+}
+.extra-card[data-tone='freeze'] {
+  background:
+    radial-gradient(100% 120% at 100% 0%, rgb(255 255 255 / 0.25), transparent 55%),
+    linear-gradient(140deg, #0ea5e9, #0369a1 60%, #1e3a8a);
+}
+.mystery-wobble {
+  animation: chest-wiggle 2.2s ease-in-out infinite;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+[data-reduce-motion='true'] .mystery-wobble {
+  animation: none !important;
+}
+
 /* The free daily chest. */
 .chest-card {
   background:
@@ -1150,7 +1206,7 @@ button {
   animation: tile-jelly 3s ease-in-out infinite;
 }
 /* With animated tile colours, run both animations. */
-:is([data-skin='galaxy'], [data-skin='gold'], [data-skin='rainbow'], [data-skin='toxic'], [data-skin='lava'], [data-skin='vapor'], [data-skin='holo'])
+:is([data-skin='galaxy'], [data-skin='gold'], [data-skin='rainbow'], [data-skin='toxic'], [data-skin='lava'], [data-skin='vapor'], [data-skin='holo'], [data-skin='haunted'], [data-skin='candycane'])
   :is([data-tiles='jelly'] .tile:not([data-style]), .tile[data-style='jelly']):is([data-state='correct'], [data-state='present']):not([data-anim]) {
   animation: var(--skin-anim, skin-flow 6s ease-in-out infinite), tile-jelly 3s ease-in-out infinite;
 }
@@ -1445,6 +1501,123 @@ button {
   transition-duration: 1ms !important;
 }
 
+
+/* Keyboard skins (bought in the shop). On <html> as data-keys; a preview key
+   can carry its own data-keyskin, which then wins over the page's skin. */
+:is([data-keys='candy'] .key:not([data-keyskin]), .key[data-keyskin='candy']) {
+  border-radius: 1rem;
+  box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.1), inset 0 2px 0 rgb(255 255 255 / 0.4);
+}
+:is([data-keys='candy'] .key:not([data-keyskin]), .key[data-keyskin='candy']):not([data-state]) { --key-bg: color-mix(in srgb, var(--c-key) 45%, #f9a8d4); }
+:is([data-keys='candy'] .key:not([data-keyskin]), .key[data-keyskin='candy']):not([data-state]):nth-child(3n + 2) { --key-bg: color-mix(in srgb, var(--c-key) 45%, #7dd3fc); }
+:is([data-keys='candy'] .key:not([data-keyskin]), .key[data-keyskin='candy']):not([data-state]):nth-child(3n) { --key-bg: color-mix(in srgb, var(--c-key) 45%, #86efac); }
+:is([data-keys='candy'] .key:not([data-keyskin]), .key[data-keyskin='candy']):active { transform: scale(0.9, 0.84); }
+
+:is([data-keys='typewriter'] .key:not([data-keyskin]), .key[data-keyskin='typewriter']) {
+  border-radius: 999px;
+  font-family: 'Courier New', ui-monospace, monospace;
+  font-weight: 800;
+  box-shadow: inset 0 0 0 2px #a8a29e, inset 0 0 0 4px rgb(0 0 0 / 0.55), 0 3px 0 rgb(0 0 0 / 0.25);
+}
+:is([data-keys='typewriter'] .key:not([data-keyskin]), .key[data-keyskin='typewriter']):not([data-state]) { --key-bg: #292524; --key-ink: #f5f5f4; }
+:is([data-keys='typewriter'] .key:not([data-keyskin]), .key[data-keyskin='typewriter']):active { transform: translateY(2px); box-shadow: inset 0 0 0 2px #a8a29e, inset 0 0 0 4px rgb(0 0 0 / 0.55); }
+
+:is([data-keys='mech'] .key:not([data-keyskin]), .key[data-keyskin='mech']) {
+  border-radius: 0.45rem;
+  background: linear-gradient(rgb(255 255 255 / 0.16), transparent 55%), var(--key-bg);
+  box-shadow: inset 0 -5px 0 rgb(0 0 0 / 0.22), inset 0 1px 0 rgb(255 255 255 / 0.3), 0 2px 0 rgb(0 0 0 / 0.25);
+  font-weight: 800;
+}
+:is([data-keys='mech'] .key:not([data-keyskin]), .key[data-keyskin='mech']):active { transform: translateY(3px); box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.22), 0 0 0 rgb(0 0 0 / 0.25); }
+
+:is([data-keys='neon'] .key:not([data-keyskin]), .key[data-keyskin='neon']) {
+  --glow: #22d3ee;
+  background: color-mix(in srgb, var(--glow) 10%, transparent);
+  color: color-mix(in srgb, var(--glow) 80%, var(--c-text));
+  box-shadow: inset 0 0 0 1.5px var(--glow), 0 0 10px -3px var(--glow);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--glow) 60%, transparent);
+  animation: key-neon 2.4s ease-in-out infinite alternate;
+}
+:is([data-keys='neon'] .key:not([data-keyskin]), .key[data-keyskin='neon'])[data-state='correct'] { --glow: var(--c-correct); }
+:is([data-keys='neon'] .key:not([data-keyskin]), .key[data-keyskin='neon'])[data-state='present'] { --glow: var(--c-present); }
+:is([data-keys='neon'] .key:not([data-keyskin]), .key[data-keyskin='neon'])[data-state='absent'] { --glow: var(--c-subtle); opacity: 0.45; animation: none; }
+@keyframes key-neon {
+  from { box-shadow: inset 0 0 0 1.5px var(--glow), 0 0 6px -3px var(--glow); }
+  to { box-shadow: inset 0 0 0 1.5px var(--glow), 0 0 16px -2px var(--glow); }
+}
+[data-reduce-motion='true'] .key { animation: none !important; }
+
+/* Avatar frames and badges (bought in the shop, shown to friends). */
+.avatar-frame {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  padding: 3px;
+  flex-shrink: 0;
+}
+.avatar-frame:not([data-frame]) {
+  padding: 0;
+}
+.avatar-frame[data-frame='gold'] {
+  background: conic-gradient(from 200deg, #a16207, #fde68a, #d4a017, #fef3c7, #a16207);
+  box-shadow: 0 0 0 1px rgb(161 98 7 / 0.4), 0 2px 8px -2px rgb(161 98 7 / 0.6);
+}
+.avatar-frame[data-frame='neon'] {
+  background: #22d3ee;
+  box-shadow: 0 0 10px 1px #22d3ee, 0 0 22px -4px #a5f3fc;
+}
+.avatar-frame[data-frame='rainbow'],
+.avatar-frame[data-frame='flames'] {
+  isolation: isolate;
+}
+.avatar-frame[data-frame='rainbow']::before,
+.avatar-frame[data-frame='flames']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  animation: frame-spin 3s linear infinite;
+}
+.avatar-frame[data-frame='rainbow']::before {
+  background: conic-gradient(#ef4444, #f59e0b, #22c55e, #06b6d4, #6366f1, #d946ef, #ef4444);
+}
+.avatar-frame[data-frame='flames']::before {
+  inset: -3px;
+  background: conic-gradient(#facc15, #f97316, #dc2626, #f97316, #facc15, #fb923c, #dc2626, #facc15);
+  filter: blur(1.5px);
+  animation: frame-spin 2.2s linear infinite, frame-flicker 0.6s ease-in-out infinite alternate;
+}
+@keyframes frame-spin { to { transform: rotate(360deg); } }
+@keyframes frame-flicker {
+  from { opacity: 0.8; transform: scale(1); }
+  to { opacity: 1; transform: scale(1.06) rotate(25deg); }
+}
+.avatar-badge {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: grid;
+  place-items: center;
+  width: 46%;
+  min-width: 15px;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: var(--c-surface);
+  box-shadow: 0 0 0 2px var(--c-surface), 0 1px 4px rgb(0 0 0 / 0.3);
+}
+[data-reduce-motion='true'] .avatar-frame::before { animation: none !important; }
+
+/* Daily streak freeze chip. */
+.freeze-chip {
+  background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+  color: #075985;
+}
+.dark .freeze-chip {
+  background: linear-gradient(135deg, #0c4a6e, #075985);
+  color: #e0f2fe;
+}
 
 /* Safe areas: browsers expose env(); the Android app also provides
    --safe-area-inset-* for older WebViews that lack env() values. */

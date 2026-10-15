@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { Coins } from 'lucide-react';
 import { levelFor, type GameEvent } from '@/engine';
 import { useToast, type Reward } from '@/components/layout/Toasts';
 import { ACHIEVEMENT_ICONS } from '@/components/progress/achievementIcons';
@@ -44,6 +45,9 @@ export function useAward() {
       }
       for (const q of result.questsCompleted) {
         rewards.push({ kind: 'quest', eyebrow: 'Quest complete', title: q.title, detail: '+60 XP' });
+      }
+      for (const b of result.coinBonuses) {
+        rewards.push({ kind: 'achievement', eyebrow: 'Coin bonus', title: b.label, detail: `+${b.coins} coins`, icon: Coins });
       }
 
       // One after another, so each card gets its moment.

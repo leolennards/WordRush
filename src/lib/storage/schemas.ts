@@ -4,7 +4,22 @@ import type { Stats } from '@/engine/stats';
 import { emptyProgress, type Progress } from '@/engine/progress';
 import type { QuestState } from '@/engine/quests';
 import { SKINS, type SkinId } from '@/engine/ranks';
-import { TILE_STYLES, WIN_EFFECTS, shopItem, type TileStyleId, type WinFxId } from '@/engine/shop';
+import {
+  BADGES,
+  FRAMES,
+  KEY_SKINS,
+  SOUND_PACKS,
+  TILE_STYLES,
+  WIN_EFFECTS,
+  isFreezeId,
+  shopItem,
+  type BadgeId,
+  type FrameId,
+  type KeySkinId,
+  type SoundPackId,
+  type TileStyleId,
+  type WinFxId,
+} from '@/engine/shop';
 import type { SurvivalRun } from '@/engine/survival';
 import type { MultiState } from '@/engine/multi';
 import type { LadderState } from '@/engine/ladder';
@@ -54,6 +69,13 @@ export interface Settings {
   tileStyle: TileStyleId;
   /** What bursts out when you win (free or bought in the shop). */
   winFx: WinFxId;
+  /** On-screen keyboard look. */
+  keySkin: KeySkinId;
+  /** Sound effects pack. */
+  soundPack: SoundPackId;
+  /** Avatar frame and badge, shown to friends. */
+  frame: FrameId;
+  badge: BadgeId;
   /** Whether the first-visit help has been shown. */
   seenHelp: boolean;
 }
@@ -71,6 +93,10 @@ export const DEFAULT_SETTINGS: Settings = {
   skin: 'classic',
   tileStyle: 'classic',
   winFx: 'confetti',
+  keySkin: 'classic',
+  soundPack: 'classic',
+  frame: 'none',
+  badge: 'none',
   seenHelp: false,
 };
 
@@ -94,6 +120,10 @@ export const settingsSchema: Schema<Settings> = {
       skin: SKINS.some((x) => x.id === d.skin) ? (d.skin as SkinId) : 'classic',
       tileStyle: TILE_STYLES.some((x) => x.id === d.tileStyle) ? (d.tileStyle as TileStyleId) : 'classic',
       winFx: WIN_EFFECTS.some((x) => x.id === d.winFx) ? (d.winFx as WinFxId) : 'confetti',
+      keySkin: KEY_SKINS.some((x) => x.id === d.keySkin) ? (d.keySkin as KeySkinId) : 'classic',
+      soundPack: SOUND_PACKS.some((x) => x.id === d.soundPack) ? (d.soundPack as SoundPackId) : 'classic',
+      frame: FRAMES.some((x) => x.id === d.frame) ? (d.frame as FrameId) : 'none',
+      badge: BADGES.some((x) => x.id === d.badge) ? (d.badge as BadgeId) : 'none',
       seenHelp: bool('seenHelp'),
     };
   },
@@ -263,7 +293,7 @@ export const progressSchema: Schema<Progress> = {
       applied: Array.isArray(d.applied) ? d.applied.filter((x): x is string => typeof x === 'string') : [],
       coins: nonNegInt(d.coins) ? d.coins : 0,
       spent: nonNegInt(d.spent) ? d.spent : 0,
-      owned: Array.isArray(d.owned) ? [...new Set(d.owned.filter((x): x is string => typeof x === 'string' && shopItem(x) !== null))] : [],
+      owned: Array.isArray(d.owned) ? [...new Set(d.owned.filter((x): x is string => typeof x === 'string' && (shopItem(x) !== null || isFreezeId(x))))] : [],
     };
   },
 };

@@ -27,3 +27,4 @@ export * from './tower';
 export * from './sync';
 export * from './swap';
 export * from './shop';
+export * from './season';

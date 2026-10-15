@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { useServices } from '@/app/services';
 import { GAME } from '@/config/game';
-import { emptyStats, recordResult, type SoloMode, type GameResult, type Stats } from '@/engine';
-import { KEYS, statsSchema } from '@/lib/storage/schemas';
+import { emptyStats, frozenDays, recordResult, type SoloMode, type GameResult, type Stats } from '@/engine';
+import { KEYS, progressSchema, statsSchema } from '@/lib/storage/schemas';
 import { readVersioned, writeVersioned } from '@/lib/storage/versioned';
 
 interface StatsContextValue {
@@ -35,7 +35,9 @@ export function StatsProvider({ children }: { children: ReactNode }) {
       // Read-modify-write from storage so another tab's results are respected
       // and the same result is never counted twice.
       const current = load(mode);
-      const next = recordResult(current, result);
+      // Daily days covered by a streak freeze don't break the streak.
+      const frozen = mode === 'daily' ? frozenDays(readVersioned(store, KEYS.progress, progressSchema)?.owned ?? []) : undefined;
+      const next = recordResult(current, result, frozen);
       if (next !== current) writeVersioned(store, keyFor(mode), statsSchema, next);
       (mode === 'daily' ? setDaily : setPractice)(next);
     },

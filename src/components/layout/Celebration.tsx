@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { m } from 'motion/react';
+import { Snowflake } from 'lucide-react';
 import type { WinFxId } from '@/engine';
 import { useSettings } from '@/features/settings/SettingsContext';
 import { Coin } from '@/components/shop/Coin';
@@ -31,6 +32,10 @@ export function Celebration({ seed, fx = 'confetti' }: { seed: number; fx?: WinF
         <Stars seed={seed} />
       ) : fx === 'fireworks' ? (
         <Fireworks seed={seed} />
+      ) : fx === 'bats' ? (
+        <Bats seed={seed} />
+      ) : fx === 'snow' ? (
+        <Snow seed={seed} />
       ) : (
         <Confetti seed={seed} />
       )}
@@ -213,5 +218,72 @@ function Fireworks({ seed }: { seed: number }) {
         />
       ))}
     </span>
+  ));
+}
+
+/** A spooky swarm of bats flaps out of the board. */
+function Bats({ seed }: { seed: number }) {
+  const bats = useMemo(() => {
+    const rnd = rng(seed);
+    return Array.from({ length: 14 }, (_, i) => {
+      const angle = -Math.PI / 2 + (rnd(i, 0) - 0.5) * Math.PI * 1.6;
+      const dist = 180 + rnd(i, 1) * 160;
+      return {
+        x: Math.cos(angle) * dist,
+        y: Math.sin(angle) * dist,
+        size: 22 + rnd(i, 2) * 18,
+        delay: rnd(i, 3) * 0.4,
+        flap: 0.14 + rnd(i, 4) * 0.08,
+      };
+    });
+  }, [seed]);
+  return bats.map((b, i) => (
+    <m.span
+      key={i}
+      className="absolute"
+      initial={{ x: 0, y: 20, opacity: 0, scale: 0.3 }}
+      animate={{ x: [0, b.x * 0.4, b.x], y: [20, b.y * 0.5 - 20, b.y], opacity: [0, 1, 1, 0], scale: [0.3, 1, 0.8] }}
+      transition={{ duration: 1.8, delay: b.delay, ease: 'easeOut' }}
+    >
+      <m.svg
+        viewBox="0 0 64 32"
+        style={{ width: b.size, height: b.size / 2, filter: 'drop-shadow(0 0 4px rgb(249 115 22 / 0.6))' }}
+        animate={{ scaleY: [1, 0.35, 1] }}
+        transition={{ duration: b.flap * 2, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <path
+          d="M32 10c2-3 3-6 3-8l2 6 4-2c3 6 10 9 23 8-6 3-8 8-8 14-4-4-9-5-13-2-2-4-6-6-11-6s-9 2-11 6c-4-3-9-2-13 2 0-6-2-11-8-14 13 1 20-2 23-8l4 2 2-6c0 2 1 5 3 8z"
+          fill="#1c1917"
+        />
+        <circle cx="29.5" cy="12" r="1.3" fill="#fb923c" />
+        <circle cx="34.5" cy="12" r="1.3" fill="#fb923c" />
+      </m.svg>
+    </m.span>
+  ));
+}
+
+/** Soft snowflakes drift down over the board. */
+function Snow({ seed }: { seed: number }) {
+  const flakes = useMemo(() => {
+    const rnd = rng(seed);
+    return Array.from({ length: 26 }, (_, i) => ({
+      x: (rnd(i, 0) - 0.5) * 380,
+      sway: (rnd(i, 1) - 0.5) * 50,
+      size: 10 + rnd(i, 2) * 16,
+      delay: rnd(i, 3) * 0.9,
+      spin: (rnd(i, 4) - 0.5) * 360,
+    }));
+  }, [seed]);
+  return flakes.map((f, i) => (
+    <m.span
+      key={i}
+      className="absolute text-sky-200"
+      style={{ filter: 'drop-shadow(0 0 3px rgb(56 189 248 / 0.8))' }}
+      initial={{ x: f.x, y: -260, opacity: 0, rotate: 0 }}
+      animate={{ x: [f.x, f.x + f.sway, f.x - f.sway, f.x], y: [-260, 260], opacity: [0, 1, 1, 0], rotate: f.spin }}
+      transition={{ duration: 2.4, delay: f.delay, ease: 'linear' }}
+    >
+      <Snowflake style={{ width: f.size, height: f.size }} strokeWidth={2.5} aria-hidden />
+    </m.span>
   ));
 }

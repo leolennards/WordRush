@@ -42,7 +42,7 @@ import {
   type Firestore,
 } from 'firebase/firestore';
 import { finishRound, generateFriendCode, resolveRace, roundOver, type RacerProgress, type Swap, type SwapDoc } from '@/engine';
-import type { Account, ChallengeDoc, DailySummary, FriendLink, PlayerDoc, RaceDoc, RaceProgress } from './types';
+import type { Account, ChallengeDoc, DailySummary, FriendLink, GiftDoc, PlayerDoc, RaceDoc, RaceProgress } from './types';
 import { firebaseConfig } from './config';
 import { isNativeApp } from '@/lib/native/platform';
 
@@ -239,6 +239,50 @@ export async function renameProfile(uid: string, name: string) {
 
 export async function publishDaily(uid: string, daily: DailySummary) {
   await updateDoc(doc(handles().db, 'players', uid), { daily });
+}
+
+/** Shows my avatar frame and badge to friends. */
+export async function publishLook(uid: string, look: { frame: string | null; badge: string | null }) {
+  await updateDoc(doc(handles().db, 'players', uid), look);
+}
+
+// ---------- Gifts ----------
+
+export async function sendGift(from: string, to: string, gift: Pick<GiftDoc, 'kind' | 'coins' | 'item'>): Promise<string> {
+  const { db } = handles();
+  const ref = doc(collection(db, 'gifts'));
+  const data: GiftDoc = {
+    from,
+    to,
+    kind: gift.kind,
+    ...(gift.kind === 'coins' ? { coins: gift.coins } : { item: gift.item }),
+    createdAt: Date.now(),
+    claimed: false,
+  };
+  await setDoc(ref, data);
+  return ref.id;
+}
+
+/** Gifts waiting for me to open. */
+export function watchGifts(me: string, cb: (list: (GiftDoc & { id: string })[]) => void, onError?: (e: Error) => void) {
+  const q = query(collection(handles().db, 'gifts'), where('to', '==', me), where('claimed', '==', false), limit(20));
+  return onSnapshot(
+    q,
+    (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as GiftDoc) }))),
+    (e) => onError?.(e),
+  );
+}
+
+/** Marks a gift opened; false if it was already opened (say on another device). */
+export async function claimGift(id: string): Promise<boolean> {
+  const { db } = handles();
+  return runTransaction(db, async (tx) => {
+    const ref = doc(db, 'gifts', id);
+    const snap = await tx.get(ref);
+    if (!snap.exists() || (snap.data() as GiftDoc).claimed) return false;
+    tx.update(ref, { claimed: true });
+    return true;
+  });
 }
 
 // ---------- Friends ----------

@@ -1,31 +1,7 @@
 import { m } from 'motion/react';
-import {
-  ArrowDownUp,
-  ArrowRight,
-  Bot,
-  Castle,
-  Award,
-  Palette,
-  BookOpen,
-  CalendarClock,
-  Grid2x2,
-  BarChart3,
-  ChevronRight,
-  CircleHelp,
-  Clock3,
-  Columns2,
-  Flame,
-  Footprints,
-  Heart,
-  Settings,
-  Shuffle,
-  Smartphone,
-  Trophy,
-  Users,
-  Zap,
-} from 'lucide-react';
+import { ArrowDownUp, ArrowRight, Award, BarChart3, BookOpen, Bot, CalendarClock, Castle, ChevronRight, CircleHelp, Clock3, Columns2, Flame, Footprints, Grid2x2, Heart, Palette, Settings, Shuffle, Smartphone, Snowflake, Trophy, Users, Zap } from 'lucide-react';
 import { BRAND, GAME } from '@/config/game';
-import { ACHIEVEMENTS, SHOP_ITEMS, chestReady, coinBalance, effectiveStreak, owns, winPercentage, type GameState, type Progress, type Stats } from '@/engine';
+import { ACHIEVEMENTS, SHOP_ITEMS, chestReady, coinBalance, effectiveStreak, freezesHeld, frozenDays, owns, winPercentage, type GameState, type Progress, type Stats } from '@/engine';
 import { Coin } from '@/components/shop/Coin';
 import { LevelBar } from '@/components/progress/LevelBar';
 import { MiniBoard } from './MiniBoard';
@@ -106,7 +82,8 @@ export function Home(props: HomeProps) {
   const { daily, practice, dailyStats, practiceStats } = props;
   const copy = dailyCopy(daily);
   const dailyDone = daily.status !== 'playing';
-  const streak = effectiveStreak(dailyStats, props.todayIndex);
+  const streak = effectiveStreak(dailyStats, props.todayIndex, frozenDays(props.progress.owned));
+  const freezes = freezesHeld(props.progress.owned);
   const practiceInProgress = practice.status === 'playing' && practice.guesses.length > 0;
   const unlocked = ACHIEVEMENTS.filter((a) => props.progress.unlocked[a.id]).length;
   const best = props.progress.bestBlitz;
@@ -376,6 +353,12 @@ export function Home(props: HomeProps) {
                   </div>
                 ))}
               </dl>
+            )}
+            {freezes > 0 && dailyStats.played > 0 && (
+              <p className="freeze-chip mx-4 mb-4 flex items-center justify-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold">
+                <Snowflake className="size-3.5" aria-hidden />
+                {freezes === 1 ? '1 streak freeze' : `${freezes} streak freezes`} protecting your streak
+              </p>
             )}
           </m.section>
 

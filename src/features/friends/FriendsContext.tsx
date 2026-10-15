@@ -7,7 +7,10 @@ import type { SaveDoc } from './api';
 import { swapWaitingOn, type Swap } from '@/engine';
 import { useToast } from '@/components/layout/Toasts';
 import { notify } from '@/lib/notify';
-import type { Account, Challenge, DailySummary, Friend, FinishedResult, FriendLink, PlayerDoc, Race, RaceProgress } from './types';
+import { useSettings } from '@/features/settings/SettingsContext';
+import type { Account, Challenge, DailySummary, Friend, FinishedResult, FriendLink, GiftDoc, PlayerDoc, Race, RaceProgress } from './types';
+
+export type ReceivedGift = GiftDoc & { id: string };
 
 type Api = typeof import('./api');
 
@@ -47,6 +50,14 @@ interface FriendsContextValue {
   /** Permanently delete my profile, code, friendships and account. */
   deleteProfile: () => Promise<void>;
   nameOf: (uid: string) => string;
+  /** A player's avatar frame and badge (mine from my settings). */
+  lookOf: (uid: string) => { frame: string | null; badge: string | null };
+  /** Gifts from friends waiting to be opened. */
+  gifts: ReceivedGift[];
+  /** Sends a friend coins or a shop item (paid for separately). */
+  sendGift: (uid: string, gift: Pick<GiftDoc, 'kind' | 'coins' | 'item'>) => Promise<void>;
+  /** Opens a gift; false if it was already opened elsewhere. */
+  claimGift: (id: string) => Promise<boolean>;
   /** Word Swap. */
   startSwap: (uid: string) => Promise<string>;
   pickSwapWord: (id: string, word: string) => Promise<void>;
@@ -88,7 +99,9 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [swaps, setSwaps] = useState<Swap[]>([]);
   const [races, setRaces] = useState<Race[]>([]);
+  const [gifts, setGifts] = useState<ReceivedGift[]>([]);
   const api = useRef<Api | null>(null);
+  const { settings } = useSettings();
 
   const fail = useCallback((e: unknown) => {
     setError(e instanceof Error ? e.message : String(e));
@@ -117,6 +130,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
             setChallenges([]);
             setSwaps([]);
             setRaces([]);
+            setGifts([]);
             setUid(acct.uid);
           }
         });
@@ -165,9 +179,22 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       a.watchChallenges(uid, setChallenges, fail),
       a.watchRaces(uid, setRaces, fail),
       a.watchSwaps(uid, setSwaps, fail),
+      // Gifts are a bonus: if they can't load, the rest of Friends still works.
+      a.watchGifts(uid, setGifts),
     ];
     return () => unsubs.forEach((u) => u());
   }, [ready, uid, fail]);
+
+  // Show my avatar frame and badge to friends.
+  const myFrame = settings.frame === 'none' ? null : settings.frame;
+  const myBadge = settings.badge === 'none' ? null : settings.badge;
+  useEffect(() => {
+    if (!ready || !api.current || !uid || !profile) return;
+    if ((profile.frame ?? null) === myFrame && (profile.badge ?? null) === myBadge) return;
+    api.current.publishLook(uid, { frame: myFrame, badge: myBadge }).catch(() => {
+      /* Best effort: tried again on the next change. */
+    });
+  }, [ready, uid, profile, myFrame, myBadge]);
 
   // Live: each friend's public profile (name + today's result).
   const linkKey = links.map((l) => l.uid).sort().join(',');
@@ -260,6 +287,16 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       swaps,
       connect,
       nameOf,
+      lookOf: (id: string) =>
+        id === uid ? { frame: myFrame, badge: myBadge } : { frame: profiles[id]?.frame ?? null, badge: profiles[id]?.badge ?? null },
+      gifts,
+      async sendGift(friendUid, gift) {
+        const { a, me } = need();
+        await a.sendGift(me, friendUid, gift);
+      },
+      async claimGift(id) {
+        return need().a.claimGift(id);
+      },
       cloud,
       async startSwap(friendUid) {
         const { a, me } = need();
@@ -379,7 +416,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         });
       },
     };
-  }, [status, error, uid, account, profile, links, profiles, challenges, races, swaps, connect, need, pickAnswer, fail, store, configured, startConnection, cloud]);
+  }, [status, error, uid, account, profile, links, profiles, challenges, races, swaps, gifts, myFrame, myBadge, connect, need, pickAnswer, fail, store, configured, startConnection, cloud]);
 
   return <FriendsContext.Provider value={value}>{children}</FriendsContext.Provider>;
 }

@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.14.0 — 2026-10-15 (gifts, frames and badges, streak freezes, mystery boxes, keyboards and sounds)
+
+- **Gifts:** send a friend 50–500 coins, or buy them anything on sale, from their card on the Friends page. They
+  get a gift card to open with a shake-and-burst reveal. Already own it? They get its price in coins. Each gift
+  opens once across devices.
+- **Avatar frames and badges:** Gold, Neon, and animated Rainbow and Flame rings; Star, Heart, Lightning, Crown and
+  Diamond badges. Friends see them on your avatar everywhere in Friends.
+- **Streak freeze** (250 coins, hold 2): covers a missed Daily Challenge automatically so your streak carries on.
+  Home shows how many you have.
+- **Mystery box** (600 coins): a random item you don't own yet, revealed with an animation.
+- **Keyboards:** Candy Pop, Typewriter, Mechanical and animated Neon Glow.
+- **Sound packs:** Bubble Pop, Marimba, 8-bit Arcade and Typewriter (tap Listen to hear one).
+- **Limited-time items:** Halloween (Haunted tile colours, Bat Swarm win effect) until 7 November; Winter (Candy
+  Cane, Snowfall) from 1 December to 10 January.
+- **Coin bonuses:** +50 for a first-guess solve, +40 for finishing all three daily quests, +100 for every week of
+  Daily streak.
+- The shop's sections are now a scrollable row: Colours, Styles, Keyboards, Sounds, Win effects, Frames, Badges.
+  Settings → Tile theme has pickers for all of them.
+- **Android app 1.14.0** (versionCode 15).
+
 ## 1.13.0 — 2026-10-15 (more shop: animated styles, win effects, daily chest)
 
 - **Daily chest:** a free chest in the shop opens once a day for 20–80 coins (once across your devices with

@@ -16,6 +16,7 @@ service cloud.firestore {
     function areFriends(a, b) {
       return exists(/databases/$(database)/documents/players/$(a)/friends/$(b));
     }
+    function validLook(x) { return x == null || (x is string && x.matches('^[a-z]{1,12}$')); }
     function validDaily(d) {
       return d == null || (
         d is map
@@ -45,15 +46,17 @@ service cloud.firestore {
       allow get: if signedIn();
       allow list: if false;
       allow create: if signedIn() && me() == uid
-        && request.resource.data.keys().hasOnly(['name', 'code', 'createdAt', 'daily'])
+        && request.resource.data.keys().hasOnly(['name', 'code', 'createdAt', 'daily', 'frame', 'badge'])
         && validName(request.resource.data.name)
         && validCode(request.resource.data.code)
         && getAfter(/databases/$(database)/documents/codes/$(request.resource.data.code)).data.uid == uid
         && validDaily(request.resource.data.get('daily', null));
       allow update: if signedIn() && me() == uid
-        && onlyChanged(['name', 'daily'])
+        && onlyChanged(['name', 'daily', 'frame', 'badge'])
         && validName(request.resource.data.name)
-        && validDaily(request.resource.data.get('daily', null));
+        && validDaily(request.resource.data.get('daily', null))
+        && validLook(request.resource.data.get('frame', null))
+        && validLook(request.resource.data.get('badge', null));
       // "Delete my profile" (required by the app stores).
       allow delete: if signedIn() && me() == uid;
 
@@ -172,6 +175,29 @@ service cloud.firestore {
       allow update: if isPlayer() && (picks() || guesses() || finishes() || nudges());
       // Either player can end the match.
       allow delete: if isPlayer();
+    }
+
+    // ---- Gifts between friends: coins or a shop item, opened once by the recipient. ----
+    match /gifts/{id} {
+      function gift() { return request.resource.data; }
+      allow get, list: if signedIn() && (resource.data.to == me() || resource.data.from == me());
+      allow create: if signedIn()
+        && gift().from == me()
+        && gift().to is string && gift().to != me()
+        && areFriends(me(), gift().to)
+        && gift().createdAt is int
+        && gift().claimed == false
+        && ((gift().kind == 'coins'
+              && gift().keys().hasOnly(['from', 'to', 'kind', 'coins', 'createdAt', 'claimed'])
+              && gift().coins in [50, 100, 250, 500])
+          || (gift().kind == 'item'
+              && gift().keys().hasOnly(['from', 'to', 'kind', 'item', 'createdAt', 'claimed'])
+              && gift().item is string && gift().item.matches('^[a-z]+:[a-z0-9-]{1,40}$')));
+      // Only the recipient opens it, once.
+      allow update: if signedIn() && resource.data.to == me()
+        && resource.data.claimed == false
+        && onlyChanged(['claimed']) && gift().claimed == true;
+      allow delete: if false;
     }
 
     // ---- Live races. ----

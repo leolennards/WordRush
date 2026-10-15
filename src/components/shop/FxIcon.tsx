@@ -1,4 +1,4 @@
-import { Heart, PartyPopper, Sparkles, Star } from 'lucide-react';
+import { Ghost, Heart, PartyPopper, Snowflake, Sparkles, Star } from 'lucide-react';
 import type { WinFxId } from '@/engine';
 import { Coin } from './Coin';
 
@@ -11,6 +11,10 @@ export function FxIcon({ id, className = 'size-5' }: { id: WinFxId; className?: 
       return <Coin className={className} />;
     case 'stars':
       return <Star className={`${className} fill-current text-amber-400`} aria-hidden />;
+    case 'bats':
+      return <Ghost className={`${className} text-orange-500`} aria-hidden />;
+    case 'snow':
+      return <Snowflake className={`${className} text-sky-400`} aria-hidden />;
     case 'fireworks':
       return <Sparkles className={`${className} text-fuchsia-500`} aria-hidden />;
     default:

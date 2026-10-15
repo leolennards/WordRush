@@ -6,7 +6,7 @@
 import { QUEST_XP, advanceQuests, questsFor, type Quest, type QuestState } from './quests';
 import type { Mod } from './types';
 import { rankFor, type Rank } from './ranks';
-import { coinsFor } from './shop';
+import { COIN_REWARDS, coinsFor, type CoinBonus } from './shop';
 
 /** XP multiplier for each mod on a won game. */
 export const MOD_BONUS: Record<Mod, number> = { fog: 0.3, blind: 0.25, liar: 0.4 };
@@ -213,8 +213,10 @@ export interface ApplyResult {
   rankUp: Rank | null;
   /** Daily quests this event completed (their XP is included in xpGained). */
   questsCompleted: Quest[];
-  /** Wordskiis coins this event earned. */
+  /** Wordskiis coins this event earned (bonuses included). */
   coinsGained: number;
+  /** Extra coins for a special result (first-guess solve, all quests done, a week of streak). */
+  coinBonuses: CoinBonus[];
 }
 
 /** A run-based mode (Blitz, Survival) has no single win; everything else does. */
@@ -226,7 +228,7 @@ const isRun = (e: GameEvent) => e.mode === 'blitz' || e.mode === 'survival' || e
  */
 export function applyEvent(progress: Progress, e: GameEvent, now: number, day = 0): ApplyResult {
   if (progress.applied.includes(e.id)) {
-    return { progress, xpGained: 0, unlocked: [], levelUp: null, rankUp: null, questsCompleted: [], coinsGained: 0 };
+    return { progress, xpGained: 0, unlocked: [], levelUp: null, rankUp: null, questsCompleted: [], coinsGained: 0, coinBonuses: [] };
   }
 
   const quests = advanceQuests(progress.quests, day, e);
@@ -265,11 +267,23 @@ export function applyEvent(progress: Progress, e: GameEvent, now: number, day = 
   const rankBefore = rankFor(before).rank;
   const rankAfter = rankFor(after).rank;
   const rankUp = rankAfter.id !== rankBefore.id;
-  const coinsGained = coinsFor(xpGained, unlocked.length, Math.max(0, after - before), rankUp);
+  const coinBonuses: CoinBonus[] = [];
+  const wordGame = e.mode === 'daily' || e.mode === 'practice' || e.mode === 'duel' || (e.mode === 'swap' && !e.swapPicker);
+  if (e.won && wordGame && e.guesses === 1) {
+    coinBonuses.push({ id: 'firstGuess', label: 'First-guess bonus', coins: COIN_REWARDS.firstGuess });
+  }
+  if (quests.completed.length > 0 && questsFor(day).every((q) => (quests.state.progress[q.id] ?? 0) >= q.target)) {
+    coinBonuses.push({ id: 'allQuests', label: 'All quests done', coins: COIN_REWARDS.allQuests });
+  }
+  if (e.mode === 'daily' && e.won && (e.streak ?? 0) > 0 && e.streak! % 7 === 0) {
+    coinBonuses.push({ id: 'streakWeek', label: `${e.streak}-day streak`, coins: COIN_REWARDS.streakWeek });
+  }
+  const coinsGained = coinsFor(xpGained, unlocked.length, Math.max(0, after - before), rankUp, coinBonuses);
   next.coins += coinsGained;
   return {
     progress: next,
     coinsGained,
+    coinBonuses,
     xpGained,
     unlocked,
     levelUp: after > before ? after : null,

@@ -1,6 +1,7 @@
 import { m } from 'motion/react';
 import { BarChart3 } from 'lucide-react';
-import { averageGuesses, effectiveStreak, winPercentage, type Stats } from '@/engine';
+import { averageGuesses, effectiveStreak, frozenDays, winPercentage, type Stats } from '@/engine';
+import { useProgress } from '@/features/progress/ProgressContext';
 import { useSettings } from '@/features/settings/SettingsContext';
 
 interface StatsPanelProps {
@@ -13,6 +14,7 @@ interface StatsPanelProps {
 }
 
 export function StatsPanel({ stats, currentKey, highlight, streakLabel = 'Streak' }: StatsPanelProps) {
+  const { owned } = useProgress().progress;
   const { reducedMotion } = useSettings();
   const avg = averageGuesses(stats);
   const maxCount = Math.max(1, ...stats.distribution);
@@ -20,7 +22,7 @@ export function StatsPanel({ stats, currentKey, highlight, streakLabel = 'Streak
   const items = [
     { label: 'Played', value: stats.played },
     { label: 'Win %', value: winPercentage(stats) },
-    { label: streakLabel, value: effectiveStreak(stats, currentKey) },
+    { label: streakLabel, value: effectiveStreak(stats, currentKey, frozenDays(owned)) },
     { label: 'Best', value: stats.maxStreak },
   ];
 

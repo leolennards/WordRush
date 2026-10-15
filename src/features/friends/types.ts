@@ -14,6 +14,20 @@ export interface PlayerDoc {
   code: string;
   createdAt: number;
   daily: DailySummary | null;
+  /** Avatar frame and badge from the shop (absent = none). */
+  frame?: string | null;
+  badge?: string | null;
+}
+
+/** A present from a friend: coins, or a shop item. */
+export interface GiftDoc {
+  from: string;
+  to: string;
+  kind: 'coins' | 'item';
+  coins?: number;
+  item?: string;
+  createdAt: number;
+  claimed: boolean;
 }
 
 export interface FriendLink {

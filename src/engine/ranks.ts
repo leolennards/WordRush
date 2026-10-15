@@ -4,6 +4,8 @@
  * sparks and, at the top, an animated prismatic emblem. Some ranks unlock
  * a tile theme.
  */
+import { HALLOWEEN, WINTER, type Season } from './season';
+
 export interface Rank {
   id: string;
   name: string;
@@ -27,7 +29,8 @@ export type SkinId =
 /** Tile themes sold in the shop for coins. */
 export type ShopSkinId =
   | 'citrus' | 'sakura' | 'berry' | 'arctic' | 'matcha' | 'midnight' | 'retro' | 'coral' | 'cyber'
-  | 'galaxy' | 'toxic' | 'lava' | 'vapor' | 'gold' | 'holo' | 'rainbow';
+  | 'galaxy' | 'toxic' | 'lava' | 'vapor' | 'gold' | 'holo' | 'rainbow'
+  | 'haunted' | 'candycane';
 
 export const RANKS: readonly Rank[] = [
   { id: 'rookie', name: 'Rookie', minLevel: 1, from: '#9aa1ad', to: '#6b7280', ink: '#ffffff', effects: 0 },
@@ -60,6 +63,8 @@ export interface Skin {
   free?: boolean;
   /** Sold in the shop for this many coins (no level needed). */
   price?: number;
+  /** Only on sale at this time of year. */
+  season?: Season;
 }
 
 export const SKINS: readonly Skin[] = [
@@ -98,6 +103,8 @@ export const SKINS: readonly Skin[] = [
   { id: 'gold', name: 'Solid Gold', minLevel: 1, swatch: ['#d4a017', '#9ca3af'], animated: true, price: 2200 },
   { id: 'holo', name: 'Hologram', minLevel: 1, swatch: ['#a5f3fc', '#f0abfc'], animated: true, price: 2600 },
   { id: 'rainbow', name: 'Rainbow', minLevel: 1, swatch: ['#ef4444', '#3b82f6'], animated: true, price: 3000 },
+  { id: 'haunted', name: 'Haunted', minLevel: 1, swatch: ['#f97316', '#7c3aed'], animated: true, price: 1200, season: HALLOWEEN },
+  { id: 'candycane', name: 'Candy Cane', minLevel: 1, swatch: ['#dc2626', '#16a34a'], animated: true, price: 1200, season: WINTER },
 ];
 
 /** Whether a tile theme can be used: free, reached by rank, or bought in the shop. */
