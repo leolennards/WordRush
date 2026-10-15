@@ -207,8 +207,11 @@ the next game. Hard-mode results are marked with `*` when shared.
   - Sound packs (with sound effects on): Bubble Pop, Marimba, 8-bit Arcade and Typewriter.
   - Win effects (what bursts out when you win): Love Hearts, Coin Shower, Starfall and Fireworks.
     Confetti is free.
-  - Avatar frames (Gold, Neon, and the animated Rainbow and Flame rings) and badges (Star, Heart,
-    Lightning, Crown, Diamond). Friends see them next to your name everywhere in Friends.
+  - Backgrounds (animated scenes behind the app) and app colours (free: Mint, Ocean, Grape, Rose).
+  - Profile items: avatar frames, badges, titles and banners. Friends see them on your profile card and
+    friend list.
+- **Profile:** tap your picture at the top to edit it. Your picture can be your initial, an emoji or a photo
+  (cropped to a small square and visible only to friends), on a colour you choose. All free.
 - Limited-time items are only on sale in their season: Halloween (1 October – 7 November: Haunted tile
   colours and the Bat Swarm win effect) and Winter (1 December – 10 January: Candy Cane tile colours and
   the Snowfall win effect). Once bought they're yours to keep all year. They're never the daily deal or

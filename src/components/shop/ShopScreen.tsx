@@ -28,6 +28,7 @@ import { useCountdown } from '@/hooks/useToday';
 import { playCue } from '@/lib/audio/sound';
 import { buzz } from '@/lib/haptics';
 import { useToast } from '@/components/layout/Toasts';
+import { Segmented } from '@/components/ui';
 import { GiftDialog } from '@/components/friends/GiftDialog';
 import { Coin } from './Coin';
 import { Rolling } from './CoinChip';
@@ -36,18 +37,25 @@ import { ItemPreview } from './Previews';
 import { KIND_DETAIL, KIND_LABEL, SETTING_FOR } from './kinds';
 import { Reveal, type Prize } from './Reveal';
 
-const TABS: { value: ItemKind; label: string }[] = [
-  { value: 'skin', label: 'Colours' },
-  { value: 'tiles', label: 'Styles' },
-  { value: 'keys', label: 'Keyboards' },
-  { value: 'sound', label: 'Sounds' },
-  { value: 'fx', label: 'Win effects' },
-  { value: 'frame', label: 'Frames' },
-  { value: 'badge', label: 'Badges' },
+type Group = 'game' | 'app' | 'profile';
+
+const TABS: { value: ItemKind; label: string; group: Group }[] = [
+  { value: 'skin', label: 'Colours', group: 'game' },
+  { value: 'tiles', label: 'Styles', group: 'game' },
+  { value: 'keys', label: 'Keyboards', group: 'game' },
+  { value: 'sound', label: 'Sounds', group: 'game' },
+  { value: 'fx', label: 'Win effects', group: 'game' },
+  { value: 'bg', label: 'Backgrounds', group: 'app' },
+  { value: 'accent', label: 'App colours', group: 'app' },
+  { value: 'frame', label: 'Frames', group: 'profile' },
+  { value: 'badge', label: 'Badges', group: 'profile' },
+  { value: 'title', label: 'Titles', group: 'profile' },
+  { value: 'banner', label: 'Banners', group: 'profile' },
 ];
+const GROUP_OF = Object.fromEntries(TABS.map((t) => [t.value, t.group])) as Record<ItemKind, Group>;
 
 /** The shop: spend Wordskiis coins on looks, sounds, effects and extras. */
-export function ShopScreen({ onBack }: { onBack: () => void }) {
+export function ShopScreen({ onBack, onProfile }: { onBack: () => void; onProfile?: () => void }) {
   const { progress, buy, buyFreeze, openMystery } = useProgress();
   const { settings, update } = useSettings();
   const { now } = useServices();
@@ -112,7 +120,8 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
         kind: 'achievement',
         eyebrow: 'New in your collection',
         title: item.name,
-        detail: item.kind === 'sound' && !settings.sound ? 'Turn on sound effects in Settings to hear it' : KIND_DETAIL[item.kind],
+        detail:
+          item.kind === 'sound' && !settings.sound ? 'Turn on sound effects in Settings to hear it' : KIND_DETAIL[item.kind],
         icon: Sparkles,
       },
     });
@@ -126,7 +135,9 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
       return;
     }
     celebrate();
-    toast('Streak freeze ready: a missed Daily won’t break your streak', { tone: 'success' });
+    toast('Streak freeze ready: a missed Daily won’t break your streak', {
+      tone: 'success',
+    });
   };
 
   const pressMystery = () => {
@@ -190,7 +201,7 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
         >
           <span className="feature-card-shine" aria-hidden />
           <div className="relative flex items-center gap-4">
-            <Coin className="size-16 drop-shadow-lg" spin shine sparkle />
+            <Coin className="size-16" hero />
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold tracking-[0.14em] text-white/75 uppercase">Your coins</p>
               <p className="coin-hero-amount tabular text-4xl leading-none font-black">
@@ -298,7 +309,27 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
           />
         </div>
 
+        <div className="mt-6 flex justify-center">
+          <Segmented<Group>
+            label="Shop area"
+            value={GROUP_OF[tab]}
+            onChange={(g) => setTab(TABS.find((t) => t.group === g)!.value)}
+            options={[
+              { value: 'game', label: 'Game' },
+              { value: 'app', label: 'App' },
+              { value: 'profile', label: 'Profile' },
+            ]}
+          />
+        </div>
         <ShopTabs value={tab} onChange={setTab} />
+        {GROUP_OF[tab] === 'profile' && onProfile && (
+          <p className="mt-2 text-center text-xs text-muted">
+            Friends see these on your profile.{' '}
+            <button type="button" onClick={onProfile} className="font-semibold text-accent underline-offset-2 hover:underline">
+              Edit your profile and picture
+            </button>
+          </p>
+        )}
 
         <AnimatePresence mode="popLayout">
           <m.ul
@@ -333,16 +364,19 @@ function ShopTabs({ value, onChange }: { value: ItemKind; onChange: (v: ItemKind
     const el = active.current;
     const box = row.current;
     if (!el || !box) return;
-    box.scrollTo({ left: el.offsetLeft - (box.clientWidth - el.offsetWidth) / 2, behavior: 'smooth' });
+    box.scrollTo({
+      left: el.offsetLeft - (box.clientWidth - el.offsetWidth) / 2,
+      behavior: 'smooth',
+    });
   }, [value]);
   return (
     <div
       ref={row}
       role="radiogroup"
       aria-label="Shop section"
-      className="no-scrollbar relative -mx-4 mt-6 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:flex-wrap sm:justify-center"
+      className="no-scrollbar relative -mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:flex-wrap sm:justify-center"
     >
-      {TABS.map((t) => {
+      {TABS.filter((t) => t.group === GROUP_OF[value]).map((t) => {
         const on = t.value === value;
         return (
           <button
@@ -391,7 +425,11 @@ function ItemCard({
     <m.li
       initial={{ opacity: 0, y: 12, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: index * 0.03, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      transition={{
+        delay: index * 0.03,
+        duration: 0.3,
+        ease: [0.22, 1, 0.36, 1],
+      }}
       className={`shop-card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border bg-surface p-3 text-text transition ${
         equipped ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
       }`}
@@ -459,9 +497,15 @@ function Extra({
 }) {
   const what = title.toLowerCase();
   return (
-    <section className="extra-card flex flex-col gap-3 rounded-[var(--radius-card)] p-4 text-white shadow-md" data-tone={tone} aria-label={title}>
+    <section
+      className="extra-card flex flex-col gap-3 rounded-[var(--radius-card)] p-4 text-white shadow-md"
+      data-tone={tone}
+      aria-label={title}
+    >
       <div className="flex items-start gap-3">
-        <span className={`grid size-12 shrink-0 place-items-center rounded-2xl bg-white/20 ${tone === 'mystery' && !disabled ? 'mystery-wobble' : ''}`}>
+        <span
+          className={`grid size-12 shrink-0 place-items-center rounded-2xl bg-white/20 ${tone === 'mystery' && !disabled ? 'mystery-wobble' : ''}`}
+        >
           {icon}
         </span>
         <div className="min-w-0">
@@ -584,7 +628,11 @@ function CoinBurst() {
       Array.from({ length: 12 }, (_, i) => {
         const angle = (i / 12) * Math.PI * 2;
         const dist = 60 + (i % 3) * 18;
-        return { x: Math.cos(angle) * dist, y: Math.sin(angle) * dist - 20, r: (i % 2 ? 1 : -1) * (180 + i * 20) };
+        return {
+          x: Math.cos(angle) * dist,
+          y: Math.sin(angle) * dist - 20,
+          r: (i % 2 ? 1 : -1) * (180 + i * 20),
+        };
       }),
     [],
   );

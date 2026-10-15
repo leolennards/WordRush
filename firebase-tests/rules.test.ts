@@ -307,6 +307,17 @@ describe('profile looks', () => {
     await assertFails(updateDoc(doc(db('alice'), 'players', 'alice'), { badge: 'x'.repeat(13) }));
     await assertFails(updateDoc(doc(db('bob'), 'players', 'alice'), { frame: 'gold' }));
   });
+
+  it('accepts a profile picture: an emoji or a small photo, nothing else', async () => {
+    await makePlayer('alice', 'AAAAAA');
+    const me = doc(db('alice'), 'players', 'alice');
+    await assertSucceeds(updateDoc(me, { avatar: '🦊', tint: 'sky', title: 'wizard', banner: 'aurora' }));
+    await assertSucceeds(updateDoc(me, { avatar: 'photo', photo: 'data:image/jpeg;base64,/9j/4AAQSkZJRg==' }));
+    await assertFails(updateDoc(me, { photo: 'https://example.com/me.png' }));
+    await assertFails(updateDoc(me, { photo: 'data:image/svg+xml;base64,PHN2Zz4=' }));
+    await assertFails(updateDoc(me, { photo: `data:image/jpeg;base64,${'A'.repeat(16001)}` }));
+    await assertFails(updateDoc(me, { avatar: 'x'.repeat(17) }));
+  });
 });
 
 describe('gifts', () => {

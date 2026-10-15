@@ -17,6 +17,24 @@ export interface PlayerDoc {
   /** Avatar frame and badge from the shop (absent = none). */
   frame?: string | null;
   badge?: string | null;
+  /** Profile picture: an emoji, 'photo' (with `photo`, a small data URL), or absent for their initial. */
+  avatar?: string | null;
+  photo?: string | null;
+  tint?: string | null;
+  /** Title and banner from the shop. */
+  title?: string | null;
+  banner?: string | null;
+}
+
+/** What friends see of my profile, besides my name. */
+export interface PlayerLook {
+  frame: string | null;
+  badge: string | null;
+  avatar: string | null;
+  photo: string | null;
+  tint: string | null;
+  title: string | null;
+  banner: string | null;
 }
 
 /** A present from a friend: coins, or a shop item. */

@@ -42,7 +42,7 @@ import {
   type Firestore,
 } from 'firebase/firestore';
 import { finishRound, generateFriendCode, resolveRace, roundOver, type RacerProgress, type Swap, type SwapDoc } from '@/engine';
-import type { Account, ChallengeDoc, DailySummary, FriendLink, GiftDoc, PlayerDoc, RaceDoc, RaceProgress } from './types';
+import type { Account, ChallengeDoc, DailySummary, FriendLink, GiftDoc, PlayerDoc, PlayerLook, RaceDoc, RaceProgress } from './types';
 import { firebaseConfig } from './config';
 import { isNativeApp } from '@/lib/native/platform';
 
@@ -241,8 +241,8 @@ export async function publishDaily(uid: string, daily: DailySummary) {
   await updateDoc(doc(handles().db, 'players', uid), { daily });
 }
 
-/** Shows my avatar frame and badge to friends. */
-export async function publishLook(uid: string, look: { frame: string | null; badge: string | null }) {
+/** Shows my picture, frame, badge, title and banner to friends. */
+export async function publishLook(uid: string, look: Partial<PlayerLook>) {
   await updateDoc(doc(handles().db, 'players', uid), look);
 }
 

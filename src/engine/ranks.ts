@@ -30,7 +30,8 @@ export type SkinId =
 export type ShopSkinId =
   | 'citrus' | 'sakura' | 'berry' | 'arctic' | 'matcha' | 'midnight' | 'retro' | 'coral' | 'cyber'
   | 'galaxy' | 'toxic' | 'lava' | 'vapor' | 'gold' | 'holo' | 'rainbow'
-  | 'haunted' | 'candycane';
+  | 'haunted' | 'candycane'
+  | 'peach' | 'jungle' | 'glacier' | 'bubblegum' | 'northern' | 'cosmic';
 
 export const RANKS: readonly Rank[] = [
   { id: 'rookie', name: 'Rookie', minLevel: 1, from: '#9aa1ad', to: '#6b7280', ink: '#ffffff', effects: 0 },
@@ -103,6 +104,12 @@ export const SKINS: readonly Skin[] = [
   { id: 'gold', name: 'Solid Gold', minLevel: 1, swatch: ['#d4a017', '#9ca3af'], animated: true, price: 2200 },
   { id: 'holo', name: 'Hologram', minLevel: 1, swatch: ['#a5f3fc', '#f0abfc'], animated: true, price: 2600 },
   { id: 'rainbow', name: 'Rainbow', minLevel: 1, swatch: ['#ef4444', '#3b82f6'], animated: true, price: 3000 },
+  { id: 'peach', name: 'Peach Fizz', minLevel: 1, swatch: ['#f97362', '#fbbf72'], price: 450 },
+  { id: 'jungle', name: 'Jungle', minLevel: 1, swatch: ['#15803d', '#ca8a04'], price: 500 },
+  { id: 'glacier', name: 'Glacier', minLevel: 1, swatch: ['#0891b2', '#94a3b8'], price: 550 },
+  { id: 'bubblegum', name: 'Bubblegum', minLevel: 1, swatch: ['#ec4899', '#a78bfa'], price: 600 },
+  { id: 'northern', name: 'Northern Lights', minLevel: 1, swatch: ['#2dd4bf', '#a855f7'], animated: true, price: 2000 },
+  { id: 'cosmic', name: 'Cosmic Dust', minLevel: 1, swatch: ['#4338ca', '#f472b6'], animated: true, price: 2500 },
   { id: 'haunted', name: 'Haunted', minLevel: 1, swatch: ['#f97316', '#7c3aed'], animated: true, price: 1200, season: HALLOWEEN },
   { id: 'candycane', name: 'Candy Cane', minLevel: 1, swatch: ['#dc2626', '#16a34a'], animated: true, price: 1200, season: WINTER },
 ];

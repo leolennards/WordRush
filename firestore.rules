@@ -17,6 +17,16 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/players/$(a)/friends/$(b));
     }
     function validLook(x) { return x == null || (x is string && x.matches('^[a-z]{1,12}$')); }
+    // A profile picture: an emoji or 'photo' (with a small JPEG/WebP data URL).
+    function validAvatar(x) { return x == null || (x is string && x.size() <= 16); }
+    function validPhoto(x) {
+      return x == null || (x is string && x.size() <= 16000 && x.matches('^data:image/(jpeg|webp);base64,[A-Za-z0-9+/=]+$'));
+    }
+    function validLooks(d) {
+      return validLook(d.get('frame', null)) && validLook(d.get('badge', null))
+        && validLook(d.get('tint', null)) && validLook(d.get('title', null)) && validLook(d.get('banner', null))
+        && validAvatar(d.get('avatar', null)) && validPhoto(d.get('photo', null));
+    }
     function validDaily(d) {
       return d == null || (
         d is map
@@ -46,17 +56,16 @@ service cloud.firestore {
       allow get: if signedIn();
       allow list: if false;
       allow create: if signedIn() && me() == uid
-        && request.resource.data.keys().hasOnly(['name', 'code', 'createdAt', 'daily', 'frame', 'badge'])
+        && request.resource.data.keys().hasOnly(['name', 'code', 'createdAt', 'daily', 'frame', 'badge', 'avatar', 'photo', 'tint', 'title', 'banner'])
         && validName(request.resource.data.name)
         && validCode(request.resource.data.code)
         && getAfter(/databases/$(database)/documents/codes/$(request.resource.data.code)).data.uid == uid
         && validDaily(request.resource.data.get('daily', null));
       allow update: if signedIn() && me() == uid
-        && onlyChanged(['name', 'daily', 'frame', 'badge'])
+        && onlyChanged(['name', 'daily', 'frame', 'badge', 'avatar', 'photo', 'tint', 'title', 'banner'])
         && validName(request.resource.data.name)
         && validDaily(request.resource.data.get('daily', null))
-        && validLook(request.resource.data.get('frame', null))
-        && validLook(request.resource.data.get('badge', null));
+        && validLooks(request.resource.data);
       // "Delete my profile" (required by the app stores).
       allow delete: if signedIn() && me() == uid;
 

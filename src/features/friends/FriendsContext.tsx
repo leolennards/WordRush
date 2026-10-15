@@ -8,7 +8,7 @@ import { swapWaitingOn, type Swap } from '@/engine';
 import { useToast } from '@/components/layout/Toasts';
 import { notify } from '@/lib/notify';
 import { useSettings } from '@/features/settings/SettingsContext';
-import type { Account, Challenge, DailySummary, Friend, FinishedResult, FriendLink, GiftDoc, PlayerDoc, Race, RaceProgress } from './types';
+import type { Account, Challenge, DailySummary, Friend, FinishedResult, FriendLink, GiftDoc, PlayerDoc, PlayerLook, Race, RaceProgress } from './types';
 
 export type ReceivedGift = GiftDoc & { id: string };
 
@@ -50,8 +50,8 @@ interface FriendsContextValue {
   /** Permanently delete my profile, code, friendships and account. */
   deleteProfile: () => Promise<void>;
   nameOf: (uid: string) => string;
-  /** A player's avatar frame and badge (mine from my settings). */
-  lookOf: (uid: string) => { frame: string | null; badge: string | null };
+  /** A player's picture, frame, badge, title and banner (mine from my settings). */
+  lookOf: (uid: string) => PlayerLook;
   /** Gifts from friends waiting to be opened. */
   gifts: ReceivedGift[];
   /** Sends a friend coins or a shop item (paid for separately). */
@@ -185,16 +185,33 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
     return () => unsubs.forEach((u) => u());
   }, [ready, uid, fail]);
 
-  // Show my avatar frame and badge to friends.
-  const myFrame = settings.frame === 'none' ? null : settings.frame;
-  const myBadge = settings.badge === 'none' ? null : settings.badge;
+  // Show my picture, frame, badge, title and banner to friends (only what changed).
+  const none = (v: string, empty: string) => (v === empty ? null : v);
+  const myLook = useMemo<PlayerLook>(
+    () => ({
+      frame: none(settings.frame, 'none'),
+      badge: none(settings.badge, 'none'),
+      avatar: none(settings.avatar, 'initial'),
+      photo: settings.avatar === 'photo' && settings.photo ? settings.photo : null,
+      tint: none(settings.tint, 'auto'),
+      title: none(settings.title, 'none'),
+      banner: none(settings.banner, 'none'),
+    }),
+    [settings.frame, settings.badge, settings.avatar, settings.photo, settings.tint, settings.title, settings.banner],
+  );
   useEffect(() => {
     if (!ready || !api.current || !uid || !profile) return;
-    if ((profile.frame ?? null) === myFrame && (profile.badge ?? null) === myBadge) return;
-    api.current.publishLook(uid, { frame: myFrame, badge: myBadge }).catch(() => {
-      /* Best effort: tried again on the next change. */
-    });
-  }, [ready, uid, profile, myFrame, myBadge]);
+    const changed: Partial<PlayerLook> = {};
+    for (const k of Object.keys(myLook) as (keyof PlayerLook)[]) if ((profile[k] ?? null) !== myLook[k]) changed[k] = myLook[k];
+    if (!Object.keys(changed).length) return;
+    // Wait a moment so a burst of changes (picking through emoji) is one write.
+    const t = window.setTimeout(() => {
+      api.current?.publishLook(uid, changed).catch(() => {
+        /* Best effort: tried again on the next change. */
+      });
+    }, 800);
+    return () => window.clearTimeout(t);
+  }, [ready, uid, profile, myLook]);
 
   // Live: each friend's public profile (name + today's result).
   const linkKey = links.map((l) => l.uid).sort().join(',');
@@ -287,8 +304,19 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       swaps,
       connect,
       nameOf,
-      lookOf: (id: string) =>
-        id === uid ? { frame: myFrame, badge: myBadge } : { frame: profiles[id]?.frame ?? null, badge: profiles[id]?.badge ?? null },
+      lookOf: (id: string): PlayerLook => {
+        if (id === uid || id === 'me') return myLook;
+        const p = profiles[id];
+        return {
+          frame: p?.frame ?? null,
+          badge: p?.badge ?? null,
+          avatar: p?.avatar ?? null,
+          photo: p?.photo ?? null,
+          tint: p?.tint ?? null,
+          title: p?.title ?? null,
+          banner: p?.banner ?? null,
+        };
+      },
       gifts,
       async sendGift(friendUid, gift) {
         const { a, me } = need();
@@ -416,7 +444,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         });
       },
     };
-  }, [status, error, uid, account, profile, links, profiles, challenges, races, swaps, gifts, myFrame, myBadge, connect, need, pickAnswer, fail, store, configured, startConnection, cloud]);
+  }, [status, error, uid, account, profile, links, profiles, challenges, races, swaps, gifts, myLook, connect, need, pickAnswer, fail, store, configured, startConnection, cloud]);
 
   return <FriendsContext.Provider value={value}>{children}</FriendsContext.Provider>;
 }

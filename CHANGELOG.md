@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.15.0 — 2026-10-16 (profiles and pictures, backgrounds, app colours, a brand-new coin)
+
+- **A new Wordskiis coin:** a letter tile struck in gold, with holographic foil, the game's green and amber gems in
+  its corners and an engraved W. Big coins glow, shine with rays of light and flip their letter through W·O·R·D·S.
+- **Profiles:** a new Profile page (tap your picture at the top) with a card friends see: banner, picture, frame,
+  badge, title, level and stats.
+  - **Profile pictures:** your initial, one of 36 emoji, or your own photo (cropped to a small square, only friends
+    see it), on a colour of your choice.
+  - **Titles** (Word Wizard, Night Owl, Lexicon Legend…) and **banners** (Sunset, Ocean, animated Starry Night,
+    Aurora, Molten, Galaxy Swirl, Gold Rush) in the shop.
+  - More frames (Laurel, Pixel, animated Orbit) and badges (Flame, Music, Rocket, Ghost, Trophy).
+  - Friends see your picture, title and banner on their friend list.
+- **Backgrounds:** animated scenes behind the whole app: Bubbles, Starfield, Cherry Blossom, Letter Rain, Aurora
+  Sky and Synthwave (or Calm, with nothing moving).
+- **App colours:** recolour buttons and highlights: Ocean, Grape and Rose free; Tangerine, Sky, Lime, Ruby, Midnight
+  and Gold in the shop.
+- **More tile colours:** Peach Fizz, Jungle, Glacier, Bubblegum, and animated Northern Lights and Cosmic Dust.
+- **More tile styles:** Papercraft, Comic Book, Wooden Blocks and the animated Disco Ball.
+- The shop is now organised into Game, App and Profile.
+- **Android app 1.15.0** (versionCode 17).
+
 ## 1.14.1 — 2026-10-15 (shinier coins, send any amount)
 
 - **New coin design:** polished gold with a milled edge and an engraved W, a glint of light that sweeps across it,

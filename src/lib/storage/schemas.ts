@@ -4,8 +4,13 @@ import type { Stats } from '@/engine/stats';
 import { emptyProgress, type Progress } from '@/engine/progress';
 import type { QuestState } from '@/engine/quests';
 import { SKINS, type SkinId } from '@/engine/ranks';
+import { TINTS, isAvatarEmoji, isPhotoData, type AvatarTint } from '@/engine/profile';
 import {
+  ACCENTS,
+  BACKGROUNDS,
   BADGES,
+  BANNERS,
+  TITLES,
   FRAMES,
   KEY_SKINS,
   SOUND_PACKS,
@@ -13,7 +18,11 @@ import {
   WIN_EFFECTS,
   isFreezeId,
   shopItem,
+  type AccentId,
+  type BackgroundId,
   type BadgeId,
+  type BannerId,
+  type TitleId,
   type FrameId,
   type KeySkinId,
   type SoundPackId,
@@ -76,6 +85,16 @@ export interface Settings {
   /** Avatar frame and badge, shown to friends. */
   frame: FrameId;
   badge: BadgeId;
+  /** The scene behind the app, and its highlight colour. */
+  background: BackgroundId;
+  accent: AccentId;
+  /** Profile: title and banner (shop), picture (initial, an emoji or a small photo) and its colour. */
+  title: TitleId;
+  banner: BannerId;
+  /** 'initial', or an emoji from AVATAR_EMOJI, or 'photo' to show `photo`. */
+  avatar: string;
+  photo: string;
+  tint: AvatarTint;
   /** Whether the first-visit help has been shown. */
   seenHelp: boolean;
 }
@@ -97,6 +116,13 @@ export const DEFAULT_SETTINGS: Settings = {
   soundPack: 'classic',
   frame: 'none',
   badge: 'none',
+  background: 'tiles',
+  accent: 'mint',
+  title: 'none',
+  banner: 'none',
+  avatar: 'initial',
+  photo: '',
+  tint: 'auto',
   seenHelp: false,
 };
 
@@ -124,6 +150,13 @@ export const settingsSchema: Schema<Settings> = {
       soundPack: SOUND_PACKS.some((x) => x.id === d.soundPack) ? (d.soundPack as SoundPackId) : 'classic',
       frame: FRAMES.some((x) => x.id === d.frame) ? (d.frame as FrameId) : 'none',
       badge: BADGES.some((x) => x.id === d.badge) ? (d.badge as BadgeId) : 'none',
+      background: BACKGROUNDS.some((x) => x.id === d.background) ? (d.background as BackgroundId) : 'tiles',
+      accent: ACCENTS.some((x) => x.id === d.accent) ? (d.accent as AccentId) : 'mint',
+      title: TITLES.some((x) => x.id === d.title) ? (d.title as TitleId) : 'none',
+      banner: BANNERS.some((x) => x.id === d.banner) ? (d.banner as BannerId) : 'none',
+      avatar: d.avatar === 'photo' || isAvatarEmoji(d.avatar) ? (d.avatar as string) : 'initial',
+      photo: isPhotoData(d.photo) ? d.photo : '',
+      tint: TINTS.some((x) => x.id === d.tint) ? (d.tint as AvatarTint) : 'auto',
       seenHelp: bool('seenHelp'),
     };
   },

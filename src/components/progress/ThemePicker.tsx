@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { Check, Lock } from 'lucide-react';
 import {
-  BADGES,
-  FRAMES,
+  ACCENTS,
+  BACKGROUNDS,
   KEY_SKINS,
   SKINS,
   SOUND_PACKS,
@@ -21,17 +21,16 @@ import { useProgress } from '@/features/progress/ProgressContext';
 import { useSettings } from '@/features/settings/SettingsContext';
 import { Coin } from '@/components/shop/Coin';
 import { FxIcon } from '@/components/shop/FxIcon';
-import { Avatar, BadgeIcon } from '@/components/friends/Avatar';
 import { previewPack } from '@/lib/audio/sound';
 import { Volume2 } from 'lucide-react';
 import type { Settings } from '@/lib/storage/schemas';
 
-type Extra = 'keys' | 'sound' | 'frame' | 'badge';
-const EXTRA_SETTING: Record<Extra, 'keySkin' | 'soundPack' | 'frame' | 'badge'> = {
+type Extra = 'keys' | 'sound' | 'bg' | 'accent';
+const EXTRA_SETTING: Record<Extra, 'keySkin' | 'soundPack' | 'background' | 'accent'> = {
   keys: 'keySkin',
   sound: 'soundPack',
-  frame: 'frame',
-  badge: 'badge',
+  bg: 'background',
+  accent: 'accent',
 };
 
 const PREVIEW = [
@@ -179,10 +178,10 @@ export function ThemePicker({ level, onShop }: { level: number; onShop?: () => v
       );
     } else if (kind === 'sound') {
       look = <Volume2 className="size-5 text-accent" aria-hidden />;
-    } else if (kind === 'frame') {
-      look = <Avatar uid="me" name="W" size="sm" look={{ frame: c.id, badge: null }} />;
+    } else if (kind === 'bg') {
+      look = <span className="scene-thumb block h-7 w-12 rounded-md" data-scene={c.id} />;
     } else {
-      look = c.id === 'none' ? <span className="size-5 rounded-full border-2 border-dashed border-border-strong" /> : <BadgeIcon id={c.id} className="size-5" />;
+      look = <span className="block size-6 rounded-full" style={{ background: ACCENTS.find((a) => a.id === c.id)?.swatch }} />;
     }
     return (
       <button
@@ -251,12 +250,13 @@ export function ThemePicker({ level, onShop }: { level: number; onShop?: () => v
       <Group title="Win effect" label="Win effects">
         {WIN_EFFECTS.filter((f) => !f.season || winFxUnlocked(f.id, progress.owned)).map(effect)}
       </Group>
-      <Group title="Avatar frame (friends see it)" label="Avatar frames">
-        {FRAMES.map(extra('frame'))}
+      <Group title="Background" label="Backgrounds">
+        {BACKGROUNDS.map(extra('bg'))}
       </Group>
-      <Group title="Avatar badge (friends see it)" label="Avatar badges">
-        {BADGES.map(extra('badge'))}
+      <Group title="App colour" label="App colours">
+        {ACCENTS.map(extra('accent'))}
       </Group>
+      <p className="text-xs text-muted">Your picture, frame, badge, title and banner are on your profile: tap your picture at the top.</p>
       {onShop && (
         <button
           type="button"

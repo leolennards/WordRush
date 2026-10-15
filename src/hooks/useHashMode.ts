@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 export type View =
   | 'swap'
   | 'shop'
+  | 'profile'
   | 'home' | 'daily' | 'practice' | 'blitz' | 'duo' | 'quad' | 'rush' | 'ladder' | 'duel' | 'tower' | 'reverse' | 'survival' | 'friends' | 'challenge' | 'race';
 
 export interface Route {
@@ -29,6 +30,7 @@ export function parseHash(hash: string): Route {
     case 'survival':
     case 'friends':
     case 'shop':
+    case 'profile':
       return { view: name, id: null };
     case 'challenge':
     case 'race':

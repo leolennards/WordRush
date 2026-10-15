@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   SHOP_ITEMS,
   CHEST,
+  PHOTO_MAX,
+  cosmeticUnlocked,
+  isPhotoData,
   FREEZE_PRICE,
   HALLOWEEN,
   MAX_FREEZES,
@@ -41,7 +44,7 @@ import {
   type GameEvent,
 } from '@/engine';
 import { ANSWERS } from '@/data/words/answers';
-import { progressSchema } from '@/lib/storage/schemas';
+import { progressSchema, settingsSchema } from '@/lib/storage/schemas';
 
 /** A date outside every limited-time season. */
 const JUNE = new Date('2026-06-15T12:00:00Z');
@@ -331,5 +334,31 @@ describe('gifts', () => {
     const again = receiveGift(r!.progress, { id: 'g3', from: 'x', kind: 'item', item: 'skin:galaxy' });
     expect(again?.item).toBeNull();
     expect(again?.coins).toBe(shopItem('skin:galaxy')!.price);
+  });
+});
+
+describe('profiles', () => {
+  it('accepts small JPEG photos only', () => {
+    expect(isPhotoData('data:image/jpeg;base64,/9j/4AAQ')).toBe(true);
+    expect(isPhotoData('data:image/svg+xml;base64,PHN2Zz4=')).toBe(false);
+    expect(isPhotoData('https://example.com/a.jpg')).toBe(false);
+    expect(isPhotoData(`data:image/jpeg;base64,${'A'.repeat(PHOTO_MAX)}`)).toBe(false);
+  });
+
+  it('keeps a valid profile in settings and drops anything else', () => {
+    const ok = settingsSchema.validate({ avatar: '🦊', tint: 'sky', title: 'wizard', banner: 'aurora', background: 'stars', accent: 'grape' });
+    expect(ok).toMatchObject({ avatar: '🦊', tint: 'sky', title: 'wizard', banner: 'aurora', background: 'stars', accent: 'grape' });
+    const bad = settingsSchema.validate({ avatar: '<img>', photo: 'javascript:alert(1)', tint: 'nope', background: 'lava' });
+    expect(bad).toMatchObject({ avatar: 'initial', photo: '', tint: 'auto', background: 'tiles' });
+  });
+
+  it('sells profile items, backgrounds and app colours, with free defaults', () => {
+    for (const kind of ['bg', 'accent', 'title', 'banner'] as const) {
+      expect(SHOP_ITEMS.some((i) => i.kind === kind)).toBe(true);
+    }
+    expect(cosmeticUnlocked('bg', 'tiles', [])).toBe(true);
+    expect(cosmeticUnlocked('bg', 'synthwave', [])).toBe(false);
+    expect(cosmeticUnlocked('accent', 'grape', [])).toBe(true);
+    expect(cosmeticUnlocked('title', 'legend', ['title:legend'])).toBe(true);
   });
 });

@@ -38,6 +38,53 @@ export function ItemPreview({ item }: { item: ShopItem }) {
     case 'frame':
     case 'badge':
       return <LookPreview item={item} />;
+    case 'bg':
+      return (
+        <span
+          className="scene-thumb block aspect-[5/2] w-full max-w-[12.5rem] rounded-xl"
+          data-scene={item.ref}
+          role="img"
+          aria-label={`Preview of ${item.name}`}
+        />
+      );
+    case 'accent':
+      return (
+        <div
+          className={`flex aspect-[5/2] w-full max-w-[12.5rem] flex-col justify-center gap-2 rounded-xl bg-surface-2 px-3 ${dark ? 'dark' : ''}`}
+          data-accent={item.ref}
+          role="img"
+          aria-label={`Preview of ${item.name}`}
+        >
+          <span className="flex items-center gap-2">
+            <span className="rounded-lg bg-accent px-2.5 py-1 text-xs font-bold text-accent-ink">Play</span>
+            <span className="relative h-4 w-7 rounded-full bg-accent">
+              <span className="absolute top-0.5 right-0.5 size-3 rounded-full bg-white" />
+            </span>
+          </span>
+          <span className="h-1.5 w-full overflow-hidden rounded-full bg-border">
+            <span className="block h-full w-2/3 rounded-full bg-accent" />
+          </span>
+        </div>
+      );
+    case 'title':
+      return (
+        <span
+          className="grid aspect-[5/2] w-full max-w-[12.5rem] place-items-center rounded-xl bg-surface-2"
+          role="img"
+          aria-label={`Preview of ${item.name}`}
+        >
+          <span className="profile-title text-base font-extrabold">{item.name}</span>
+        </span>
+      );
+    case 'banner':
+      return (
+        <span
+          className="profile-banner block aspect-[5/2] w-full max-w-[12.5rem] rounded-xl"
+          data-banner={item.ref}
+          role="img"
+          aria-label={`Preview of ${item.name}`}
+        />
+      );
     case 'keys':
       return (
         <div
@@ -47,7 +94,13 @@ export function ItemPreview({ item }: { item: ShopItem }) {
           aria-label={`Preview of ${item.name}`}
         >
           {KEYS.map((k, i) => (
-            <span key={i} className="key grid h-9 place-items-center text-sm" data-state={k.s} data-keyskin={item.ref} aria-hidden>
+            <span
+              key={i}
+              className="key grid h-9 place-items-center text-sm"
+              data-state={k.s}
+              data-keyskin={item.ref}
+              aria-hidden
+            >
               {k.l}
             </span>
           ))}
@@ -137,7 +190,10 @@ function SoundPreview({ item }: { item: ShopItem }) {
             <span
               key={i}
               className="w-1 rounded-full bg-current transition-all"
-              style={{ height: playing ? `${[60, 100, 40, 80][i]}%` : '30%', transitionDelay: `${i * 60}ms` }}
+              style={{
+                height: playing ? `${[60, 100, 40, 80][i]}%` : '30%',
+                transitionDelay: `${i * 60}ms`,
+              }}
             />
           ))}
         </span>
@@ -154,10 +210,20 @@ function LookPreview({ item }: { item: ShopItem }) {
   const name = f.me?.profile.name ?? 'You';
   const look =
     item.kind === 'frame'
-      ? { frame: item.ref, badge: settings.badge === 'none' ? null : settings.badge }
-      : { frame: settings.frame === 'none' ? null : settings.frame, badge: item.ref };
+      ? {
+          frame: item.ref,
+          badge: settings.badge === 'none' ? null : settings.badge,
+        }
+      : {
+          frame: settings.frame === 'none' ? null : settings.frame,
+          badge: item.ref,
+        };
   return (
-    <div className="grid aspect-[5/2] w-full max-w-[12.5rem] place-items-center" role="img" aria-label={`Preview of ${item.name}`}>
+    <div
+      className="grid aspect-[5/2] w-full max-w-[12.5rem] place-items-center"
+      role="img"
+      aria-label={`Preview of ${item.name}`}
+    >
       <Avatar uid={f.me?.uid ?? 'me'} name={name} size="lg" look={look} />
     </div>
   );

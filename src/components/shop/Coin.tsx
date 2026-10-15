@@ -1,104 +1,208 @@
-import { useId } from 'react';
-
-/** Little ridges around the rim, like a real coin's milled edge. */
-const RIDGES = Array.from({ length: 40 }, (_, i) => (i / 40) * 360);
+import { useId, type CSSProperties } from 'react';
 
 /** A 4-point sparkle. */
-const SPARKLE = 'M0 -1 C0.12 -0.12 0.12 -0.12 1 0 C0.12 0.12 0.12 0.12 0 1 C-0.12 0.12 -0.12 0.12 -1 0 C-0.12 -0.12 -0.12 -0.12 0 -1 Z';
+const SPARKLE =
+  'M0 -1 C0.12 -0.12 0.12 -0.12 1 0 C0.12 0.12 0.12 0.12 0 1 C-0.12 0.12 -0.12 0.12 -1 0 C-0.12 -0.12 -0.12 -0.12 0 -1 Z';
+/** Light rays behind a hero coin. */
+const RAYS = Array.from({ length: 12 }, (_, i) => i * 30);
+/** The letters a hero coin flips through, like tiles being revealed. */
+const LETTERS = ['W', 'O', 'R', 'D', 'S'];
 
 /**
- * A Wordskiis coin: polished gold with a milled edge and an engraved W.
- * `shine` sweeps a glint of light across it now and then, `sparkle` adds
- * twinkling stars, and `spin` flips it every few seconds.
+ * The Wordskiis coin: a letter tile struck in gold. Holographic foil, a green
+ * and an amber gem in the corners (the game's "correct" and "present"), and
+ * an engraved W.
+ *
+ * - `shine`: a glint of light and the foil's rainbow sweep across it.
+ * - `sparkle`: twinkling stars around it.
+ * - `spin`: it flips over every few seconds, like a tile.
+ * - `hero`: the big version: rays of light behind it, a glowing aura, and the
+ *   letter flipping through W·O·R·D·S.
  */
 export function Coin({
   className = 'size-5',
   spin = false,
   shine = false,
   sparkle = false,
+  hero = false,
 }: {
   className?: string;
   spin?: boolean;
   shine?: boolean;
   sparkle?: boolean;
+  hero?: boolean;
 }) {
   const id = useId().replace(/:/g, '');
+  const u = (name: string) => `url(#${id}-${name})`;
+  const letter = (ch: string, extra?: { className?: string; style?: CSSProperties }) => (
+    <g key={ch} className={extra?.className} style={extra?.style}>
+      <text
+        x="24.6"
+        y="26.2"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize="23"
+        fontWeight="900"
+        fill="#fff8dc"
+        fillOpacity="0.9"
+      >
+        {ch}
+      </text>
+      <text x="24" y="25.4" textAnchor="middle" dominantBaseline="central" fontSize="23" fontWeight="900" fill={u('ink')}>
+        {ch}
+      </text>
+    </g>
+  );
   return (
     <svg
       viewBox="0 0 48 48"
-      className={`${className} shrink-0 overflow-visible ${spin ? 'coin-spin' : ''}`}
+      className={`coin ${className} shrink-0 overflow-visible ${spin ? 'coin-spin' : ''} ${hero ? 'coin-hero' : ''}`}
       aria-hidden
     >
       <defs>
-        <linearGradient id={`${id}-rim`} x1="0.15" y1="0" x2="0.85" y2="1">
-          <stop offset="0" stopColor="#fff6bf" />
-          <stop offset="0.28" stopColor="#fcd34d" />
-          <stop offset="0.55" stopColor="#f59e0b" />
-          <stop offset="0.82" stopColor="#b45309" />
+        <linearGradient id={`${id}-rim`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fff4b8" />
+          <stop offset="0.25" stopColor="#fcd34d" />
+          <stop offset="0.5" stopColor="#f59e0b" />
+          <stop offset="0.78" stopColor="#c2410c" />
           <stop offset="1" stopColor="#7c2d12" />
         </linearGradient>
-        <radialGradient id={`${id}-face`} cx="0.36" cy="0.3" r="0.85">
-          <stop offset="0" stopColor="#fffbe8" />
-          <stop offset="0.22" stopColor="#fde68a" />
-          <stop offset="0.52" stopColor="#fbbf24" />
-          <stop offset="0.8" stopColor="#f59e0b" />
-          <stop offset="1" stopColor="#c2410c" />
+        <radialGradient id={`${id}-face`} cx="0.32" cy="0.25" r="0.95">
+          <stop offset="0" stopColor="#fffbea" />
+          <stop offset="0.2" stopColor="#fde68a" />
+          <stop offset="0.5" stopColor="#fbbf24" />
+          <stop offset="0.78" stopColor="#f59e0b" />
+          <stop offset="1" stopColor="#d97706" />
         </radialGradient>
-        <linearGradient id={`${id}-w`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#b45309" />
-          <stop offset="1" stopColor="#78350f" />
+        <linearGradient id={`${id}-ink`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#c2410c" />
+          <stop offset="1" stopColor="#6b210a" />
+        </linearGradient>
+        <linearGradient id={`${id}-gloss`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff" stopOpacity="0.75" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id={`${id}-holo`} x1="0" y1="0" x2="1" y2="0.3">
+          <stop offset="0" stopColor="#ff7ad9" />
+          <stop offset="0.2" stopColor="#7af0ff" />
+          <stop offset="0.4" stopColor="#b6ff7a" />
+          <stop offset="0.6" stopColor="#ffe57a" />
+          <stop offset="0.8" stopColor="#c99bff" />
+          <stop offset="1" stopColor="#ff7ad9" />
         </linearGradient>
         <linearGradient id={`${id}-glint`} x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor="#fff" stopOpacity="0" />
-          <stop offset="0.5" stopColor="#fff" stopOpacity="0.85" />
+          <stop offset="0.5" stopColor="#fff" stopOpacity="0.95" />
           <stop offset="1" stopColor="#fff" stopOpacity="0" />
         </linearGradient>
-        <clipPath id={`${id}-clip`}>
-          <circle cx="24" cy="24" r="22.5" />
+        <radialGradient id={`${id}-ray`} cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0.25" stopColor="#fde68a" stopOpacity="0.9" />
+          <stop offset="1" stopColor="#fde68a" stopOpacity="0" />
+        </radialGradient>
+        <clipPath id={`${id}-body`}>
+          <rect x="2.5" y="2.5" width="43" height="43" rx="12" />
+        </clipPath>
+        <clipPath id={`${id}-inner`}>
+          <rect x="6.5" y="6.5" width="35" height="35" rx="8" />
         </clipPath>
       </defs>
 
-      {/* Rim with a milled edge. */}
-      <circle cx="24" cy="24" r="22.5" fill={`url(#${id}-rim)`} />
-      <g stroke="#7c2d12" strokeOpacity="0.32" strokeWidth="0.9" strokeLinecap="round">
-        {RIDGES.map((a) => (
-          <line key={a} x1="24" y1="2.2" x2="24" y2="4.4" transform={`rotate(${a} 24 24)`} />
-        ))}
+      {/* Rays of light behind a hero coin. */}
+      {hero && (
+        <g className="coin-rays" fill={u('ray')}>
+          {RAYS.map((a) => (
+            <path key={a} d="M24 24 L22.2 -10 L25.8 -10 Z" transform={`rotate(${a} 24 24)`} />
+          ))}
+        </g>
+      )}
+
+      {/* A thick gold tile with a bevelled edge. */}
+      <rect x="2.5" y="4" width="43" height="43" rx="12" fill="#7c2d12" fillOpacity="0.55" />
+      <rect x="2.5" y="2.5" width="43" height="43" rx="12" fill={u('rim')} />
+      <rect
+        x="3.3"
+        y="3.3"
+        width="41.4"
+        height="41.4"
+        rx="11.3"
+        fill="none"
+        stroke="#fff"
+        strokeOpacity="0.55"
+        strokeWidth="0.8"
+      />
+      <rect x="6" y="6.8" width="36" height="36" rx="8.5" fill="#7c2d12" fillOpacity="0.4" />
+      <rect x="6.5" y="6.5" width="35" height="35" rx="8" fill={u('face')} />
+
+      {/* Holographic foil drifting across the face. */}
+      <g clipPath={u('inner')}>
+        <rect
+          className={shine || hero ? 'coin-holo' : undefined}
+          x="-30"
+          y="0"
+          width="108"
+          height="48"
+          fill={u('holo')}
+          opacity="0.3"
+          style={{ mixBlendMode: 'overlay' }}
+        />
       </g>
 
-      {/* The face, sunk into the rim. */}
-      <circle cx="24" cy="24" r="17.8" fill="#92400e" fillOpacity="0.45" />
-      <circle cx="24" cy="24.6" r="17.2" fill={`url(#${id}-face)`} />
-      <circle cx="24" cy="24" r="14.6" fill="none" stroke="#b45309" strokeOpacity="0.45" strokeWidth="0.8" strokeDasharray="1.2 1.6" />
+      {/* Gems: the game's green and amber. */}
+      <g>
+        <rect
+          x="9.6"
+          y="9.6"
+          width="4.6"
+          height="4.6"
+          rx="1"
+          transform="rotate(45 11.9 11.9)"
+          fill="#16a34a"
+          stroke="#064e3b"
+          strokeWidth="0.6"
+        />
+        <rect x="10.6" y="10.3" width="1.6" height="1.2" rx="0.4" transform="rotate(45 11.9 11.9)" fill="#bbf7d0" />
+        <rect
+          x="33.8"
+          y="33.8"
+          width="4.6"
+          height="4.6"
+          rx="1"
+          transform="rotate(45 36.1 36.1)"
+          fill="#f59e0b"
+          stroke="#7c2d12"
+          strokeWidth="0.6"
+        />
+        <rect x="34.8" y="34.5" width="1.6" height="1.2" rx="0.4" transform="rotate(45 36.1 36.1)" fill="#fef3c7" />
+      </g>
 
-      {/* Engraved W: a light lip below, the cut above. */}
-      <path
-        d="M13.2 16.5h4.3l2.6 10.1 2.8-10.1h3.4l2.8 10.1 2.6-10.1h4.3l-5 16h-3.9L24 23.1l-3.1 9.4H17z"
-        fill="#fff7d6"
-        fillOpacity="0.85"
-        transform="translate(0.5 0.8)"
-      />
-      <path d="M13.2 16.5h4.3l2.6 10.1 2.8-10.1h3.4l2.8 10.1 2.6-10.1h4.3l-5 16h-3.9L24 23.1l-3.1 9.4H17z" fill={`url(#${id}-w)`} />
+      {/* The engraved letter: W, or W·O·R·D·S flipping on a hero coin. */}
+      {hero
+        ? LETTERS.map((ch, i) =>
+            letter(ch, {
+              className: i ? 'coin-letter' : 'coin-letter coin-letter-first',
+              style: { animationDelay: `${i * 1.6}s` },
+            }),
+          )
+        : letter('W')}
 
-      {/* Polished highlight on the rim. */}
-      <path d="M8.2 15.5a18 18 0 0 1 9.5-9.6" stroke="#fff" strokeOpacity="0.8" strokeWidth="2" strokeLinecap="round" fill="none" />
-      <path d="M40.5 31.5a18 18 0 0 1-5.5 7" stroke="#fff" strokeOpacity="0.35" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+      {/* Glassy gloss over the top half. */}
+      <path d="M8 14.5 Q8 6.5 16 6.5 H32 Q40 6.5 40 14.5 V19 Q24 23 8 19 Z" fill={u('gloss')} opacity="0.55" />
 
       {/* A glint of light sweeping across. */}
-      {shine && (
-        <g clipPath={`url(#${id}-clip)`}>
+      {(shine || hero) && (
+        <g clipPath={u('body')}>
           <g transform="rotate(24 24 24)">
-            <rect className="coin-glint" x="-14" y="-6" width="12" height="60" fill={`url(#${id}-glint)`} />
+            <rect className="coin-glint" x="-16" y="-8" width="11" height="64" fill={u('glint')} />
           </g>
         </g>
       )}
 
-      {sparkle && (
+      {(sparkle || hero) && (
         <g fill="#fff">
           {[
-            { at: 'translate(41 7) scale(5)', delay: '0s' },
-            { at: 'translate(5 38) scale(3.4)', delay: '0.9s' },
-            { at: 'translate(44 34) scale(2.6)', delay: '1.6s' },
+            { at: 'translate(44 4) scale(5.5)', delay: '0s' },
+            { at: 'translate(3 40) scale(3.6)', delay: '0.9s' },
+            { at: 'translate(46 38) scale(2.8)', delay: '1.6s' },
           ].map((s) => (
             <g key={s.at} transform={s.at}>
               <path className="coin-sparkle" d={SPARKLE} style={{ animationDelay: s.delay }} />

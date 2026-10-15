@@ -39,7 +39,8 @@ paid API or database — and keeps preferences, progress and statistics in `loca
 - Correct duplicate-letter feedback, local dictionary (12,675 accepted guesses, 1,922 curated answers).
 - Physical and on-screen keyboards, invalid-word shake, flip reveals, win celebration.
 - Word Swap (Friends): take turns picking one of three offered words for each other, spectate live, nudge, running score.
-- Wordskiis coins from every game (with bonuses) and a free daily chest, and a shop with tile colours, animated tile styles, keyboards, sound packs, win effects, avatar frames and badges, limited-time seasonal items, mystery boxes, streak freezes, gifts for friends and a daily deal.
+- Profiles with pictures (emoji or your own photo), titles and banners, shown to friends.
+- Wordskiis coins from every game (with bonuses) and a free daily chest, and a shop with tile colours, animated tile styles, keyboards, sound packs, win effects, backgrounds, app colours, profile frames, badges, titles and banners, limited-time seasonal items, mystery boxes, streak freezes, gifts for friends and a daily deal.
 - Submit button under the keyboard: only enabled for a full, real word ("Not a real word" otherwise).
 - Cloud save: signed in with Google, progress (level, XP, achievements, bests, quests, Daily stats, today's
   Daily, Word Book) syncs live across devices; XP and coins are per-device counters so they add up without double counting.

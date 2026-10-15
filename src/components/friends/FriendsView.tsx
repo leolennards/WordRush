@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { m } from 'motion/react';
 import { Check, Cloud, Copy, Crown, Flame, Gift, Loader2, LogOut, Pencil, Repeat2, Share2, Smartphone, Swords, Timer, Trash2, UserPlus, Users, X, Zap } from 'lucide-react';
 import { BRAND, GAME } from '@/config/game';
-import { compareChallenge, decodeRows, formatFriendCode, swapLeader, swapTurn, type GameState, type Swap } from '@/engine';
+import { TITLES, compareChallenge, decodeRows, formatFriendCode, swapLeader, swapTurn, type GameState, type Swap } from '@/engine';
 import { useFriends } from '@/features/friends/FriendsContext';
 import type { Challenge, Friend, Race } from '@/features/friends/types';
 import { copyText, shareResult } from '@/features/sharing/shareResult';
@@ -275,9 +275,13 @@ function ProfileCard() {
   };
 
   return (
-    <section aria-labelledby="my-profile" className={`${card} p-5 shadow-md sm:p-6`}>
-      <div className="flex items-center gap-3">
-        <Avatar uid={me.uid} name={me.profile.name} size="lg" />
+    <section aria-labelledby="my-profile" className={`${card} overflow-hidden shadow-md`}>
+      <div className="profile-banner h-16" data-banner={f.lookOf(me.uid).banner ?? 'none'} />
+      <div className="p-5 pt-0 sm:p-6 sm:pt-0">
+      <div className="-mt-7 flex items-end gap-3">
+        <span className="rounded-full bg-surface p-1">
+          <Avatar uid={me.uid} name={me.profile.name} size="lg" />
+        </span>
         {editing ? (
           <form onSubmit={save} className="flex flex-1 gap-2">
             <input
@@ -305,7 +309,13 @@ function ProfileCard() {
                 <Pencil className="size-3.5" aria-hidden />
               </button>
             </h3>
-            <p className="text-sm text-muted">This is how friends see you.</p>
+            <TitleLine id={f.lookOf(me.uid).title} />
+            <p className="text-sm text-muted">
+              This is how friends see you.{' '}
+              <a href="#profile" className="font-semibold text-accent underline-offset-2 hover:underline">
+                Edit picture & profile
+              </a>
+            </p>
           </div>
         )}
       </div>
@@ -327,6 +337,7 @@ function ProfileCard() {
         </div>
       </div>
       <DeleteProfile />
+      </div>
     </section>
   );
 }
@@ -556,7 +567,10 @@ function FriendRow({
   };
 
   return (
-    <li className="p-4 sm:px-5">
+    <li className="relative overflow-hidden p-4 sm:px-5">
+      {friend.profile?.banner && (
+        <span className="profile-banner pointer-events-none absolute inset-y-0 left-0 w-1.5" data-banner={friend.profile.banner} aria-hidden />
+      )}
       <div className="flex items-center gap-3">
         <Avatar uid={friend.uid} name={name} />
         <div className="min-w-0 flex-1">
@@ -569,6 +583,7 @@ function FriendRow({
               </span>
             )}
           </p>
+          <TitleLine id={friend.profile?.title} />
           <p className="truncate text-xs text-muted">{dailyLine(friend, todayIndex)}</p>
         </div>
         {playedToday && <MiniBoard game={boardFromRows(daily.rows)} tile="size-2 rounded-[2px]" className="shrink-0" />}
@@ -815,4 +830,10 @@ function SwapList({ onOpenSwap }: { onOpenSwap: (id: string) => void }) {
       </ul>
     </section>
   );
+}
+
+/** A player's title under their name, if they've picked one. */
+function TitleLine({ id }: { id: string | null | undefined }) {
+  const title = id ? TITLES.find((t) => t.id === id && t.id !== 'none') : null;
+  return title ? <p className="profile-title truncate text-xs font-bold">{title.name}</p> : null;
 }

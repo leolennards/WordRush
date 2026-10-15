@@ -70,6 +70,7 @@ const DuelScreen = lazy(() => import('@/components/duel/DuelScreen').then((m) =>
 const TowerScreen = lazy(() => import('@/components/tower/TowerScreen').then((m) => ({ default: m.TowerScreen })));
 const ReverseScreen = lazy(() => import('@/components/reverse/ReverseScreen').then((m) => ({ default: m.ReverseScreen })));
 const ShopScreen = lazy(() => import('@/components/shop/ShopScreen').then((m) => ({ default: m.ShopScreen })));
+const ProfileScreen = lazy(() => import('@/components/profile/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
 const SwapScreen = lazy(() => import('@/components/swap/SwapScreen').then((m) => ({ default: m.SwapScreen })));
 const SurvivalScreen = lazy(() => import('@/components/survival/SurvivalScreen').then((m) => ({ default: m.SurvivalScreen })));
 
@@ -140,6 +141,10 @@ function Wordskiis() {
     if (!cosmeticUnlocked('sound', settings.soundPack, progress.owned)) update({ soundPack: 'classic' });
     if (!cosmeticUnlocked('frame', settings.frame, progress.owned)) update({ frame: 'none' });
     if (!cosmeticUnlocked('badge', settings.badge, progress.owned)) update({ badge: 'none' });
+    if (!cosmeticUnlocked('bg', settings.background, progress.owned)) update({ background: 'tiles' });
+    if (!cosmeticUnlocked('accent', settings.accent, progress.owned)) update({ accent: 'mint' });
+    if (!cosmeticUnlocked('title', settings.title, progress.owned)) update({ title: 'none' });
+    if (!cosmeticUnlocked('banner', settings.banner, progress.owned)) update({ banner: 'none' });
   }, [
     settings.skin,
     settings.tileStyle,
@@ -148,6 +153,10 @@ function Wordskiis() {
     settings.soundPack,
     settings.frame,
     settings.badge,
+    settings.background,
+    settings.accent,
+    settings.title,
+    settings.banner,
     playerLevel,
     progress.owned,
     update,
@@ -300,6 +309,7 @@ function Wordskiis() {
   const goReverse = useCallback(() => go('reverse'), [go]);
   const goSurvival = useCallback(() => go('survival'), [go]);
   const goShop = useCallback(() => go('shop'), [go]);
+  const goProfile = useCallback(() => go('profile'), [go]);
   const openChallenge = useCallback((id: string) => go('challenge', id), [go]);
   const openRace = useCallback((id: string) => go('race', id), [go]);
   const openSwap = useCallback((id: string) => go('swap', id), [go]);
@@ -426,7 +436,9 @@ function Wordskiis() {
       <ChallengeScreen id={route.id} inputEnabled={dialog === null} onBack={goFriends} onOpenChallenge={openChallenge} />
     );
   } else if (view === 'shop') {
-    content = <ShopScreen onBack={goHome} />;
+    content = <ShopScreen onBack={goHome} onProfile={goProfile} />;
+  } else if (view === 'profile') {
+    content = <ProfileScreen onBack={goHome} onShop={goShop} />;
   } else if (view === 'swap' && route.id) {
     content = <SwapScreen id={route.id} inputEnabled={dialog === null} onBack={goFriends} />;
   } else if (view === 'race' && route.id) {
@@ -493,6 +505,7 @@ function Wordskiis() {
           onStats={() => setDialog('stats')}
           onSettings={() => setDialog('settings')}
           onShop={goShop}
+          onProfile={goProfile}
         />
         <UpdateBar show={updateAvailable} />
         <GiftInbox />

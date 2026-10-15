@@ -92,7 +92,7 @@ export function Reveal({
                   <ItemPreview item={prize.item} />
                 ) : (
                   <p className="tabular flex items-center gap-2 text-4xl font-black">
-                    <Coin className="size-12" spin shine sparkle /> +{prize.coins}
+                    <Coin className="size-12" hero /> +{prize.coins}
                   </p>
                 )}
               </m.div>
