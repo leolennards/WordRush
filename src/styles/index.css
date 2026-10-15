@@ -854,7 +854,61 @@ button {
   animation: skin-flow 6s ease-in-out infinite;
 }
 .coin-spin {
-  animation: coin-spin 2.4s ease-in-out infinite;
+  animation: coin-spin 3.4s ease-in-out infinite;
+}
+/* A glint of light sweeping across a coin, then a pause. */
+.coin-glint {
+  animation: coin-glint 3.2s ease-in-out infinite;
+}
+@keyframes coin-glint {
+  0% { transform: translateX(0); }
+  40%, 100% { transform: translateX(62px); }
+}
+.coin-sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: coin-sparkle 2.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 0.6px #fde68a);
+}
+@keyframes coin-sparkle {
+  0%, 55%, 100% { transform: scale(0) rotate(0deg); opacity: 0; }
+  70% { transform: scale(1) rotate(45deg); opacity: 1; }
+  85% { transform: scale(0.4) rotate(90deg); opacity: 0.6; }
+}
+/* The balance in gold, with light running along it. */
+.coin-amount {
+  background: linear-gradient(100deg, #92400e 0%, #d97706 30%, #fbbf24 44%, #fff3c4 50%, #fbbf24 56%, #d97706 70%, #92400e 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: coin-amount 4s linear infinite;
+}
+.dark .coin-amount {
+  background-image: linear-gradient(100deg, #f59e0b 0%, #fcd34d 30%, #fff7d6 48%, #fcd34d 60%, #f59e0b 100%);
+}
+@keyframes coin-amount {
+  from { background-position: 125% 0; }
+  to { background-position: -125% 0; }
+}
+.coin-hero-amount {
+  text-shadow: 0 2px 0 rgb(124 45 18 / 0.45), 0 0 18px rgb(253 230 138 / 0.55);
+}
+/* The header balance: a gold ring, glowing when coins come in. */
+.coin-chip {
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(var(--c-surface), var(--c-surface)) padding-box,
+    linear-gradient(120deg, #fde68a, #f59e0b, #b45309, #fcd34d, #fde68a) border-box;
+  background-size: 100% 100%, 300% 100%;
+  animation: coin-chip-ring 6s linear infinite;
+}
+@keyframes coin-chip-ring {
+  from { background-position: 0 0, 0% 0; }
+  to { background-position: 0 0, 300% 0; }
+}
+.coin-chip[data-gain] {
+  box-shadow: 0 0 0 4px rgb(251 191 36 / 0.35), 0 0 22px rgb(251 191 36 / 0.65);
 }
 @keyframes coin-spin {
   0%, 70% { transform: rotateY(0); }
@@ -866,6 +920,12 @@ button {
 @keyframes buy-pulse {
   0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-present) 55%, transparent); }
   50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--c-present) 0%, transparent); }
+}
+[data-reduce-motion='true'] :is(.coin-glint, .coin-sparkle, .coin-amount, .coin-chip) {
+  animation: none !important;
+}
+[data-reduce-motion='true'] .coin-sparkle {
+  opacity: 0;
 }
 [data-reduce-motion='true'] :is(.deal-card, .coin-spin, .buy-button) {
   animation: none !important;

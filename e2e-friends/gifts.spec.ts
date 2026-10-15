@@ -30,9 +30,9 @@ test('Gifts: send a friend coins, and they open it once', async ({ browser }) =>
   // Ann sends Ben 250 coins (she has 150 + 1000).
   await ann.page.getByRole('button', { name: 'Send Ben a gift' }).click();
   const dialog = ann.page.getByRole('dialog', { name: 'Send Ben a gift' });
-  await dialog.getByRole('radio', { name: '250' }).click();
-  await dialog.getByRole('button', { name: 'Send for 250 coins' }).click();
-  await expect(ann.page.getByText('Gift sent to Ben!').first()).toBeVisible({ timeout: 10_000 });
+  await dialog.getByRole('radio', { name: '250 coins' }).click();
+  await dialog.getByRole('button', { name: 'Send 250 coins' }).click();
+  await expect(ann.page.getByText('Sent 250 coins to Ben!').first()).toBeVisible({ timeout: 10_000 });
   await expect(ann.page.getByRole('button', { name: /^900 coins/ })).toBeVisible();
 
   // Ben gets a gift card, opens it, and the coins land.

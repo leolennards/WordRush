@@ -300,7 +300,7 @@ export function Home(props: HomeProps) {
           >
             <span className="feature-card-shine" aria-hidden />
             <span className="relative transition-transform group-hover:scale-110 group-hover:-rotate-12">
-              <Coin className="size-12 drop-shadow-md" spin />
+              <Coin className="size-12 drop-shadow-md" spin shine sparkle />
             </span>
             <span className="relative min-w-0 flex-1">
               <span className="flex items-center gap-2 text-lg leading-tight font-extrabold">

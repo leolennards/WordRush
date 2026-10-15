@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, m } from 'motion/react';
-import { ArrowLeft, Check, Clock3, Package, Snowflake, Sparkles, Tag } from 'lucide-react';
+import { ArrowLeft, Check, Clock3, Package, Send, Snowflake, Sparkles, Tag } from 'lucide-react';
 import { GAME } from '@/config/game';
 import {
   COIN_REWARDS,
@@ -28,6 +28,7 @@ import { useCountdown } from '@/hooks/useToday';
 import { playCue } from '@/lib/audio/sound';
 import { buzz } from '@/lib/haptics';
 import { useToast } from '@/components/layout/Toasts';
+import { GiftDialog } from '@/components/friends/GiftDialog';
 import { Coin } from './Coin';
 import { Rolling } from './CoinChip';
 import { DailyChest } from './DailyChest';
@@ -59,6 +60,7 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
   const [confirming, setConfirming] = useState<string | null>(null);
   const [burst, setBurst] = useState<{ id: string; key: number } | null>(null);
   const [mystery, setMystery] = useState<Prize | null>(null);
+  const [sending, setSending] = useState(false);
   const balance = coinBalance(progress);
 
   // A confirm tap expires after a few seconds.
@@ -188,15 +190,20 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
         >
           <span className="feature-card-shine" aria-hidden />
           <div className="relative flex items-center gap-4">
-            <m.span animate={{ rotateY: [0, 360] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1.5 }}>
-              <Coin className="size-14 drop-shadow-lg" />
-            </m.span>
-            <div className="min-w-0">
+            <Coin className="size-16 drop-shadow-lg" spin shine sparkle />
+            <div className="min-w-0 flex-1">
               <p className="text-xs font-bold tracking-[0.14em] text-white/75 uppercase">Your coins</p>
-              <p className="tabular text-4xl leading-none font-black">
+              <p className="coin-hero-amount tabular text-4xl leading-none font-black">
                 <Rolling value={balance} />
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setSending(true)}
+              className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full bg-white/20 px-3 py-1.5 text-xs font-bold text-white backdrop-blur transition hover:bg-white/30 active:scale-95"
+            >
+              <Send className="size-3.5" aria-hidden /> Send coins
+            </button>
           </div>
           <p className="relative mt-3 text-[0.8rem] leading-snug text-white/85">
             Every game pays out coins with its XP, plus {COIN_REWARDS.achievement} per achievement, {COIN_REWARDS.level} per level
@@ -311,6 +318,7 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
           friend’s card on the Friends page.
         </p>
       </div>
+      <GiftDialog open={sending} onClose={() => setSending(false)} />
       {mystery && <Reveal kind="mystery" eyebrow="Mystery box" prize={mystery} onUse={equip} onClose={() => setMystery(null)} />}
     </main>
   );
@@ -319,14 +327,20 @@ export function ShopScreen({ onBack }: { onBack: () => void }) {
 /** The shop's sections, scrollable sideways on a phone. */
 function ShopTabs({ value, onChange }: { value: ItemKind; onChange: (v: ItemKind) => void }) {
   const active = useRef<HTMLButtonElement>(null);
+  const row = useRef<HTMLDivElement>(null);
+  // Centre the chosen section in the row, sideways only (never scrolling the page).
   useEffect(() => {
-    active.current?.scrollIntoView?.({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    const el = active.current;
+    const box = row.current;
+    if (!el || !box) return;
+    box.scrollTo({ left: el.offsetLeft - (box.clientWidth - el.offsetWidth) / 2, behavior: 'smooth' });
   }, [value]);
   return (
     <div
+      ref={row}
       role="radiogroup"
       aria-label="Shop section"
-      className="no-scrollbar -mx-4 mt-6 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:flex-wrap sm:justify-center"
+      className="no-scrollbar relative -mx-4 mt-6 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:flex-wrap sm:justify-center"
     >
       {TABS.map((t) => {
         const on = t.value === value;

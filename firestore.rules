@@ -189,7 +189,7 @@ service cloud.firestore {
         && gift().claimed == false
         && ((gift().kind == 'coins'
               && gift().keys().hasOnly(['from', 'to', 'kind', 'coins', 'createdAt', 'claimed'])
-              && gift().coins in [50, 100, 250, 500])
+              && gift().coins is int && gift().coins >= 10 && gift().coins <= 5000)
           || (gift().kind == 'item'
               && gift().keys().hasOnly(['from', 'to', 'kind', 'item', 'createdAt', 'claimed'])
               && gift().item is string && gift().item.matches('^[a-z]+:[a-z0-9-]{1,40}$')));

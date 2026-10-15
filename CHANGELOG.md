@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.14.1 — 2026-10-15 (shinier coins, send any amount)
+
+- **New coin design:** polished gold with a milled edge and an engraved W, a glint of light that sweeps across it,
+  and twinkling sparkles on the big ones. The header balance has a gold ring, shimmering gold numbers, and glows
+  with coins popping out whenever you earn some.
+- **Send coins:** a "Send coins" button on the shop's balance card (pick a friend there), more amounts (up to
+  2,500) and any custom amount from 10 to 5,000.
+- Fixed the shop opening scrolled down to its section tabs.
+- **Android app 1.14.1** (versionCode 16).
+
 ## 1.14.0 — 2026-10-15 (gifts, frames and badges, streak freezes, mystery boxes, keyboards and sounds)
 
 - **Gifts:** send a friend 50–500 coins, or buy them anything on sale, from their card on the Friends page. They

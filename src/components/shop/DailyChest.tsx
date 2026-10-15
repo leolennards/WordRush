@@ -117,7 +117,7 @@ export function DailyChest() {
               transition={{ type: 'spring', stiffness: 380, damping: 16 }}
               className="tabular flex items-center gap-1.5 text-2xl font-black"
             >
-              +{won} <Coin className="size-6" />
+              +{won} <Coin className="size-7" shine sparkle />
             </m.p>
           ) : ready ? (
             <m.p key="ready" className="text-[0.95rem] leading-snug font-bold">

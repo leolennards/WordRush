@@ -26,7 +26,8 @@ export function CoinChip({ onClick }: { onClick: () => void }) {
       type="button"
       onClick={onClick}
       aria-label={`${balance} coins — open the shop`}
-      className="relative mr-1 inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-surface pr-3 pl-1.5 text-sm font-bold shadow-sm transition hover:border-border-strong hover:shadow-md active:scale-95"
+      className="coin-chip relative mr-1 inline-flex h-9 items-center gap-1.5 rounded-full pr-3 pl-1 text-sm font-extrabold shadow-sm transition-shadow hover:shadow-md active:scale-95"
+      data-gain={gain ? true : undefined}
     >
       <m.span
         key={gain?.key ?? 0}
@@ -34,11 +35,28 @@ export function CoinChip({ onClick }: { onClick: () => void }) {
         animate={{ rotateY: 360, scale: 1 }}
         transition={{ duration: 0.7 }}
       >
-        <Coin className="size-6" />
+        <Coin className="size-7" shine />
       </m.span>
-      <span className="tabular">
+      <span className="coin-amount tabular">
         <Rolling value={balance} />
       </span>
+      {/* A few coins pop out when coins come in. */}
+      <AnimatePresence>
+        {gain &&
+          [-28, -10, 10, 28].map((x, i) => (
+            <m.span
+              key={`${gain.key}-${i}`}
+              className="pointer-events-none absolute top-1 left-2"
+              initial={{ x: 0, y: 0, opacity: 1, scale: 0.5, rotate: 0 }}
+              animate={{ x, y: [0, -26 - (i % 2) * 10, 6], opacity: [1, 1, 0], scale: 0.8, rotate: x * 8 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.9, delay: i * 0.05, ease: 'easeOut' }}
+              aria-hidden
+            >
+              <Coin className="size-4" />
+            </m.span>
+          ))}
+      </AnimatePresence>
       <AnimatePresence>
         {gain && (
           <m.span

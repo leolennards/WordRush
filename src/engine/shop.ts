@@ -349,7 +349,10 @@ export function applyFreezes(p: Progress, days: readonly number[]): Progress | n
 
 // ---------- Gifts ----------
 
-export const GIFT_COINS = [50, 100, 250, 500] as const;
+/** Quick picks for a coin gift; any whole amount from GIFT_MIN to GIFT_MAX can be sent. */
+export const GIFT_COINS = [50, 100, 250, 500, 1000, 2500] as const;
+export const GIFT_MIN = 10;
+export const GIFT_MAX = 5000;
 
 export interface Gift {
   id: string;
@@ -381,6 +384,6 @@ export function receiveGift(p: Progress, g: Gift): { progress: Progress; item: S
   if (item && !owns(p, item.id)) {
     return { item, coins: 0, progress: { ...p, applied, owned: [...p.owned, item.id] } };
   }
-  const coins = g.kind === 'coins' ? Math.max(0, Math.min(500, g.coins ?? 0)) : (item?.price ?? 100);
+  const coins = g.kind === 'coins' ? Math.max(0, Math.min(GIFT_MAX, Math.floor(g.coins ?? 0))) : (item?.price ?? 100);
   return { item: null, coins, progress: { ...p, applied, coins: p.coins + coins } };
 }

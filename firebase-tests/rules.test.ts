@@ -328,8 +328,11 @@ describe('gifts', () => {
     await assertFails(setDoc(doc(db('alice'), 'gifts', 'g5'), coins('alice', 'alice')));
   });
 
-  it('only allows the set coin amounts and no extra fields', async () => {
-    await assertFails(setDoc(doc(db('alice'), 'gifts', 'g1'), coins('alice', 'bob', 100000)));
+  it('only allows 10 to 5,000 whole coins and no extra fields', async () => {
+    await assertSucceeds(setDoc(doc(db('alice'), 'gifts', 'g0'), coins('alice', 'bob', 5000)));
+    await assertFails(setDoc(doc(db('alice'), 'gifts', 'g1'), coins('alice', 'bob', 5001)));
+    await assertFails(setDoc(doc(db('alice'), 'gifts', 'g6'), coins('alice', 'bob', 5)));
+    await assertFails(setDoc(doc(db('alice'), 'gifts', 'g7'), coins('alice', 'bob', 12.5)));
     await assertFails(setDoc(doc(db('alice'), 'gifts', 'g2'), { ...coins('alice', 'bob'), claimed: true }));
     await assertFails(setDoc(doc(db('alice'), 'gifts', 'g3'), { ...coins('alice', 'bob'), item: 'skin:gold' }));
   });

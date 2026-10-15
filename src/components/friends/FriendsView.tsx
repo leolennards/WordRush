@@ -619,7 +619,7 @@ function FriendRow({
           </button>
         )}
       </div>
-      <GiftDialog friend={gifting ? friend.uid : null} name={name} onClose={() => setGifting(false)} />
+      <GiftDialog open={gifting} friend={friend.uid} onClose={() => setGifting(false)} />
     </li>
   );
 }

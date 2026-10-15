@@ -219,7 +219,8 @@ the next game. Hard-mode results are marked with `*` when shared.
 - **Streak freeze** (250 coins, hold up to 2): if you miss a Daily Challenge, a freeze covers that day
   automatically and your streak carries on. One freeze per missed day; if you miss more days than you
   have freezes, none are used and the streak resets as usual. A lost Daily still ends a streak.
-- **Gifts:** from a friend's card on the Friends page, send them 50, 100, 250 or 500 coins, or buy them
+- **Gifts:** from a friend's card on the Friends page, or from the shop's "Send coins" button, send them
+  any amount from 10 to 5,000 coins (quick picks 50 to 2,500), or buy them
   any item on sale at its full price. They get a gift card to open. If they already own the item,
   they get its price in coins instead. Each gift opens once, even with several devices.
 - Reduce motion (or the system setting) stills animated tiles, keys and frames and turns win effects off.
