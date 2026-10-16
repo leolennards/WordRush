@@ -11,6 +11,7 @@ import { MiniBoard } from '@/components/home/MiniBoard';
 import { Button } from '@/components/ui';
 import { Avatar } from './Avatar';
 import { GiftDialog } from './GiftDialog';
+import { titleTier } from '@/components/shop/kinds';
 import { GoogleButton } from './GoogleButton';
 
 interface FriendsViewProps {
@@ -835,5 +836,9 @@ function SwapList({ onOpenSwap }: { onOpenSwap: (id: string) => void }) {
 /** A player's title under their name, if they've picked one. */
 function TitleLine({ id }: { id: string | null | undefined }) {
   const title = id ? TITLES.find((t) => t.id === id && t.id !== 'none') : null;
-  return title ? <p className="profile-title truncate text-xs font-bold">{title.name}</p> : null;
+  return title ? (
+    <p className="profile-title truncate text-xs font-bold" data-tier={titleTier(title)}>
+      {title.name}
+    </p>
+  ) : null;
 }

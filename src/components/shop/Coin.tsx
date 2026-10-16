@@ -1,23 +1,23 @@
-import { useId, type CSSProperties } from 'react';
+import { useId } from 'react';
 
 /** A 4-point sparkle. */
 const SPARKLE =
   'M0 -1 C0.12 -0.12 0.12 -0.12 1 0 C0.12 0.12 0.12 0.12 0 1 C-0.12 0.12 -0.12 0.12 -1 0 C-0.12 -0.12 -0.12 -0.12 0 -1 Z';
 /** Light rays behind a hero coin. */
 const RAYS = Array.from({ length: 12 }, (_, i) => i * 30);
-/** The letters a hero coin flips through, like tiles being revealed. */
-const LETTERS = ['W', 'O', 'R', 'D', 'S'];
+/** The W, struck into the face. */
+const W = 'M12.6 15.6h4.6l2.6 10.4 2.9-10.4h3.4l2.9 10.4 2.6-10.4h4.6l-5.2 16.6h-4.1L24 22.6l-3.1 9.6h-4.1z';
 
 /**
  * The Wordskiis coin: a letter tile struck in gold. Holographic foil, a green
  * and an amber gem in the corners (the game's "correct" and "present"), and
  * an engraved W.
  *
- * - `shine`: a glint of light and the foil's rainbow sweep across it.
+ * - `shine`: a glint sweeps across it, light runs around its rim and the gems twinkle.
  * - `sparkle`: twinkling stars around it.
  * - `spin`: it flips over every few seconds, like a tile.
- * - `hero`: the big version: rays of light behind it, a glowing aura, and the
- *   letter flipping through W·O·R·D·S.
+ * - `hero`: the big version: all of the above, plus turning rays of light, a
+ *   glowing aura, sparkles orbiting it and a gentle 3D tilt.
  */
 export function Coin({
   className = 'size-5',
@@ -34,25 +34,6 @@ export function Coin({
 }) {
   const id = useId().replace(/:/g, '');
   const u = (name: string) => `url(#${id}-${name})`;
-  const letter = (ch: string, extra?: { className?: string; style?: CSSProperties }) => (
-    <g key={ch} className={extra?.className} style={extra?.style}>
-      <text
-        x="24.6"
-        y="26.2"
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize="23"
-        fontWeight="900"
-        fill="#fff8dc"
-        fillOpacity="0.9"
-      >
-        {ch}
-      </text>
-      <text x="24" y="25.4" textAnchor="middle" dominantBaseline="central" fontSize="23" fontWeight="900" fill={u('ink')}>
-        {ch}
-      </text>
-    </g>
-  );
   return (
     <svg
       viewBox="0 0 48 48"
@@ -148,7 +129,7 @@ export function Coin({
       </g>
 
       {/* Gems: the game's green and amber. */}
-      <g>
+      <g className={shine || hero ? 'coin-gems' : undefined}>
         <rect
           x="9.6"
           y="9.6"
@@ -175,18 +156,31 @@ export function Coin({
         <rect x="34.8" y="34.5" width="1.6" height="1.2" rx="0.4" transform="rotate(45 36.1 36.1)" fill="#fef3c7" />
       </g>
 
-      {/* The engraved letter: W, or W·O·R·D·S flipping on a hero coin. */}
-      {hero
-        ? LETTERS.map((ch, i) =>
-            letter(ch, {
-              className: i ? 'coin-letter' : 'coin-letter coin-letter-first',
-              style: { animationDelay: `${i * 1.6}s` },
-            }),
-          )
-        : letter('W')}
+      {/* The engraved W: a light lip below, the cut above. */}
+      <path d={W} fill="#fff8dc" fillOpacity="0.9" transform="translate(0.6 0.9)" />
+      <path d={W} fill={u('ink')} />
+      <path d={W} fill="none" stroke="#7c2d12" strokeOpacity="0.35" strokeWidth="0.5" />
 
       {/* Glassy gloss over the top half. */}
       <path d="M8 14.5 Q8 6.5 16 6.5 H32 Q40 6.5 40 14.5 V19 Q24 23 8 19 Z" fill={u('gloss')} opacity="0.55" />
+
+      {/* Light running around the rim. */}
+      {(shine || hero) && (
+        <rect
+          className="coin-rimlight"
+          x="3.3"
+          y="3.3"
+          width="41.4"
+          height="41.4"
+          rx="11.3"
+          pathLength={100}
+          fill="none"
+          stroke="#fff"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeDasharray="14 86"
+        />
+      )}
 
       {/* A glint of light sweeping across. */}
       {(shine || hero) && (
@@ -194,6 +188,16 @@ export function Coin({
           <g transform="rotate(24 24 24)">
             <rect className="coin-glint" x="-16" y="-8" width="11" height="64" fill={u('glint')} />
           </g>
+        </g>
+      )}
+
+      {hero && (
+        <g className="coin-orbit" fill="#fff7c2">
+          {[0, 120, 240].map((a) => (
+            <g key={a} transform={`rotate(${a} 24 24) translate(24 -6)`}>
+              <path d={SPARKLE} transform="scale(2.4)" />
+            </g>
+          ))}
         </g>
       )}
 

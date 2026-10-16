@@ -117,6 +117,19 @@ function playPack(ac: AudioContext, cue: Cue, use: SoundPackId): boolean {
         tone(ac, 4186, 0.24, 0.4, 'sine', 0.02);
       } else [0, 0.1].forEach((t) => click(ac, t, 0.4, 500));
       return true;
+    case 'chimes': {
+      // A struck glass bell: a pure tone with a soft, shimmering overtone.
+      const bell = (f: number, t: number, g: number) => {
+        tone(ac, f, t, 0.9, 'sine', g);
+        tone(ac, f * 2.76, t, 0.35, 'sine', g * 0.3);
+      };
+      if (cue === 'key') bell(1046.5 + Math.random() * 400, 0, 0.035);
+      else if (cue === 'reveal') bell(1318.5, 0, 0.045);
+      else if (cue === 'invalid') bell(392, 0, 0.05);
+      else if (cue === 'win') [1046.5, 1318.5, 1568, 2093, 2637].forEach((f, i) => bell(f, i * 0.1, 0.05));
+      else [880, 698.5, 523.25].forEach((f, i) => bell(f, i * 0.18, 0.045));
+      return true;
+    }
     default:
       return false;
   }

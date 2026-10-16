@@ -210,7 +210,10 @@ the next game. Hard-mode results are marked with `*` when shared.
   - Backgrounds (animated scenes behind the app) and app colours (free: Mint, Ocean, Grape, Rose).
   - Profile items: avatar frames, badges, titles and banners. Friends see them on your profile card and
     friend list.
-- **Profile:** tap your picture at the top to edit it. Your picture can be your initial, an emoji or a photo
+- **Level rewards:** besides rank tile colours, 27 rewards unlock as you level up (titles, frames, badges,
+  tile styles, banners, backgrounds, win effects, a sound pack, a keyboard, an app colour and Tile Pals),
+  from level 2 to 100. They can't be bought. Your Profile shows them all and what's next.
+- **Profile:** tap your picture at the top to edit it. Your picture can be your initial, a Tile Pal or a photo
   (cropped to a small square and visible only to friends), on a colour you choose. All free.
 - Limited-time items are only on sale in their season: Halloween (1 October – 7 November: Haunted tile
   colours and the Bat Swarm win effect) and Winter (1 December – 10 January: Candy Cane tile colours and

@@ -44,3 +44,15 @@ export const KIND_DETAIL: Record<ItemKind, string> = {
   title: 'Shown under your name',
   banner: 'On your profile card',
 };
+
+/** Why something is locked, for screen readers: its price or the level that unlocks it. */
+export const lockLabel = (c: { price?: number; level?: number }) =>
+  c.level !== undefined ? `unlocks at level ${c.level}` : `${c.price} coins in the shop`;
+
+/** How grand a title looks: level-50+ titles in gold, level-100 ones in rainbow. */
+export function titleTier(t: { level?: number; price?: number } | undefined): 'epic' | 'legend' | undefined {
+  if (!t) return undefined;
+  if ((t.level ?? 0) >= 100) return 'legend';
+  if ((t.level ?? 0) >= 50 || (t.price ?? 0) >= 1200) return 'epic';
+  return undefined;
+}

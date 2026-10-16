@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.16.0 — 2026-10-16 (level rewards, Tile Pals, a brighter Home, a cooler coin)
+
+- **Level rewards:** levelling up now unlocks much more than tile colours: 27 rewards from level 2 to 100, including
+  titles (Rookie Speller → Wordskiis Legend), frames (Bronze, Silver, and animated Gilded, Royal and Mythic Aura),
+  badges (Sprout, Medal, animated Nova and Legend Gem), tile styles (Outline, animated Crystal and Prismatic),
+  banners (First Light, Nebula, Phoenix, Prism), backgrounds (Fireflies, Spiral Galaxy), win effects (Balloons,
+  Supernova), the Crystal Chimes sound pack, Golden Keys, the Teal app colour and five special Tile Pals. The
+  higher the level, the more animated and special the reward. Each level-up shows what it unlocked, Home shows
+  what's next, and your Profile has the full road.
+- **Tile Pals** replace the emoji pictures: 29 little letter-tile characters in the game's colours, with faces and
+  accessories (sprouts, caps, crowns, halos, headphones…).
+- **A brighter Home:** a colourful hero card with your picture, greeting, level progress, next reward, streak,
+  coins and badges on your banner; a vivid Daily Challenge card; every mode in its own colour; a colourful
+  Friends card and quick links.
+- **The coin:** just the W now, with light running around its rim, twinkling gems, sparkles orbiting it and a
+  gentle 3D tilt on the big ones.
+- **Android app 1.16.0** (versionCode 18).
+
 ## 1.15.0 — 2026-10-16 (profiles and pictures, backgrounds, app colours, a brand-new coin)
 
 - **A new Wordskiis coin:** a letter tile struck in gold, with holographic foil, the game's green and amber gems in

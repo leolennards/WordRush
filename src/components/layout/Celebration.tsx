@@ -36,6 +36,10 @@ export function Celebration({ seed, fx = 'confetti' }: { seed: number; fx?: WinF
         <Bats seed={seed} />
       ) : fx === 'snow' ? (
         <Snow seed={seed} />
+      ) : fx === 'balloons' ? (
+        <Balloons seed={seed} />
+      ) : fx === 'supernova' ? (
+        <Supernova seed={seed} />
       ) : (
         <Confetti seed={seed} />
       )}
@@ -286,4 +290,77 @@ function Snow({ seed }: { seed: number }) {
       <Snowflake style={{ width: f.size, height: f.size }} strokeWidth={2.5} aria-hidden />
     </m.span>
   ));
+}
+
+/** A bunch of balloons floats up past the board. */
+function Balloons({ seed }: { seed: number }) {
+  const balloons = useMemo(() => {
+    const rnd = rng(seed);
+    return Array.from({ length: 12 }, (_, i) => ({
+      x: (rnd(i, 0) - 0.5) * 320,
+      sway: (rnd(i, 1) - 0.5) * 40,
+      size: 30 + rnd(i, 2) * 20,
+      color: ['#f43f5e', '#38bdf8', '#facc15', '#a855f7', '#22c55e', '#fb923c'][i % 6],
+      delay: rnd(i, 3) * 0.6,
+    }));
+  }, [seed]);
+  return balloons.map((b, i) => (
+    <m.svg
+      key={i}
+      viewBox="0 0 30 50"
+      className="absolute"
+      style={{ width: b.size, height: b.size * 1.66 }}
+      initial={{ x: b.x, y: 260, opacity: 0 }}
+      animate={{ x: [b.x, b.x + b.sway, b.x - b.sway, b.x], y: [260, -320], opacity: [0, 1, 1, 0], rotate: [-4, 4, -4] }}
+      transition={{ duration: 2.6, delay: b.delay, ease: 'easeOut' }}
+    >
+      <ellipse cx="15" cy="15" rx="13" ry="15" fill={b.color} />
+      <ellipse cx="10" cy="9" rx="3.5" ry="5" fill="#fff" opacity="0.45" />
+      <path d="M13 29 L17 29 L15 32 Z" fill={b.color} />
+      <path d="M15 32 Q12 38 15 43 Q18 47 15 50" stroke="#94a3b8" strokeWidth="1" fill="none" />
+    </m.svg>
+  ));
+}
+
+/** A star explodes: a flash, rings of light and a spray of sparks. Level 100 only. */
+function Supernova({ seed }: { seed: number }) {
+  const sparks = useMemo(() => {
+    const rnd = rng(seed);
+    return Array.from({ length: 28 }, (_, i) => {
+      const angle = (i / 28) * Math.PI * 2 + rnd(i, 0) * 0.2;
+      const dist = 140 + rnd(i, 1) * 120;
+      return { x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, color: SPARKS[i % SPARKS.length]!, delay: rnd(i, 2) * 0.15 };
+    });
+  }, [seed]);
+  return (
+    <>
+      <m.span
+        className="absolute size-40 rounded-full"
+        style={{ background: 'radial-gradient(circle, #fff 0%, #fde68a 25%, #f472b6 50%, transparent 70%)' }}
+        initial={{ scale: 0, opacity: 1 }}
+        animate={{ scale: [0, 1.6, 2.4], opacity: [1, 0.9, 0] }}
+        transition={{ duration: 1.1, ease: 'easeOut' }}
+      />
+      {[0, 0.18, 0.36].map((d, i) => (
+        <m.span
+          key={i}
+          className="absolute size-24 rounded-full border-[3px]"
+          style={{ borderColor: ['#fde68a', '#f472b6', '#38bdf8'][i] }}
+          initial={{ scale: 0.2, opacity: 1 }}
+          animate={{ scale: 5, opacity: 0 }}
+          transition={{ duration: 1.3, delay: d, ease: 'easeOut' }}
+        />
+      ))}
+      {sparks.map((s, i) => (
+        <m.span
+          key={i}
+          className="absolute size-2.5 rounded-full"
+          style={{ background: s.color, boxShadow: `0 0 12px 2px ${s.color}` }}
+          initial={{ x: 0, y: 0, opacity: 0 }}
+          animate={{ x: s.x, y: [0, s.y, s.y + 30], opacity: [0, 1, 0], scale: [0.5, 1.2, 0.4] }}
+          transition={{ duration: 1.5, delay: 0.15 + s.delay, ease: [0.22, 1, 0.36, 1] }}
+        />
+      ))}
+    </>
+  );
 }

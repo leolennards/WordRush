@@ -4,7 +4,7 @@ import type { Stats } from '@/engine/stats';
 import { emptyProgress, type Progress } from '@/engine/progress';
 import type { QuestState } from '@/engine/quests';
 import { SKINS, type SkinId } from '@/engine/ranks';
-import { TINTS, isAvatarEmoji, isPhotoData, type AvatarTint } from '@/engine/profile';
+import { TINTS, isPhotoData, isTilePal, type AvatarTint } from '@/engine/profile';
 import {
   ACCENTS,
   BACKGROUNDS,
@@ -154,7 +154,7 @@ export const settingsSchema: Schema<Settings> = {
       accent: ACCENTS.some((x) => x.id === d.accent) ? (d.accent as AccentId) : 'mint',
       title: TITLES.some((x) => x.id === d.title) ? (d.title as TitleId) : 'none',
       banner: BANNERS.some((x) => x.id === d.banner) ? (d.banner as BannerId) : 'none',
-      avatar: d.avatar === 'photo' || isAvatarEmoji(d.avatar) ? (d.avatar as string) : 'initial',
+      avatar: d.avatar === 'photo' || isTilePal(d.avatar) ? (d.avatar as string) : 'initial',
       photo: isPhotoData(d.photo) ? d.photo : '',
       tint: TINTS.some((x) => x.id === d.tint) ? (d.tint as AvatarTint) : 'auto',
       seenHelp: bool('seenHelp'),

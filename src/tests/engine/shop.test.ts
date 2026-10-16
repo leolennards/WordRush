@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   SHOP_ITEMS,
   CHEST,
+  LEVEL_REWARDS,
+  TILE_PALS,
+  nextRewards,
+  palUnlocked,
+  rewardsBetween,
   PHOTO_MAX,
   cosmeticUnlocked,
   isPhotoData,
@@ -124,15 +129,15 @@ describe('shop', () => {
     expect(skinUnlocked('galaxy', 100, [])).toBe(false);
     expect(skinUnlocked('galaxy', 1, ['skin:galaxy'])).toBe(true);
     expect(skinUnlocked('ocean', 5, [])).toBe(true);
-    expect(tileStyleUnlocked('classic', [])).toBe(true);
-    expect(tileStyleUnlocked('neon', [])).toBe(false);
-    expect(tileStyleUnlocked('neon', ['tiles:neon'])).toBe(true);
+    expect(tileStyleUnlocked('classic', [], 1)).toBe(true);
+    expect(tileStyleUnlocked('neon', [], 100)).toBe(false);
+    expect(tileStyleUnlocked('neon', ['tiles:neon'], 1)).toBe(true);
   });
 
   it('sells win effects, with confetti free for everyone', () => {
-    expect(winFxUnlocked('confetti', [])).toBe(true);
-    expect(winFxUnlocked('fireworks', [])).toBe(false);
-    expect(winFxUnlocked('fireworks', ['fx:fireworks'])).toBe(true);
+    expect(winFxUnlocked('confetti', [], 1)).toBe(true);
+    expect(winFxUnlocked('fireworks', [], 1)).toBe(false);
+    expect(winFxUnlocked('fireworks', ['fx:fireworks'], 1)).toBe(true);
     const paid = WIN_EFFECTS.filter((f) => f.price !== undefined);
     expect(SHOP_ITEMS.filter((i) => i.kind === 'fx').map((i) => i.id)).toEqual(paid.map((f) => `fx:${f.id}`));
   });
@@ -346,8 +351,8 @@ describe('profiles', () => {
   });
 
   it('keeps a valid profile in settings and drops anything else', () => {
-    const ok = settingsSchema.validate({ avatar: '🦊', tint: 'sky', title: 'wizard', banner: 'aurora', background: 'stars', accent: 'grape' });
-    expect(ok).toMatchObject({ avatar: '🦊', tint: 'sky', title: 'wizard', banner: 'aurora', background: 'stars', accent: 'grape' });
+    const ok = settingsSchema.validate({ avatar: 'p3', tint: 'sky', title: 'wizard', banner: 'aurora', background: 'stars', accent: 'grape' });
+    expect(ok).toMatchObject({ avatar: 'p3', tint: 'sky', title: 'wizard', banner: 'aurora', background: 'stars', accent: 'grape' });
     const bad = settingsSchema.validate({ avatar: '<img>', photo: 'javascript:alert(1)', tint: 'nope', background: 'lava' });
     expect(bad).toMatchObject({ avatar: 'initial', photo: '', tint: 'auto', background: 'tiles' });
   });
@@ -356,9 +361,35 @@ describe('profiles', () => {
     for (const kind of ['bg', 'accent', 'title', 'banner'] as const) {
       expect(SHOP_ITEMS.some((i) => i.kind === kind)).toBe(true);
     }
-    expect(cosmeticUnlocked('bg', 'tiles', [])).toBe(true);
-    expect(cosmeticUnlocked('bg', 'synthwave', [])).toBe(false);
-    expect(cosmeticUnlocked('accent', 'grape', [])).toBe(true);
-    expect(cosmeticUnlocked('title', 'legend', ['title:legend'])).toBe(true);
+    expect(cosmeticUnlocked('bg', 'tiles', [], 1)).toBe(true);
+    expect(cosmeticUnlocked('bg', 'synthwave', [], 1)).toBe(false);
+    expect(cosmeticUnlocked('accent', 'grape', [], 1)).toBe(true);
+    expect(cosmeticUnlocked('title', 'legend', ['title:legend'], 1)).toBe(true);
+  });
+});
+
+describe('level rewards', () => {
+  it('unlocks rewards by level, never sold in the shop', () => {
+    expect(cosmeticUnlocked('frame', 'bronze', [], 4)).toBe(false);
+    expect(cosmeticUnlocked('frame', 'bronze', [], 5)).toBe(true);
+    expect(cosmeticUnlocked('title', 'legendary', [], 99)).toBe(false);
+    expect(cosmeticUnlocked('title', 'legendary', [], 100)).toBe(true);
+    for (const r of LEVEL_REWARDS) expect(SHOP_ITEMS.some((i) => i.id === `${r.kind}:${r.id}`)).toBe(false);
+  });
+
+  it('spreads rewards from level 2 to 100, with something special at the top', () => {
+    expect(LEVEL_REWARDS[0]!.level).toBe(2);
+    expect(rewardsBetween(99, 100).length).toBeGreaterThanOrEqual(4);
+    expect(rewardsBetween(1, 100).length).toBe(LEVEL_REWARDS.length);
+    expect(nextRewards(23)?.level).toBe(25);
+    expect(nextRewards(100)).toBeNull();
+  });
+
+  it('has Tile Pals for everyone, and some for high levels', () => {
+    expect(TILE_PALS.length).toBeGreaterThanOrEqual(24);
+    expect(palUnlocked('p1', 1)).toBe(true);
+    expect(palUnlocked('p29', 99)).toBe(false);
+    expect(palUnlocked('p29', 100)).toBe(true);
+    expect(new Set(TILE_PALS.map((p) => p.id)).size).toBe(TILE_PALS.length);
   });
 });

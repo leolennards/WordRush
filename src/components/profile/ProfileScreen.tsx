@@ -3,7 +3,8 @@ import { m } from 'motion/react';
 import { ArrowLeft, Camera, Check, CircleCheck, Flame, ImageOff, Lock, ShoppingBag, Smile, Trophy, Type } from 'lucide-react';
 import {
   ACHIEVEMENTS,
-  AVATAR_EMOJI,
+  TILE_PALS,
+  palUnlocked,
   BADGES,
   BANNERS,
   FRAMES,
@@ -27,8 +28,11 @@ import { useSettings } from '@/features/settings/SettingsContext';
 import { useStats } from '@/features/stats/StatsContext';
 import { useToast } from '@/components/layout/Toasts';
 import { Avatar, BadgeIcon, type Look } from '@/components/friends/Avatar';
+import { TilePalArt } from '@/components/friends/TilePalArt';
+import { LevelRoad } from './LevelRoad';
 import { RankBadge } from '@/components/progress/RankBadge';
-import { Coin } from '@/components/shop/Coin';
+import { LockTag } from '@/components/shop/LockTag';
+import { lockLabel, titleTier } from '@/components/shop/kinds';
 import { Segmented } from '@/components/ui';
 
 /** Shrinks a picked image to a small square JPEG, small enough to share with friends. */
@@ -63,7 +67,7 @@ async function photoFromFile(file: File): Promise<string> {
   }
 }
 
-type PictureMode = 'initial' | 'emoji' | 'photo';
+type PictureMode = 'initial' | 'pal' | 'photo';
 
 /** Your profile: picture, colour, frame, badge, title and banner, as friends see them. */
 export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: () => void }) {
@@ -76,7 +80,7 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
   const today = useTodayIndex(now);
   const file = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
-  const mode: PictureMode = settings.avatar === 'photo' ? 'photo' : settings.avatar === 'initial' ? 'initial' : 'emoji';
+  const mode: PictureMode = settings.avatar === 'photo' ? 'photo' : settings.avatar === 'initial' ? 'initial' : 'pal';
   const [tab, setTab] = useState<PictureMode>(mode);
 
   const name = f.me?.profile.name ?? 'You';
@@ -146,7 +150,11 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
               </m.div>
             </div>
             <p className="mt-2 text-xl font-extrabold">{name}</p>
-            {title && <p className="profile-title text-sm font-bold">{title.name}</p>}
+            {title && (
+              <p className="profile-title text-sm font-bold" data-tier={titleTier(title)}>
+                {title.name}
+              </p>
+            )}
             <p className="text-xs text-muted">
               Level {level} · {rank.name}
             </p>
@@ -163,6 +171,11 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
             )}
           </div>
         </m.section>
+
+        <Section title={`Level rewards · you're level ${level}`}>
+          <p className="mb-2 text-sm text-muted">Every few levels unlocks something new. The higher you climb, the cooler it gets.</p>
+          <LevelRoad level={level} />
+        </Section>
 
         {/* Picture */}
         <Section title="Picture">
@@ -185,10 +198,10 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
                 ),
               },
               {
-                value: 'emoji',
+                value: 'pal',
                 label: (
                   <>
-                    <Smile className="size-3.5" aria-hidden /> Emoji
+                    <Smile className="size-3.5" aria-hidden /> Tile Pals
                   </>
                 ),
               },
@@ -202,23 +215,33 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
               },
             ]}
           />
-          {tab === 'emoji' && (
-            <div role="radiogroup" aria-label="Emoji" className="mt-3 grid grid-cols-6 gap-2 sm:grid-cols-9">
-              {AVATAR_EMOJI.map((e) => {
-                const on = settings.avatar === e;
+          {tab === 'pal' && (
+            <div role="radiogroup" aria-label="Tile Pals" className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
+              {TILE_PALS.map((p) => {
+                const on = settings.avatar === p.id;
+                const open = palUnlocked(p.id, level);
                 return (
                   <button
-                    key={e}
+                    key={p.id}
                     type="button"
                     role="radio"
                     aria-checked={on}
-                    aria-label={e}
-                    onClick={() => update({ avatar: e })}
-                    className={`grid aspect-square place-items-center rounded-xl text-2xl transition hover:scale-110 active:scale-95 ${
-                      on ? 'bg-accent/15 ring-2 ring-accent' : 'bg-surface-2'
+                    aria-label={open ? p.name : `${p.name}, unlocks at level ${p.level}`}
+                    disabled={!open}
+                    onClick={() => update({ avatar: p.id })}
+                    className={`group relative flex flex-col items-center gap-1 rounded-xl p-2 transition active:scale-95 disabled:cursor-not-allowed ${
+                      on ? 'bg-accent/15 ring-2 ring-accent' : 'bg-surface-2 hover:bg-surface-3'
                     }`}
                   >
-                    {e}
+                    <span className={`block size-12 transition-transform group-hover:scale-110 group-hover:-rotate-6 ${open ? '' : 'opacity-35 grayscale'}`}>
+                      <TilePalArt pal={p} />
+                    </span>
+                    <span className={`text-[0.7rem] leading-tight font-semibold ${open ? '' : 'text-muted'}`}>{p.name}</span>
+                    {!open && (
+                      <span className="tabular flex items-center gap-0.5 text-[0.6rem] text-subtle">
+                        <Lock className="size-2.5" aria-hidden /> Level {p.level}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -319,7 +342,14 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
           items={TITLES}
           onShop={onShop}
           wide
-          preview={(id, n) => <span className={`text-sm font-bold ${id === 'none' ? 'text-muted' : 'profile-title'}`}>{n}</span>}
+          preview={(id, n) => (
+            <span
+              className={`text-sm font-bold ${id === 'none' ? 'text-muted' : 'profile-title'}`}
+              data-tier={titleTier(TITLES.find((t) => t.id === id))}
+            >
+              {n}
+            </span>
+          )}
         />
         <Picks
           title="Banner"
@@ -369,7 +399,7 @@ function Picks({
   title: string;
   kind: 'frame' | 'badge' | 'title' | 'banner';
   setting: 'frame' | 'badge' | 'title' | 'banner';
-  items: readonly { id: string; name: string; price?: number }[];
+  items: readonly { id: string; name: string; price?: number; level?: number }[];
   preview: (id: string, name: string) => ReactNode;
   onShop: () => void;
   wide?: boolean;
@@ -384,7 +414,7 @@ function Picks({
         className={`grid gap-2 ${wide ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-4 sm:grid-cols-6'}`}
       >
         {items.map((it) => {
-          const unlocked = cosmeticUnlocked(kind, it.id, progress.owned);
+          const unlocked = cosmeticUnlocked(kind, it.id, progress.owned, levelFor(progress.xp).level);
           const on = settings[setting] === it.id;
           return (
             <button
@@ -392,8 +422,8 @@ function Picks({
               type="button"
               role="radio"
               aria-checked={on}
-              aria-label={unlocked ? it.name : `${it.name}, ${it.price} coins in the shop`}
-              onClick={() => (unlocked ? update({ [setting]: it.id } as Partial<Settings>) : onShop())}
+              aria-label={unlocked ? it.name : `${it.name}, ${lockLabel(it)}`}
+              onClick={() => (unlocked ? update({ [setting]: it.id } as Partial<Settings>) : it.level === undefined && onShop())}
               className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition active:scale-[0.97] ${
                 on ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
               }`}
@@ -411,11 +441,7 @@ function Picks({
                   <Check className="size-3" aria-hidden />
                 </span>
               )}
-              {!unlocked && (
-                <span className="tabular flex items-center gap-0.5 text-[0.65rem] text-subtle">
-                  <Lock className="size-2.5" aria-hidden /> <Coin className="size-3" /> {it.price}
-                </span>
-              )}
+              {!unlocked && <LockTag price={it.price} level={it.level} />}
             </button>
           );
         })}

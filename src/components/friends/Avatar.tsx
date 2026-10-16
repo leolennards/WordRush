@@ -1,5 +1,6 @@
-import { Crown, Flame, Gem, Ghost, Heart, Music, Rocket, Star, Trophy, Zap } from 'lucide-react';
-import { TINTS, isAvatarEmoji, isPhotoData, type BadgeId } from '@/engine';
+import { Crown, Flame, Gem, Ghost, Heart, Hexagon, Medal, Music, Rocket, Sparkles, Sprout, Star, Trophy, Zap } from 'lucide-react';
+import { TINTS, isPhotoData, tilePal, type BadgeId } from '@/engine';
+import { TilePalArt } from './TilePalArt';
 import { useFriends } from '@/features/friends/FriendsContext';
 
 const HUES = [152, 38, 210, 280, 12, 190, 330, 95];
@@ -8,7 +9,7 @@ const HUES = [152, 38, 210, 280, 12, 190, 330, 95];
 export interface Look {
   frame?: string | null;
   badge?: string | null;
-  /** An emoji, 'photo', or null for their initial. */
+  /** A Tile Pal id, 'photo', or null for their initial. */
   avatar?: string | null;
   photo?: string | null;
   tint?: string | null;
@@ -37,13 +38,21 @@ export function BadgeIcon({ id, className = 'size-3' }: { id: BadgeId | string; 
       return <Ghost className={`${className} fill-white text-slate-600`} aria-hidden />;
     case 'trophy':
       return <Trophy className={`${className} fill-amber-300 text-amber-600`} aria-hidden />;
+    case 'sprout':
+      return <Sprout className={`${className} text-green-600`} strokeWidth={2.6} aria-hidden />;
+    case 'medal':
+      return <Medal className={`${className} fill-amber-200 text-amber-600`} aria-hidden />;
+    case 'nova':
+      return <Sparkles className={`badge-nova ${className} fill-yellow-200 text-amber-500`} aria-hidden />;
+    case 'legend':
+      return <Hexagon className={`badge-legend ${className} fill-fuchsia-300 text-violet-600`} aria-hidden />;
     default:
       return null;
   }
 }
 
-const FRAMES = new Set(['gold', 'neon', 'rainbow', 'flames', 'leaves', 'pixel', 'orbit']);
-const BADGES = new Set(['star', 'heart', 'bolt', 'crown', 'diamond', 'flame', 'music', 'rocket', 'ghost', 'trophy']);
+const FRAMES = new Set(['gold', 'neon', 'rainbow', 'flames', 'leaves', 'pixel', 'orbit', 'bronze', 'silver', 'gilded', 'royal', 'mythic']);
+const BADGES = new Set(['star', 'heart', 'bolt', 'crown', 'diamond', 'flame', 'music', 'rocket', 'ghost', 'trophy', 'sprout', 'medal', 'nova', 'legend']);
 
 /** The background behind a picture: the chosen colour, or one picked from the player's id. */
 function tintFor(uid: string, tint: string | null | undefined): string {
@@ -73,7 +82,7 @@ export function Avatar({
   const frame = look.frame && FRAMES.has(look.frame) ? look.frame : null;
   const badge = look.badge && BADGES.has(look.badge) ? look.badge : null;
   const photo = look.avatar === 'photo' && isPhotoData(look.photo) ? look.photo : null;
-  const emoji = !photo && isAvatarEmoji(look.avatar) ? look.avatar : null;
+  const pal = !photo ? tilePal(look.avatar) : null;
   const face = (
     <span
       aria-hidden
@@ -82,10 +91,8 @@ export function Avatar({
     >
       {photo ? (
         <img src={photo} alt="" className="size-full object-cover" draggable={false} />
-      ) : emoji ? (
-        <span className="leading-none" style={{ fontSize: '1.25em' }}>
-          {emoji}
-        </span>
+      ) : pal ? (
+        <TilePalArt pal={pal} className="size-[92%] translate-y-[3%]" />
       ) : (
         (name.trim()[0] ?? '?').toUpperCase()
       )}

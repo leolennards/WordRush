@@ -245,6 +245,40 @@ export const Backdrop = memo(function Backdrop() {
           />
         </>
       )}
+      {scene === 'fireflies' &&
+        many(30).map((i) => (
+          <span
+            key={i}
+            className="scene-firefly"
+            style={{
+              left: `${rnd(i, 1) * 100}%`,
+              top: `${rnd(i, 2) * 100}%`,
+              animationDuration: `${8 + rnd(i, 3) * 10}s, ${1.5 + rnd(i, 4) * 2.5}s`,
+              animationDelay: `${-rnd(i, 5) * 18}s, ${-rnd(i, 6) * 4}s`,
+              ['--fx' as string]: `${(rnd(i, 7) - 0.5) * 120}px`,
+              ['--fy' as string]: `${(rnd(i, 8) - 0.5) * 120}px`,
+            }}
+          />
+        ))}
+      {scene === 'galaxy' && (
+        <>
+          <span className="scene-galaxy" />
+          {many(50).map((i) => (
+            <span
+              key={i}
+              className="scene-star"
+              style={{
+                left: `${rnd(i, 1) * 100}%`,
+                top: `${rnd(i, 2) * 100}%`,
+                width: 1 + rnd(i, 3) * 2,
+                height: 1 + rnd(i, 3) * 2,
+                animationDuration: `${2 + rnd(i, 4) * 4}s`,
+                animationDelay: `${-rnd(i, 5) * 6}s`,
+              }}
+            />
+          ))}
+        </>
+      )}
       {scene === 'synthwave' && (
         <>
           <span className="scene-sun" />

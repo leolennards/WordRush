@@ -4,6 +4,7 @@ import { Play, Volume2 } from 'lucide-react';
 import type { ShopItem, SkinId, WinFxId } from '@/engine';
 import type { Settings } from '@/lib/storage/schemas';
 import { useSettings } from '@/features/settings/SettingsContext';
+import { titleTier } from './kinds';
 import { useFriends } from '@/features/friends/FriendsContext';
 import { previewPack } from '@/lib/audio/sound';
 import { Avatar } from '@/components/friends/Avatar';
@@ -73,7 +74,9 @@ export function ItemPreview({ item }: { item: ShopItem }) {
           role="img"
           aria-label={`Preview of ${item.name}`}
         >
-          <span className="profile-title text-base font-extrabold">{item.name}</span>
+          <span className="profile-title text-base font-extrabold" data-tier={titleTier(item)}>
+            {item.name}
+          </span>
         </span>
       );
     case 'banner':

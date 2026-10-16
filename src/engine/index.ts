@@ -29,3 +29,4 @@ export * from './swap';
 export * from './shop';
 export * from './season';
 export * from './profile';
+export * from './rewards';

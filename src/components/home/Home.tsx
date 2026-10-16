@@ -1,9 +1,14 @@
+import type { ReactNode } from 'react';
 import { m } from 'motion/react';
-import { ArrowDownUp, ArrowRight, Award, BarChart3, BookOpen, Bot, CalendarClock, Castle, ChevronRight, CircleHelp, Clock3, Columns2, Flame, Footprints, Grid2x2, Heart, Palette, Settings, Shuffle, Smartphone, Snowflake, Trophy, Users, Zap } from 'lucide-react';
+import { ArrowDownUp, ArrowRight, Award, BarChart3, BookOpen, Bot, CalendarClock, Castle, ChevronRight, CircleHelp, Clock3, Columns2, Flame, Footprints, Gift, Grid2x2, Heart, Palette, Settings, Shuffle, Smartphone, Trophy, Users, Zap } from 'lucide-react';
 import { BRAND, GAME } from '@/config/game';
-import { ACHIEVEMENTS, SHOP_ITEMS, chestReady, coinBalance, effectiveStreak, freezesHeld, frozenDays, owns, winPercentage, type GameState, type Progress, type Stats } from '@/engine';
+import { ACHIEVEMENTS, SHOP_ITEMS, TITLES, chestReady, coinBalance, effectiveStreak, freezesHeld, frozenDays, levelFor, nextRewards, owns, rankFor, winPercentage, type GameState, type Progress, type Stats } from '@/engine';
 import { Coin } from '@/components/shop/Coin';
-import { LevelBar } from '@/components/progress/LevelBar';
+import { RankBadge } from '@/components/progress/RankBadge';
+import { Avatar } from '@/components/friends/Avatar';
+import { useServices } from '@/app/services';
+import { useFriends } from '@/features/friends/FriendsContext';
+import { useSettings } from '@/features/settings/SettingsContext';
 import { MiniBoard } from './MiniBoard';
 import { QuestsCard } from './QuestsCard';
 
@@ -45,6 +50,7 @@ interface HomeProps {
   onHelp: () => void;
   onStats: () => void;
   onSettings: () => void;
+  onProfile: () => void;
 }
 
 function dailyCopy(game: GameState): { headline: string; detail: string; cta: string } {
@@ -80,6 +86,9 @@ const rise = (i: number) => ({
 
 export function Home(props: HomeProps) {
   const { daily, practice, dailyStats, practiceStats } = props;
+  const f = useFriends();
+  const { settings } = useSettings();
+  const { now } = useServices();
   const copy = dailyCopy(daily);
   const dailyDone = daily.status !== 'playing';
   const streak = effectiveStreak(dailyStats, props.todayIndex, frozenDays(props.progress.owned));
@@ -94,8 +103,7 @@ export function Home(props: HomeProps) {
       group: 'quick' as const,
       label: `${practiceInProgress ? 'Continue' : 'Play'} Practice`,
       icon: Shuffle,
-      tint: 'bg-surface-2',
-      iconClass: '',
+      color: '#0ea5e9',
       onClick: props.onPlayPractice,
       detail: practiceInProgress
         ? `Word ${props.practiceNumber} in progress`
@@ -109,8 +117,7 @@ export function Home(props: HomeProps) {
       group: 'quick' as const,
       label: 'Play Blitz',
       icon: Zap,
-      tint: 'bg-present/20',
-      iconClass: 'text-present',
+      color: '#f59e0b',
       onClick: props.onBlitz,
       detail: best > 0 ? `Best: ${best} ${best === 1 ? 'word' : 'words'}` : 'Race the clock.',
       isNew: false,
@@ -120,8 +127,7 @@ export function Home(props: HomeProps) {
       group: 'quick' as const,
       label: props.rushScore === null ? 'Play Daily Rush' : 'Daily Rush result',
       icon: CalendarClock,
-      tint: 'bg-accent/15',
-      iconClass: 'text-accent',
+      color: '#8b5cf6',
       onClick: props.onRush,
       detail:
         props.rushScore === null
@@ -134,8 +140,7 @@ export function Home(props: HomeProps) {
       group: 'puzzle' as const,
       label: 'Play Duo',
       icon: Columns2,
-      tint: 'bg-correct/15',
-      iconClass: 'text-correct',
+      color: '#22a467',
       onClick: props.onDuo,
       detail: props.progress.duoWins > 0 ? `${props.progress.duoWins} won` : 'Two words at once.',
       isNew: false,
@@ -145,8 +150,7 @@ export function Home(props: HomeProps) {
       group: 'puzzle' as const,
       label: 'Play Quad',
       icon: Grid2x2,
-      tint: 'bg-present/15',
-      iconClass: 'text-present',
+      color: '#f97316',
       onClick: props.onQuad,
       detail: props.progress.quadWins > 0 ? `${props.progress.quadWins} won` : 'Four words, nine guesses.',
       isNew: false,
@@ -156,8 +160,7 @@ export function Home(props: HomeProps) {
       group: 'quick' as const,
       label: 'Play Survival',
       icon: Heart,
-      tint: 'bg-danger/12',
-      iconClass: 'text-danger',
+      color: '#ef4444',
       onClick: props.onSurvival,
       detail: bestSurvival > 0 ? `Best: ${bestSurvival} ${bestSurvival === 1 ? 'word' : 'words'}` : 'Three lives. How far?',
       isNew: false,
@@ -167,8 +170,7 @@ export function Home(props: HomeProps) {
       group: 'puzzle' as const,
       label: 'Play Word Ladder',
       icon: Footprints,
-      tint: 'bg-accent/15',
-      iconClass: 'text-accent',
+      color: '#14b8a6',
       onClick: props.onLadder,
       detail: 'One letter at a time.',
       isNew: false,
@@ -178,8 +180,7 @@ export function Home(props: HomeProps) {
       group: 'puzzle' as const,
       label: 'Play Reverse',
       icon: ArrowDownUp,
-      tint: 'bg-accent/15',
-      iconClass: 'text-accent',
+      color: '#6366f1',
       onClick: props.onReverse,
       detail: props.progress.bestReverse > 0 ? `Best: ${props.progress.bestReverse}/5` : 'Make the colour pattern.',
       isNew: true,
@@ -190,14 +191,107 @@ export function Home(props: HomeProps) {
     { id: 'puzzle', title: 'Puzzles' },
   ] as const;
 
+  const name = f.me?.profile.name;
+  const hour = now().getHours();
+  const greeting = hour < 5 ? 'Up late' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const { level, into, span } = levelFor(props.progress.xp);
+  const { rank } = rankFor(level);
+  const upcoming = nextRewards(level);
+  const coins = coinBalance(props.progress);
+  const chest = chestReady(props.progress, props.todayIndex);
+  const title = TITLES.find((t) => t.id === settings.title && t.id !== 'none');
+
   return (
-    <div className="mx-auto w-full max-w-[30rem] px-4 pt-5 pb-8 sm:pt-10 lg:max-w-[60rem]">
-      <m.header {...rise(0)} className="mb-5 sm:mb-8">
-        <p className="text-[0.8rem] font-semibold tracking-[0.08em] text-muted uppercase">{props.dateLabel}</p>
-        <h2 className="mt-1 text-[1.9rem] leading-[1.1] font-extrabold tracking-tight text-balance sm:text-[2.4rem]">
-          {copy.headline}
-        </h2>
-      </m.header>
+    <div className="mx-auto w-full max-w-[30rem] px-4 pt-4 pb-8 sm:pt-8 lg:max-w-[60rem]">
+      {/* You: picture, level, streak and coins, on your banner */}
+      <m.section
+        {...rise(0)}
+        aria-label="Your progress"
+        className="home-hero relative mb-4 overflow-hidden rounded-[var(--radius-card)] text-white shadow-lg sm:mb-6"
+      >
+        <span className="profile-banner absolute inset-0" data-banner={settings.banner === 'none' ? 'home' : settings.banner} aria-hidden />
+        <span className="home-hero-shade absolute inset-0" aria-hidden />
+        <span className="home-hero-tiles" aria-hidden>
+          {'WORDS'.split('').map((l, i) => (
+            <span key={i} style={{ animationDelay: `${i * -1.1}s` }}>
+              {l}
+            </span>
+          ))}
+        </span>
+        <div className="relative p-5 sm:p-6">
+          <div className="flex items-center gap-3.5">
+            <button
+              type="button"
+              onClick={props.onProfile}
+              aria-label="Your profile"
+              className="shrink-0 rounded-full bg-white/25 p-1 backdrop-blur transition hover:scale-105 active:scale-95"
+            >
+              <Avatar uid={f.me?.uid ?? 'me'} name={name ?? 'You'} size="lg" look={f.lookOf('me')} />
+            </button>
+            <div className="min-w-0 flex-1">
+              <p className="text-[0.72rem] font-bold tracking-[0.12em] text-white/75 uppercase">{props.dateLabel}</p>
+              <h2 className="truncate text-[1.45rem] leading-tight font-extrabold tracking-tight sm:text-[1.7rem]">
+                {greeting}
+                {name ? `, ${name}` : ''}!
+              </h2>
+              {title ? (
+                <p className="truncate text-sm font-bold text-white/90">{title.name}</p>
+              ) : (
+                <p className="truncate text-sm text-white/80">{copy.headline}</p>
+              )}
+            </div>
+            <button type="button" onClick={props.onRanks} aria-label="Ranks and tile themes" className="shrink-0 transition hover:scale-105">
+              <RankBadge level={level} rank={rank} size="sm" />
+            </button>
+          </div>
+
+          {/* Level progress and the next reward */}
+          <button type="button" onClick={props.onProfile} className="mt-4 block w-full text-left" aria-label="Level rewards">
+            <span className="flex items-baseline justify-between text-xs font-semibold text-white/85">
+              <span>
+                Level {level} · {rank.name}
+              </span>
+              <span className="tabular">
+                {into.toLocaleString()}/{span.toLocaleString()} XP
+              </span>
+            </span>
+            <span className="mt-1.5 block h-2.5 overflow-hidden rounded-full bg-white/25">
+              <m.span
+                className="home-xp block h-full rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.max(3, Math.round((into / span) * 100))}%` }}
+                transition={{ duration: 1, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </span>
+            {upcoming && (
+              <span className="mt-2 flex items-center gap-1.5 text-xs text-white/90">
+                <Gift className="size-3.5 shrink-0" aria-hidden />
+                <span className="truncate">
+                  Level {upcoming.level} unlocks <strong>{upcoming.rewards.map((r) => r.name).join(' + ')}</strong>
+                </span>
+              </span>
+            )}
+          </button>
+
+          {/* Quick stats */}
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <HeroChip
+              icon={<Flame className="size-4 text-orange-300" aria-hidden />}
+              value={streak}
+              label={freezes > 0 ? `day streak · ${freezes} ❄` : 'day streak'}
+              onClick={props.onStats}
+            />
+            <HeroChip icon={<Coin className="size-4" shine />} value={coins.toLocaleString()} label={chest ? 'free chest!' : 'coins'} onClick={props.onShop} glow={chest} />
+            <HeroChip
+              icon={<Award className="size-4 text-yellow-200" aria-hidden />}
+              value={`${unlocked}/${ACHIEVEMENTS.length}`}
+              label="badges"
+              ariaLabel={`Achievements — ${unlocked} of ${ACHIEVEMENTS.length} unlocked`}
+              onClick={props.onAchievements}
+            />
+          </div>
+        </div>
+      </m.section>
 
       <div className="grid gap-4 lg:grid-cols-[1.15fr_1fr] lg:gap-6">
         <div className="flex flex-col gap-4">
@@ -205,96 +299,69 @@ export function Home(props: HomeProps) {
           <m.section
             {...rise(1)}
             aria-labelledby="home-daily"
-            className="relative overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-md sm:p-6"
+            className="daily-card relative overflow-hidden rounded-[var(--radius-card)] p-5 text-white shadow-md sm:p-6"
+            data-done={dailyDone || undefined}
           >
-            <div className="flex items-start justify-between gap-5">
+            <span className="feature-card-shine" aria-hidden />
+            <div className="relative flex items-start justify-between gap-5">
               <div className="min-w-0">
                 <h3 id="home-daily" className="flex items-baseline gap-2">
-                  <span className="text-sm font-semibold text-muted">Daily Challenge</span>
-                  <span className="tabular text-sm font-bold">#{props.challengeNumber}</span>
+                  <span className="text-sm font-bold text-white/85">Daily Challenge</span>
+                  <span className="tabular rounded-full bg-white/20 px-2 py-0.5 text-xs font-extrabold">#{props.challengeNumber}</span>
                 </h3>
-                <p className="mt-3 max-w-[16rem] text-[0.95rem] leading-snug text-muted">{copy.detail}</p>
+                <p className="mt-2 text-[1.35rem] leading-tight font-extrabold text-balance">{copy.headline}</p>
+                <p className="mt-1 max-w-[16rem] text-[0.9rem] leading-snug text-white/85">{copy.detail}</p>
               </div>
-              <MiniBoard game={daily} className="shrink-0" />
+              <span className="mini-plate shrink-0 rounded-2xl p-2 shadow-sm">
+                <MiniBoard game={daily} />
+              </span>
             </div>
 
-            <div className="mt-6 flex items-center gap-2">
+            <div className="relative mt-5 flex items-center gap-2">
               <button
                 type="button"
                 onClick={dailyDone ? props.onDailyResults : props.onPlayDaily}
                 aria-label={`${copy.cta} — Daily Challenge #${props.challengeNumber}`}
-                className="group inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-ink px-5 font-semibold text-ink-text shadow-sm transition hover:opacity-90 active:scale-[0.985]"
+                className="group inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-white px-5 font-extrabold text-slate-900 shadow-sm transition hover:bg-white/90 active:scale-[0.985]"
               >
                 {dailyDone && <Trophy className="size-4" aria-hidden />}
                 {copy.cta}
-                {!dailyDone && (
-                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
-                )}
+                {!dailyDone && <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />}
               </button>
               {dailyDone && (
                 <button
                   type="button"
                   onClick={props.onPlayDaily}
                   aria-label="See today’s board"
-                  className="min-h-12 rounded-xl bg-surface-2 px-4 text-sm font-semibold transition hover:bg-surface-3"
+                  className="min-h-12 rounded-xl bg-white/20 px-4 text-sm font-bold transition hover:bg-white/30"
                 >
                   Board
                 </button>
               )}
             </div>
 
-            <p className="tabular mt-4 flex items-center justify-center gap-1.5 text-xs text-muted">
+            <p className="tabular relative mt-3 flex items-center justify-center gap-1.5 text-xs text-white/85">
               <Clock3 className="size-3.5" aria-hidden />
-              Next puzzle in <span className="font-semibold text-text">{props.countdown}</span>
+              Next puzzle in <span className="font-bold text-white">{props.countdown}</span>
+              {dailyStats.played > 0 && (
+                <>
+                  {' '}
+                  · {winPercentage(dailyStats)}% won · best streak {dailyStats.maxStreak}
+                </>
+              )}
             </p>
           </m.section>
 
-          {/* Level & achievements */}
-          <m.div
-            {...rise(2)}
-            className="overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface transition hover:border-border-strong"
-          >
-            <button
-              type="button"
-              onClick={props.onRanks}
-              aria-label="Ranks and tile themes"
-              className="block w-full p-4 text-left transition hover:bg-surface-2/50"
-            >
-              <LevelBar xp={props.progress.xp} />
-            </button>
-            <div className="grid grid-cols-2 divide-x divide-border border-t border-border text-sm">
-              <button
-                type="button"
-                onClick={props.onAchievements}
-                aria-label={`Achievements — ${unlocked} of ${ACHIEVEMENTS.length} unlocked`}
-                className="flex items-center justify-center gap-1.5 px-3 py-2.5 font-semibold transition hover:bg-surface-2"
-              >
-                <Award className="size-4 text-present" aria-hidden />
-                <span className="tabular">
-                  {unlocked}/{ACHIEVEMENTS.length}
-                </span>{' '}
-                <span className="text-muted">badges</span>
-              </button>
-              <button
-                type="button"
-                onClick={props.onRanks}
-                className="flex items-center justify-center gap-1.5 px-3 py-2.5 font-semibold transition hover:bg-surface-2"
-              >
-                <Palette className="size-4 text-accent" aria-hidden /> Ranks & themes
-              </button>
-            </div>
-          </m.div>
-
-          <m.div {...rise(3)}>
+          <m.div {...rise(2)}>
             <QuestsCard progress={props.progress} todayIndex={props.todayIndex} countdown={props.countdown} />
           </m.div>
 
           {/* Shop */}
           <m.button
-            {...rise(4)}
+            {...rise(3)}
             type="button"
             onClick={props.onShop}
-            aria-label={`Shop — ${coinBalance(props.progress)} coins${chestReady(props.progress, props.todayIndex) ? ', free daily chest ready' : ''}`}
+            aria-label={`Shop — ${coins} coins${chest ? ', free daily chest ready' : ''}`}
             className="feature-card group relative flex items-center gap-4 overflow-hidden rounded-[var(--radius-card)] p-4 text-left text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.99]"
             data-tone="shop"
           >
@@ -305,14 +372,14 @@ export function Home(props: HomeProps) {
             <span className="relative min-w-0 flex-1">
               <span className="flex items-center gap-2 text-lg leading-tight font-extrabold">
                 Shop
-                {chestReady(props.progress, props.todayIndex) && (
+                {chest && (
                   <span className="chest-badge rounded-full bg-white px-2 py-0.5 text-[0.6rem] font-extrabold tracking-wide text-amber-700 uppercase">
                     Free chest
                   </span>
                 )}
               </span>
               <span className="block text-[0.8rem] leading-snug text-white/85">
-                <strong className="tabular">{coinBalance(props.progress).toLocaleString()}</strong> coins ·{' '}
+                <strong className="tabular">{coins.toLocaleString()}</strong> coins ·{' '}
                 {SHOP_ITEMS.filter((i) => owns(props.progress, i.id)).length}/{SHOP_ITEMS.length} collected
               </span>
             </span>
@@ -321,49 +388,8 @@ export function Home(props: HomeProps) {
         </div>
 
         <div className="flex flex-col gap-4">
-          {/* Streak strip */}
-          <m.section
-            {...rise(4)}
-            aria-label="Daily statistics"
-            className="rounded-[var(--radius-card)] border border-border bg-surface"
-          >
-            {dailyStats.played === 0 ? (
-              <div className="flex items-center gap-3 p-5">
-                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-present/15">
-                  <Flame className="size-5 text-present" aria-hidden />
-                </span>
-                <p className="text-sm text-muted">
-                  <strong className="block text-[0.95rem] text-text">Start a streak today</strong>
-                  Solve the daily puzzle on consecutive days to build it up.
-                </p>
-              </div>
-            ) : (
-              <dl className="grid grid-cols-3 divide-x divide-border py-4">
-                {[
-                  { label: 'Day streak', value: streak, icon: <Flame className="size-4 text-present" aria-hidden /> },
-                  { label: 'Best streak', value: dailyStats.maxStreak },
-                  { label: 'Win rate', value: `${winPercentage(dailyStats)}%` },
-                ].map((it) => (
-                  <div key={it.label} className="flex flex-col-reverse items-center gap-0.5 px-2">
-                    <dt className="text-xs text-muted">{it.label}</dt>
-                    <dd className="tabular flex items-center gap-1 text-2xl font-bold">
-                      {it.icon}
-                      {it.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-            {freezes > 0 && dailyStats.played > 0 && (
-              <p className="freeze-chip mx-4 mb-4 flex items-center justify-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold">
-                <Snowflake className="size-3.5" aria-hidden />
-                {freezes === 1 ? '1 streak freeze' : `${freezes} streak freezes`} protecting your streak
-              </p>
-            )}
-          </m.section>
-
           {/* Ways to play */}
-          <m.section {...rise(5)} aria-labelledby="home-modes" className="space-y-4">
+          <m.section {...rise(4)} aria-labelledby="home-modes" className="space-y-4">
             <h3 id="home-modes" className="sr-only">
               Ways to play
             </h3>
@@ -388,7 +414,7 @@ export function Home(props: HomeProps) {
             </div>
             {groups.map((g) => (
               <div key={g.id}>
-                <h4 className="mb-2 px-1 text-xs font-semibold tracking-[0.08em] text-muted uppercase">{g.title}</h4>
+                <h4 className="mb-2 px-1 text-xs font-bold tracking-[0.08em] text-muted uppercase">{g.title}</h4>
                 <div className="grid grid-cols-2 gap-3">
                   {modes
                     .filter((mode) => mode.group === g.id)
@@ -398,10 +424,11 @@ export function Home(props: HomeProps) {
                         type="button"
                         onClick={mode.onClick}
                         aria-label={mode.label}
-                        className="group flex min-h-[6.75rem] flex-col items-start rounded-[var(--radius-card)] border border-border bg-surface p-3.5 text-left transition hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md active:translate-y-0 active:scale-[0.99]"
+                        className="mode-card group flex min-h-[6.75rem] flex-col items-start rounded-[var(--radius-card)] p-3.5 text-left transition hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
+                        style={{ ['--mode' as string]: mode.color }}
                       >
-                        <span className={`grid size-9 shrink-0 place-items-center rounded-xl transition-transform group-hover:scale-110 ${mode.tint}`}>
-                          <mode.icon className={`size-[1.15rem] ${mode.iconClass}`} aria-hidden />
+                        <span className="mode-icon grid size-10 shrink-0 place-items-center rounded-xl text-white transition-transform group-hover:scale-110 group-hover:-rotate-6">
+                          <mode.icon className="size-5" aria-hidden />
                         </span>
                         <span className="mt-2.5 flex items-center gap-1.5 font-bold">
                           {mode.name}
@@ -421,46 +448,53 @@ export function Home(props: HomeProps) {
 
           {props.friendsAvailable && (
             <m.button
-              {...rise(6)}
+              {...rise(5)}
               type="button"
               onClick={props.onFriends}
               aria-label={props.friendsPending > 0 ? `Friends — ${props.friendsPending} waiting for you` : 'Play with friends'}
-              className="group flex w-full items-center gap-4 rounded-[var(--radius-card)] border border-border bg-surface p-5 text-left transition hover:border-border-strong"
+              className="feature-card group relative flex w-full items-center gap-4 overflow-hidden rounded-[var(--radius-card)] p-5 text-left text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
+              data-tone="friends"
             >
-              <span className="relative grid size-11 shrink-0 place-items-center rounded-xl bg-surface-2">
+              <span className="feature-card-shine" aria-hidden />
+              <span className="relative grid size-11 shrink-0 place-items-center rounded-2xl bg-white/20">
                 <Users className="size-5" aria-hidden />
                 {props.friendsPending > 0 && (
-                  <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-present px-1 text-[0.7rem] font-bold text-present-ink">
+                  <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-white px-1 text-[0.7rem] font-extrabold text-fuchsia-700">
                     {props.friendsPending}
                   </span>
                 )}
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-bold">Play with friends</span>
-                <span className="block text-sm text-muted">
-                  {props.friendsPending > 0 ? `${props.friendsPending} waiting for you` : 'Challenges and live races.'}
+              <span className="relative min-w-0 flex-1">
+                <span className="block text-lg font-extrabold">Play with friends</span>
+                <span className="block text-sm text-white/85">
+                  {props.friendsPending > 0 ? `${props.friendsPending} waiting for you` : 'Word Swap, challenges, races and gifts.'}
                 </span>
               </span>
-              <ChevronRight className="size-5 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
+              <ChevronRight className="relative size-5 text-white/80 transition-transform group-hover:translate-x-0.5" aria-hidden />
             </m.button>
           )}
 
-          <m.nav {...rise(7)} aria-label="More" className="flex flex-wrap justify-center gap-1 pt-1 lg:justify-start">
+          <m.nav {...rise(6)} aria-label="More" className="flex flex-wrap justify-center gap-1.5 pt-1 lg:justify-start">
             {[
-              ...(props.onGetApp ? [{ label: 'Get the app', icon: Smartphone, onClick: props.onGetApp }] : []),
-              { label: 'How to play', icon: CircleHelp, onClick: props.onHelp },
-              { label: 'Statistics', icon: BarChart3, onClick: props.onStats },
-              { label: 'Achievements', icon: Award, onClick: props.onAchievements },
-              { label: 'Word Book', icon: BookOpen, onClick: props.onWordBook },
-              { label: 'Settings', icon: Settings, onClick: props.onSettings },
-            ].map(({ label, icon: Icon, onClick }) => (
+              ...(props.onGetApp ? [{ label: 'Get the app', icon: Smartphone, onClick: props.onGetApp, color: '#22a467' }] : []),
+              { label: 'How to play', icon: CircleHelp, onClick: props.onHelp, color: '#0ea5e9' },
+              { label: 'Statistics', icon: BarChart3, onClick: props.onStats, color: '#8b5cf6' },
+              { label: 'Achievements', icon: Award, onClick: props.onAchievements, color: '#f59e0b' },
+              { label: 'Word Book', icon: BookOpen, onClick: props.onWordBook, color: '#14b8a6' },
+              { label: 'Ranks & rewards', icon: Palette, onClick: props.onRanks, color: '#ec4899' },
+              { label: 'Settings', icon: Settings, onClick: props.onSettings, color: '#64748b' },
+            ].map(({ label, icon: Icon, onClick, color }) => (
               <button
                 key={label}
                 type="button"
                 onClick={onClick}
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-muted transition hover:bg-surface-2 hover:text-text"
+                className="more-chip inline-flex items-center gap-1.5 rounded-full py-1.5 pr-3 pl-1.5 text-sm font-semibold transition hover:-translate-y-px"
+                style={{ ['--mode' as string]: color }}
               >
-                <Icon className="size-4" aria-hidden /> {label}
+                <span className="mode-icon grid size-6 place-items-center rounded-full text-white">
+                  <Icon className="size-3.5" aria-hidden />
+                </span>
+                {label}
               </button>
             ))}
           </m.nav>
@@ -471,6 +505,38 @@ export function Home(props: HomeProps) {
         {BRAND.tagline} New puzzle every day at 00:00 UTC.
       </p>
     </div>
+  );
+}
+
+/** A small stat on the hero card. */
+function HeroChip({
+  icon,
+  value,
+  label,
+  ariaLabel,
+  onClick,
+  glow = false,
+}: {
+  icon: ReactNode;
+  value: ReactNode;
+  label: string;
+  ariaLabel?: string;
+  onClick: () => void;
+  glow?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className={`flex flex-col items-center rounded-2xl bg-white/15 px-2 py-2 backdrop-blur transition hover:bg-white/25 active:scale-95 ${glow ? 'chest-badge' : ''}`}
+    >
+      <span className="tabular flex items-center gap-1 text-lg leading-tight font-extrabold">
+        {icon}
+        {value}
+      </span>
+      <span className="text-[0.68rem] font-semibold text-white/80">{label}</span>
+    </button>
   );
 }
 

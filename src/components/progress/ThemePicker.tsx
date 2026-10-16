@@ -21,6 +21,8 @@ import { useProgress } from '@/features/progress/ProgressContext';
 import { useSettings } from '@/features/settings/SettingsContext';
 import { Coin } from '@/components/shop/Coin';
 import { FxIcon } from '@/components/shop/FxIcon';
+import { LockTag } from '@/components/shop/LockTag';
+import { lockLabel } from '@/components/shop/kinds';
 import { previewPack } from '@/lib/audio/sound';
 import { Volume2 } from 'lucide-react';
 import type { Settings } from '@/lib/storage/schemas';
@@ -96,7 +98,7 @@ export function ThemePicker({ level, onShop }: { level: number; onShop?: () => v
   };
 
   const style = (t: TileStyle) => {
-    const unlocked = tileStyleUnlocked(t.id, progress.owned);
+    const unlocked = tileStyleUnlocked(t.id, progress.owned, level);
     const on = settings.tileStyle === t.id;
     return (
       <button
@@ -104,7 +106,7 @@ export function ThemePicker({ level, onShop }: { level: number; onShop?: () => v
         type="button"
         role="radio"
         aria-checked={on}
-        aria-label={unlocked ? `${t.name} tile style` : `${t.name} tile style, ${t.price} coins in the shop`}
+        aria-label={unlocked ? `${t.name} tile style` : `${t.name} tile style, ${lockLabel(t)}`}
         disabled={!unlocked}
         onClick={() => update({ tileStyle: t.id })}
         className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition active:scale-[0.97] ${
@@ -121,17 +123,13 @@ export function ThemePicker({ level, onShop }: { level: number; onShop?: () => v
         </span>
         <span className={`text-xs font-semibold ${unlocked ? '' : 'text-muted'}`}>{t.name}</span>
         {on && <OnMark />}
-        {!unlocked && (
-          <span className="tabular flex items-center gap-0.5 text-[0.65rem] text-subtle">
-            <Coin className="size-3" /> {t.price}
-          </span>
-        )}
+        {!unlocked && <LockTag price={t.price} level={t.level} />}
       </button>
     );
   };
 
   const effect = (f: WinFx) => {
-    const unlocked = winFxUnlocked(f.id, progress.owned);
+    const unlocked = winFxUnlocked(f.id, progress.owned, level);
     const on = settings.winFx === f.id;
     return (
       <button
@@ -139,7 +137,7 @@ export function ThemePicker({ level, onShop }: { level: number; onShop?: () => v
         type="button"
         role="radio"
         aria-checked={on}
-        aria-label={unlocked ? `${f.name} win effect` : `${f.name} win effect, ${f.price} coins in the shop`}
+        aria-label={unlocked ? `${f.name} win effect` : `${f.name} win effect, ${lockLabel(f)}`}
         disabled={!unlocked}
         onClick={() => update({ winFx: f.id })}
         className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition active:scale-[0.97] ${
@@ -151,19 +149,15 @@ export function ThemePicker({ level, onShop }: { level: number; onShop?: () => v
         </span>
         <span className={`text-center text-xs leading-tight font-semibold ${unlocked ? '' : 'text-muted'}`}>{f.name}</span>
         {on && <OnMark />}
-        {!unlocked && (
-          <span className="tabular flex items-center gap-0.5 text-[0.65rem] text-subtle">
-            <Coin className="size-3" /> {f.price}
-          </span>
-        )}
+        {!unlocked && <LockTag price={f.price} level={f.level} />}
       </button>
     );
   };
 
   /** A keyboard, sound pack, frame or badge. */
-  const extra = (kind: Extra) => (c: { id: string; name: string; price?: number }) => {
+  const extra = (kind: Extra) => (c: { id: string; name: string; price?: number; level?: number }) => {
     const key = EXTRA_SETTING[kind];
-    const unlocked = cosmeticUnlocked(kind, c.id, progress.owned);
+    const unlocked = cosmeticUnlocked(kind, c.id, progress.owned, level);
     const on = settings[key] === c.id;
     let look: ReactNode;
     if (kind === 'keys') {
@@ -189,7 +183,7 @@ export function ThemePicker({ level, onShop }: { level: number; onShop?: () => v
         type="button"
         role="radio"
         aria-checked={on}
-        aria-label={unlocked ? c.name : `${c.name}, ${c.price} coins in the shop`}
+        aria-label={unlocked ? c.name : `${c.name}, ${lockLabel(c)}`}
         disabled={!unlocked}
         onClick={() => {
           update({ [key]: c.id } as Partial<Settings>);
@@ -204,11 +198,7 @@ export function ThemePicker({ level, onShop }: { level: number; onShop?: () => v
         </span>
         <span className={`text-center text-xs leading-tight font-semibold ${unlocked ? '' : 'text-muted'}`}>{c.name}</span>
         {on && <OnMark />}
-        {!unlocked && (
-          <span className="tabular flex items-center gap-0.5 text-[0.65rem] text-subtle">
-            <Coin className="size-3" /> {c.price}
-          </span>
-        )}
+        {!unlocked && <LockTag price={c.price} level={c.level} />}
       </button>
     );
   };
@@ -248,7 +238,7 @@ export function ThemePicker({ level, onShop }: { level: number; onShop?: () => v
         {SOUND_PACKS.map(extra('sound'))}
       </Group>
       <Group title="Win effect" label="Win effects">
-        {WIN_EFFECTS.filter((f) => !f.season || winFxUnlocked(f.id, progress.owned)).map(effect)}
+        {WIN_EFFECTS.filter((f) => !f.season || winFxUnlocked(f.id, progress.owned, level)).map(effect)}
       </Group>
       <Group title="Background" label="Backgrounds">
         {BACKGROUNDS.map(extra('bg'))}

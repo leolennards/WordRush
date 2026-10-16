@@ -39,12 +39,15 @@ interface Cosmetic<Id extends string> {
   animated?: boolean;
   /** Only on sale at this time of year. */
   season?: Season;
+  /** A level reward: unlocked by reaching this level (never sold). */
+  level?: number;
 }
 
 export type TileStyleId =
   | 'classic' | 'rounded' | 'bubble' | 'glass' | 'pixel' | 'neon' | 'gem'
   | 'shimmer' | 'frost' | 'jelly' | 'blaze'
-  | 'paper' | 'comic' | 'wood' | 'disco';
+  | 'paper' | 'comic' | 'wood' | 'disco'
+  | 'outline' | 'crystal' | 'prismatic';
 export type TileStyle = Cosmetic<TileStyleId>;
 
 export const TILE_STYLES: readonly TileStyle[] = [
@@ -63,9 +66,12 @@ export const TILE_STYLES: readonly TileStyle[] = [
   { id: 'comic', name: 'Comic Book', description: 'Bold outlines and halftone dots. Pow!', price: 900 },
   { id: 'wood', name: 'Wooden Blocks', description: 'Carved wooden blocks with grain.', price: 1100 },
   { id: 'disco', name: 'Disco Ball', description: 'Mirror tiles that sparkle under the lights.', price: 2400, animated: true },
+  { id: 'outline', name: 'Outline', description: 'Crisp hollow tiles in bold colour.', level: 12 },
+  { id: 'crystal', name: 'Crystal', description: 'Cut crystal that catches the light.', level: 30, animated: true },
+  { id: 'prismatic', name: 'Prismatic', description: 'Holographic tiles that shift through every colour.', level: 80, animated: true },
 ];
 
-export type WinFxId = 'confetti' | 'hearts' | 'coins' | 'stars' | 'fireworks' | 'bats' | 'snow';
+export type WinFxId = 'confetti' | 'hearts' | 'coins' | 'stars' | 'fireworks' | 'bats' | 'snow' | 'balloons' | 'supernova';
 export type WinFx = Cosmetic<WinFxId>;
 
 /** What bursts out of the board when you win. */
@@ -77,9 +83,11 @@ export const WIN_EFFECTS: readonly WinFx[] = [
   { id: 'fireworks', name: 'Fireworks', description: 'Rockets burst into sparks.', price: 1600 },
   { id: 'bats', name: 'Bat Swarm', description: 'A spooky swarm flaps out of the board.', price: 1000, season: HALLOWEEN },
   { id: 'snow', name: 'Snowfall', description: 'Soft snowflakes drift down.', price: 1000, season: WINTER },
+  { id: 'balloons', name: 'Balloons', description: 'A bunch of balloons floats up.', level: 25 },
+  { id: 'supernova', name: 'Supernova', description: 'A star explodes in a ring of light.', level: 100 },
 ];
 
-export type KeySkinId = 'classic' | 'candy' | 'typewriter' | 'mech' | 'neon';
+export type KeySkinId = 'classic' | 'candy' | 'typewriter' | 'mech' | 'neon' | 'golden';
 export type KeySkin = Cosmetic<KeySkinId>;
 
 /** The on-screen keyboard's look. */
@@ -89,9 +97,10 @@ export const KEY_SKINS: readonly KeySkin[] = [
   { id: 'typewriter', name: 'Typewriter', description: 'Round vintage keys with metal rims.', price: 700 },
   { id: 'mech', name: 'Mechanical', description: 'Chunky keycaps you can almost hear.', price: 900 },
   { id: 'neon', name: 'Neon Glow', description: 'Glowing outlines that pulse.', price: 1000, animated: true },
+  { id: 'golden', name: 'Golden Keys', description: 'Solid gold keycaps with a shine.', level: 75, animated: true },
 ];
 
-export type SoundPackId = 'classic' | 'bubbles' | 'marimba' | 'arcade' | 'typewriter';
+export type SoundPackId = 'classic' | 'bubbles' | 'marimba' | 'arcade' | 'typewriter' | 'chimes';
 export type SoundPack = Cosmetic<SoundPackId>;
 
 /** How typing, reveals and wins sound (with sound effects on). */
@@ -101,9 +110,12 @@ export const SOUND_PACKS: readonly SoundPack[] = [
   { id: 'marimba', name: 'Marimba', description: 'Warm wooden notes.', price: 600 },
   { id: 'arcade', name: '8-bit Arcade', description: 'Retro bleeps and a victory jingle.', price: 700 },
   { id: 'typewriter', name: 'Typewriter', description: 'Clacky keys and a bell.', price: 700 },
+  { id: 'chimes', name: 'Crystal Chimes', description: 'Sparkling bells and glassy tones.', level: 45 },
 ];
 
-export type FrameId = 'none' | 'gold' | 'neon' | 'rainbow' | 'flames' | 'leaves' | 'pixel' | 'orbit';
+export type FrameId =
+  | 'none' | 'gold' | 'neon' | 'rainbow' | 'flames' | 'leaves' | 'pixel' | 'orbit'
+  | 'bronze' | 'silver' | 'gilded' | 'royal' | 'mythic';
 export type Frame = Cosmetic<FrameId>;
 
 /** A ring around your avatar, shown to friends. */
@@ -116,9 +128,16 @@ export const FRAMES: readonly Frame[] = [
   { id: 'leaves', name: 'Laurel', description: 'A champion’s laurel wreath.', price: 900 },
   { id: 'pixel', name: 'Pixel Ring', description: 'A chunky 8-bit border.', price: 600 },
   { id: 'orbit', name: 'Orbit', description: 'Little planets circling you.', price: 1800, animated: true },
+  { id: 'bronze', name: 'Bronze Ring', description: 'Your first medal-worthy ring.', level: 5 },
+  { id: 'silver', name: 'Silver Ring', description: 'Polished silver for a seasoned player.', level: 20 },
+  { id: 'gilded', name: 'Gilded', description: 'Gold with light running around it.', level: 40, animated: true },
+  { id: 'royal', name: 'Royal', description: 'Purple and gold, turning slowly.', level: 50, animated: true },
+  { id: 'mythic', name: 'Mythic Aura', description: 'A double ring of northern lights, glowing.', level: 90, animated: true },
 ];
 
-export type BadgeId = 'none' | 'star' | 'heart' | 'bolt' | 'crown' | 'diamond' | 'flame' | 'rocket' | 'music' | 'ghost' | 'trophy';
+export type BadgeId =
+  | 'none' | 'star' | 'heart' | 'bolt' | 'crown' | 'diamond' | 'flame' | 'rocket' | 'music' | 'ghost' | 'trophy'
+  | 'sprout' | 'medal' | 'nova' | 'legend';
 export type Badge = Cosmetic<BadgeId>;
 
 /** A small badge on your avatar, shown to friends. */
@@ -134,9 +153,13 @@ export const BADGES: readonly Badge[] = [
   { id: 'rocket', name: 'Rocket', description: 'To the moon.', price: 600 },
   { id: 'ghost', name: 'Ghost', description: 'Boo!', price: 600 },
   { id: 'trophy', name: 'Trophy', description: 'A true winner.', price: 1200 },
+  { id: 'sprout', name: 'Sprout', description: 'Just getting started.', level: 3 },
+  { id: 'medal', name: 'Medal', description: 'Earned, not bought.', level: 18 },
+  { id: 'nova', name: 'Nova', description: 'A glowing, pulsing star.', level: 55, animated: true },
+  { id: 'legend', name: 'Legend Gem', description: 'Only for level 100.', level: 100, animated: true },
 ];
 
-export type BackgroundId = 'tiles' | 'plain' | 'stars' | 'bubbles' | 'aurora' | 'letters' | 'sakura' | 'synthwave';
+export type BackgroundId = 'tiles' | 'plain' | 'stars' | 'bubbles' | 'aurora' | 'letters' | 'sakura' | 'synthwave' | 'fireflies' | 'galaxy';
 export type Background = Cosmetic<BackgroundId>;
 
 /** The scene behind the whole app. */
@@ -149,9 +172,11 @@ export const BACKGROUNDS: readonly Background[] = [
   { id: 'letters', name: 'Letter Rain', description: 'A gentle rain of glowing letters.', price: 1100, animated: true },
   { id: 'aurora', name: 'Aurora Sky', description: 'Ribbons of northern lights swaying.', price: 1400, animated: true },
   { id: 'synthwave', name: 'Synthwave', description: 'A neon sun over a moving grid.', price: 1800, animated: true },
+  { id: 'fireflies', name: 'Fireflies', description: 'Glowing fireflies drifting in the dusk.', level: 23, animated: true },
+  { id: 'galaxy', name: 'Spiral Galaxy', description: 'A slowly turning galaxy of stars.', level: 60, animated: true },
 ];
 
-export type AccentId = 'mint' | 'ocean' | 'grape' | 'rose' | 'tangerine' | 'sky' | 'lime' | 'gold' | 'ruby' | 'midnight';
+export type AccentId = 'mint' | 'ocean' | 'grape' | 'rose' | 'tangerine' | 'sky' | 'lime' | 'gold' | 'ruby' | 'midnight' | 'teal';
 export type Accent = Cosmetic<AccentId> & { swatch: string };
 
 /** The app's highlight colour: buttons, links and the logo. */
@@ -166,10 +191,12 @@ export const ACCENTS: readonly Accent[] = [
   { id: 'ruby', name: 'Ruby', description: 'Rich red.', swatch: '#dc2626', price: 400 },
   { id: 'midnight', name: 'Midnight', description: 'Inky blue-black.', swatch: '#334155', price: 400 },
   { id: 'gold', name: 'Gold', description: 'Shiny, like your coins.', swatch: '#d4a017', price: 600 },
+  { id: 'teal', name: 'Teal', description: 'A level-7 reward.', swatch: '#0d9488', level: 7 },
 ];
 
 export type TitleId =
-  | 'none' | 'lover' | 'puzzler' | 'owl' | 'vowels' | 'wizard' | 'speedy' | 'streaker' | 'ninja' | 'unstumpable' | 'legend';
+  | 'none' | 'lover' | 'puzzler' | 'owl' | 'vowels' | 'wizard' | 'speedy' | 'streaker' | 'ninja' | 'unstumpable' | 'legend'
+  | 'rookie' | 'sharp' | 'scholar' | 'virtuoso' | 'grandmaster' | 'legendary';
 export type Title = Cosmetic<TitleId>;
 
 /** A title under your name, shown to friends. */
@@ -185,9 +212,17 @@ export const TITLES: readonly Title[] = [
   { id: 'ninja', name: 'Letter Ninja', description: 'Silent, swift, correct.', price: 800 },
   { id: 'unstumpable', name: 'The Unstumpable', description: 'No word too tricky.', price: 1200 },
   { id: 'legend', name: 'Lexicon Legend', description: 'Simply legendary.', price: 2000 },
+  { id: 'rookie', name: 'Rookie Speller', description: 'Everyone starts somewhere.', level: 2 },
+  { id: 'sharp', name: 'Sharp Speller', description: 'Getting good at this.', level: 15 },
+  { id: 'scholar', name: 'Seasoned Scholar', description: 'Knows a word or two.', level: 28 },
+  { id: 'virtuoso', name: 'Virtuoso', description: 'A true artist of words.', level: 50 },
+  { id: 'grandmaster', name: 'Grandmaster', description: 'Few have climbed this high.', level: 65 },
+  { id: 'legendary', name: 'Wordskiis Legend', description: 'Level 100. The very top.', level: 100 },
 ];
 
-export type BannerId = 'none' | 'sunset' | 'ocean' | 'meadow' | 'candy' | 'stars' | 'aurora' | 'lava' | 'galaxy' | 'gold';
+export type BannerId =
+  | 'none' | 'sunset' | 'ocean' | 'meadow' | 'candy' | 'stars' | 'aurora' | 'lava' | 'galaxy' | 'gold'
+  | 'dawn' | 'nebula' | 'phoenix' | 'prism';
 export type Banner = Cosmetic<BannerId>;
 
 /** The banner behind your profile card, shown to friends. */
@@ -202,6 +237,10 @@ export const BANNERS: readonly Banner[] = [
   { id: 'lava', name: 'Molten', description: 'Glowing, flowing lava.', price: 1200, animated: true },
   { id: 'galaxy', name: 'Galaxy Swirl', description: 'A spinning spiral of stars.', price: 1500, animated: true },
   { id: 'gold', name: 'Gold Rush', description: 'Pure shimmering gold.', price: 2000, animated: true },
+  { id: 'dawn', name: 'First Light', description: 'The sky at sunrise.', level: 10 },
+  { id: 'nebula', name: 'Nebula', description: 'Clouds of glowing space dust.', level: 35, animated: true },
+  { id: 'phoenix', name: 'Phoenix', description: 'Rising from the flames.', level: 70, animated: true },
+  { id: 'prism', name: 'Prism', description: 'Every colour at once, for legends.', level: 100, animated: true },
 ];
 
 export type ItemKind = 'skin' | 'tiles' | 'keys' | 'sound' | 'fx' | 'bg' | 'accent' | 'frame' | 'badge' | 'title' | 'banner';
@@ -270,15 +309,17 @@ export const coinBalance = (p: Pick<Progress, 'coins' | 'spent'>) => Math.max(0,
 
 export const owns = (p: Pick<Progress, 'owned'>, itemId: string) => p.owned.includes(itemId);
 
-/** A cosmetic (anything but tile colours) is usable when it's free or bought. */
-export function cosmeticUnlocked(kind: CosmeticKind, id: string, owned: readonly string[]): boolean {
+/** A cosmetic (anything but tile colours) is usable when it's free, bought, or a level reward you've reached. */
+export function cosmeticUnlocked(kind: CosmeticKind, id: string, owned: readonly string[], level: number): boolean {
   const c = COSMETICS[kind].find((x) => x.id === id);
   if (!c) return false;
+  if (c.level !== undefined) return level >= c.level;
   return c.price === undefined || owned.includes(`${kind}:${id}`);
 }
 
-export const tileStyleUnlocked = (id: TileStyleId, owned: readonly string[]) => cosmeticUnlocked('tiles', id, owned);
-export const winFxUnlocked = (id: WinFxId, owned: readonly string[]) => cosmeticUnlocked('fx', id, owned);
+export const tileStyleUnlocked = (id: TileStyleId, owned: readonly string[], level: number) =>
+  cosmeticUnlocked('tiles', id, owned, level);
+export const winFxUnlocked = (id: WinFxId, owned: readonly string[], level: number) => cosmeticUnlocked('fx', id, owned, level);
 
 /** Coin bonuses a game can earn on top of its share of XP. */
 export interface CoinBonus {

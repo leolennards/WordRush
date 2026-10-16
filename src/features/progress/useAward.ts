@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { Coins } from 'lucide-react';
-import { levelFor, type GameEvent } from '@/engine';
+import { Coins, Gift } from 'lucide-react';
+import { REWARD_KIND, levelFor, rewardsBetween, type GameEvent } from '@/engine';
 import { useToast, type Reward } from '@/components/layout/Toasts';
 import { ACHIEVEMENT_ICONS } from '@/components/progress/achievementIcons';
 import { useWords } from '@/features/words/WordsContext';
@@ -45,6 +45,12 @@ export function useAward() {
       }
       for (const q of result.questsCompleted) {
         rewards.push({ kind: 'quest', eyebrow: 'Quest complete', title: q.title, detail: '+60 XP' });
+      }
+      if (result.levelUp) {
+        const before = levelFor(result.progress.xp - result.xpGained).level;
+        for (const r of rewardsBetween(before, result.levelUp)) {
+          rewards.push({ kind: 'achievement', eyebrow: `Level ${r.level} reward`, title: r.name, detail: `${REWARD_KIND[r.kind]} unlocked`, icon: Gift });
+        }
       }
       for (const b of result.coinBonuses) {
         rewards.push({ kind: 'achievement', eyebrow: 'Coin bonus', title: b.label, detail: `+${b.coins} coins`, icon: Coins });

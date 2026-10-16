@@ -17,6 +17,8 @@ import {
   tileStyleUnlocked,
   winFxUnlocked,
   cosmeticUnlocked,
+  isTilePal,
+  palUnlocked,
   nextHintPosition,
   type GameState,
   type SoloMode,
@@ -135,16 +137,17 @@ function Wordskiis() {
   const playerLevel = levelFor(progress.xp).level;
   useEffect(() => {
     if (!skinUnlocked(settings.skin, playerLevel, progress.owned)) update({ skin: 'classic' });
-    if (!tileStyleUnlocked(settings.tileStyle, progress.owned)) update({ tileStyle: 'classic' });
-    if (!winFxUnlocked(settings.winFx, progress.owned)) update({ winFx: 'confetti' });
-    if (!cosmeticUnlocked('keys', settings.keySkin, progress.owned)) update({ keySkin: 'classic' });
-    if (!cosmeticUnlocked('sound', settings.soundPack, progress.owned)) update({ soundPack: 'classic' });
-    if (!cosmeticUnlocked('frame', settings.frame, progress.owned)) update({ frame: 'none' });
-    if (!cosmeticUnlocked('badge', settings.badge, progress.owned)) update({ badge: 'none' });
-    if (!cosmeticUnlocked('bg', settings.background, progress.owned)) update({ background: 'tiles' });
-    if (!cosmeticUnlocked('accent', settings.accent, progress.owned)) update({ accent: 'mint' });
-    if (!cosmeticUnlocked('title', settings.title, progress.owned)) update({ title: 'none' });
-    if (!cosmeticUnlocked('banner', settings.banner, progress.owned)) update({ banner: 'none' });
+    if (!tileStyleUnlocked(settings.tileStyle, progress.owned, playerLevel)) update({ tileStyle: 'classic' });
+    if (!winFxUnlocked(settings.winFx, progress.owned, playerLevel)) update({ winFx: 'confetti' });
+    if (!cosmeticUnlocked('keys', settings.keySkin, progress.owned, playerLevel)) update({ keySkin: 'classic' });
+    if (!cosmeticUnlocked('sound', settings.soundPack, progress.owned, playerLevel)) update({ soundPack: 'classic' });
+    if (!cosmeticUnlocked('frame', settings.frame, progress.owned, playerLevel)) update({ frame: 'none' });
+    if (!cosmeticUnlocked('badge', settings.badge, progress.owned, playerLevel)) update({ badge: 'none' });
+    if (!cosmeticUnlocked('bg', settings.background, progress.owned, playerLevel)) update({ background: 'tiles' });
+    if (!cosmeticUnlocked('accent', settings.accent, progress.owned, playerLevel)) update({ accent: 'mint' });
+    if (!cosmeticUnlocked('title', settings.title, progress.owned, playerLevel)) update({ title: 'none' });
+    if (!cosmeticUnlocked('banner', settings.banner, progress.owned, playerLevel)) update({ banner: 'none' });
+    if (isTilePal(settings.avatar) && !palUnlocked(settings.avatar, playerLevel)) update({ avatar: 'initial' });
   }, [
     settings.skin,
     settings.tileStyle,
@@ -157,6 +160,7 @@ function Wordskiis() {
     settings.accent,
     settings.title,
     settings.banner,
+    settings.avatar,
     playerLevel,
     progress.owned,
     update,
@@ -386,6 +390,7 @@ function Wordskiis() {
           })()}
           onSurvival={goSurvival}
           onShop={goShop}
+          onProfile={goProfile}
           onAchievements={() => setDialog('achievements')}
           onRanks={() => setDialog('ranks')}
           onWordBook={words.showBook}
