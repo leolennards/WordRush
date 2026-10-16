@@ -198,8 +198,8 @@
 .dark[data-skin='citrus'] { --c-correct: #a3e635; --c-correct-ink: #1a2e05; --c-present: #fb923c; --c-present-ink: #2a1000; }
 [data-skin='sakura'] { --c-correct: #d9467f; --c-correct-ink: #fff; --c-present: #6aa85c; --c-present-ink: #fff; }
 .dark[data-skin='sakura'] { --c-correct: #f9a8d4; --c-correct-ink: #4a0b2a; --c-present: #9bd38c; --c-present-ink: #0f2a0a; }
-[data-skin='arctic'] { --c-correct: #0284c7; --c-correct-ink: #fff; --c-present: #7c83db; --c-present-ink: #fff; }
-.dark[data-skin='arctic'] { --c-correct: #7dd3fc; --c-correct-ink: #052033; --c-present: #c7d2fe; --c-present-ink: #1e1b4b; }
+[data-skin='arctic'] { --c-correct: #0369a1; --c-correct-ink: #fff; --c-present: #10b981; --c-present-ink: #fff; }
+.dark[data-skin='arctic'] { --c-correct: #7dd3fc; --c-correct-ink: #052033; --c-present: #6ee7b7; --c-present-ink: #022c22; }
 [data-skin='matcha'] { --c-correct: #557f37; --c-correct-ink: #fff; --c-present: #c08a4f; --c-present-ink: #fff; }
 .dark[data-skin='matcha'] { --c-correct: #9cc27a; --c-correct-ink: #15240a; --c-present: #e2b583; --c-present-ink: #2e1a05; }
 [data-skin='retro'] { --c-correct: #23867a; --c-correct-ink: #fff; --c-present: #e9c46a; --c-present-ink: #2b2000; }
@@ -214,28 +214,28 @@
   --c-present: #db2777;
   --c-present-ink: #fff;
   --fill-correct: linear-gradient(135deg, #312e81, #6366f1, #0ea5e9, #6366f1, #312e81);
-  --fill-present: linear-gradient(135deg, #9d174d, #ec4899, #a855f7, #ec4899, #9d174d);
+  --fill-present: linear-gradient(135deg, #9d174d, #ec4899, #f9a8d4, #ec4899, #9d174d);
 }
 [data-skin='gold'] {
   --c-correct: #b8860b;
   --c-correct-ink: #2a1d00;
-  --c-present: #8a94a6;
-  --c-present-ink: #111827;
+  --c-present: #c76b5a;
+  --c-present-ink: #fff;
   --fill-correct: linear-gradient(135deg, #a16207, #fde68a, #d4a017, #fef3c7, #a16207);
-  --fill-present: linear-gradient(135deg, #6b7280, #e5e7eb, #9ca3af, #f3f4f6, #6b7280);
+  --fill-present: linear-gradient(135deg, #9a3f35, #f2a48f, #c76b5a, #fbd0c2, #9a3f35);
 }
 [data-skin='rainbow'] {
   --c-correct: #7c3aed;
   --c-correct-ink: #fff;
-  --c-present: #f59e0b;
-  --c-present-ink: #2a1500;
+  --c-present: #f8fafc;
+  --c-present-ink: #7c3aed;
   --fill-correct: linear-gradient(120deg, #ef4444, #f59e0b, #22c55e, #3b82f6, #a855f7, #ef4444);
-  --fill-present: linear-gradient(120deg, #fde047, #fb923c, #f472b6, #fb923c, #fde047);
+  --fill-present: linear-gradient(120deg, #ffffff, #e9d5ff, #ffffff, #fde68a, #ffffff);
 }
-[data-skin='berry'] { --c-correct: #9d2b6b; --c-correct-ink: #fff; --c-present: #f0a1c2; --c-present-ink: #4a0a2a; }
-.dark[data-skin='berry'] { --c-correct: #e889b9; --c-correct-ink: #3a0a24; --c-present: #fbcfe8; --c-present-ink: #4a0a2a; }
-[data-skin='midnight'] { --c-correct: #111827; --c-correct-ink: #fff; --c-present: #94a3b8; --c-present-ink: #0f172a; }
-.dark[data-skin='midnight'] { --c-correct: #f8fafc; --c-correct-ink: #0b0f19; --c-present: #64748b; --c-present-ink: #fff; }
+[data-skin='berry'] { --c-correct: #9d2b6b; --c-correct-ink: #fff; --c-present: #eab308; --c-present-ink: #2a1f00; }
+.dark[data-skin='berry'] { --c-correct: #e889b9; --c-correct-ink: #3a0a24; --c-present: #facc15; --c-present-ink: #2a1f00; }
+[data-skin='midnight'] { --c-correct: #111827; --c-correct-ink: #fff; --c-present: #c9971c; --c-present-ink: #1c1400; }
+.dark[data-skin='midnight'] { --c-correct: #f8fafc; --c-correct-ink: #0b0f19; --c-present: #e0b43a; --c-present-ink: #1c1400; }
 [data-skin='toxic'] {
   --c-correct: #65a30d;
   --c-correct-ink: #1a2e05;
@@ -250,7 +250,7 @@
   --c-present: #f59e0b;
   --c-present-ink: #2a1500;
   --fill-correct: linear-gradient(160deg, #7f1d1d, #dc2626, #f97316, #b91c1c, #7f1d1d);
-  --fill-present: linear-gradient(160deg, #b45309, #f59e0b, #fde047, #f59e0b, #b45309);
+  --fill-present: linear-gradient(160deg, #ca8a04, #facc15, #fef08a, #facc15, #ca8a04);
   /* Lava rises. */
   --skin-anim: lava-flow 5s ease-in-out infinite;
   --skin-size: 100% 400%;
@@ -261,7 +261,7 @@
   --c-present: #22d3ee;
   --c-present-ink: #1e1b4b;
   --fill-correct: linear-gradient(120deg, #db2777, #a855f7, #6366f1, #a855f7, #db2777);
-  --fill-present: linear-gradient(120deg, #22d3ee, #a5f3fc, #f0abfc, #a5f3fc, #22d3ee);
+  --fill-present: linear-gradient(120deg, #0891b2, #22d3ee, #a5f3fc, #22d3ee, #0891b2);
 }
 [data-skin='holo'] {
   --c-correct: #67e8f9;
@@ -273,14 +273,14 @@
   /* Holograms shimmer faster. */
   --skin-anim: skin-flow 3s ease-in-out infinite;
 }
-[data-skin='peach'] { --c-correct: #e8604f; --c-correct-ink: #fff; --c-present: #f5b041; --c-present-ink: #2b1800; }
-.dark[data-skin='peach'] { --c-correct: #fb8a7a; --c-correct-ink: #2a0a05; --c-present: #fcc875; --c-present-ink: #2b1800; }
+[data-skin='peach'] { --c-correct: #e2553f; --c-correct-ink: #fff; --c-present: #14b8a6; --c-present-ink: #fff; }
+.dark[data-skin='peach'] { --c-correct: #fb8a7a; --c-correct-ink: #2a0a05; --c-present: #5eead4; --c-present-ink: #042f2b; }
 [data-skin='jungle'] { --c-correct: #15803d; --c-correct-ink: #fff; --c-present: #b7791f; --c-present-ink: #fff; }
 .dark[data-skin='jungle'] { --c-correct: #4ade80; --c-correct-ink: #052e16; --c-present: #facc15; --c-present-ink: #2a1f00; }
-[data-skin='glacier'] { --c-correct: #0e7490; --c-correct-ink: #fff; --c-present: #94a3b8; --c-present-ink: #0f172a; }
-.dark[data-skin='glacier'] { --c-correct: #67e8f9; --c-correct-ink: #083344; --c-present: #cbd5e1; --c-present-ink: #0f172a; }
-[data-skin='bubblegum'] { --c-correct: #db2777; --c-correct-ink: #fff; --c-present: #8b5cf6; --c-present-ink: #fff; }
-.dark[data-skin='bubblegum'] { --c-correct: #f9a8d4; --c-correct-ink: #4a0a2a; --c-present: #c4b5fd; --c-present-ink: #1e1b4b; }
+[data-skin='glacier'] { --c-correct: #0e7490; --c-correct-ink: #fff; --c-present: #f59e0b; --c-present-ink: #2a1500; }
+.dark[data-skin='glacier'] { --c-correct: #67e8f9; --c-correct-ink: #083344; --c-present: #fbbf24; --c-present-ink: #2a1500; }
+[data-skin='bubblegum'] { --c-correct: #db2777; --c-correct-ink: #fff; --c-present: #0ea5e9; --c-present-ink: #fff; }
+.dark[data-skin='bubblegum'] { --c-correct: #f9a8d4; --c-correct-ink: #4a0a2a; --c-present: #7dd3fc; --c-present-ink: #052033; }
 [data-skin='northern'] {
   --c-correct: #0d9488;
   --c-correct-ink: #fff;
@@ -295,7 +295,7 @@
   --c-correct-ink: #fff;
   --c-present: #f472b6;
   --c-present-ink: #3b0a24;
-  --fill-correct: linear-gradient(135deg, #1e1b4b, #4338ca, #db2777, #4338ca, #1e1b4b);
+  --fill-correct: linear-gradient(135deg, #1e1b4b, #4338ca, #60a5fa, #4338ca, #1e1b4b);
   --fill-present: linear-gradient(135deg, #f472b6, #fbcfe8, #c084fc, #fbcfe8, #f472b6);
   --skin-anim: skin-flow 5s ease-in-out infinite;
 }
@@ -328,6 +328,9 @@
 :is([data-skin='galaxy'], [data-skin='gold'], [data-skin='rainbow'], [data-skin='toxic'], [data-skin='lava'], [data-skin='vapor'], [data-skin='holo'], [data-skin='haunted'], [data-skin='candycane'], [data-skin='northern'], [data-skin='cosmic']) .key:is([data-state='correct'], [data-state='present']) {
   background-size: var(--skin-size, 300% 300%);
   animation: var(--skin-anim, skin-flow 6s ease-in-out infinite);
+}
+[data-skin='rainbow'] .tile[data-state='present'] {
+  box-shadow: inset 0 0 0 2px #a855f7, inset 0 -3px 0 rgb(0 0 0 / 0.12);
 }
 :is([data-skin='galaxy'], [data-skin='rainbow'], [data-skin='vapor']) .tile[data-state='correct'],
 [data-skin='toxic'] .tile[data-state='present'] {
@@ -884,11 +887,11 @@ button {
 }
 /* A glint of light sweeping across a coin, then a pause. */
 .coin-glint {
-  animation: coin-glint 3.2s ease-in-out infinite;
+  animation: coin-glint 5s ease-in-out infinite;
 }
 @keyframes coin-glint {
   0% { transform: translateX(0); }
-  40%, 100% { transform: translateX(62px); }
+  22%, 100% { transform: translateX(62px); }
 }
 .coin-sparkle {
   transform-box: fill-box;
@@ -912,37 +915,19 @@ button {
 .coin-rays {
   transform-box: view-box;
   transform-origin: 24px 24px;
-  animation: coin-rays 14s linear infinite;
+  opacity: 0.7;
+  animation: coin-rays 24s linear infinite;
 }
 @keyframes coin-rays {
   to { transform: rotate(360deg); }
 }
 .coin-hero {
-  animation: coin-aura 2.6s ease-in-out infinite, coin-tilt 6s ease-in-out infinite;
+  animation: coin-aura 3.6s ease-in-out infinite, coin-tilt 8s ease-in-out infinite;
 }
 /* A gentle 3D sway, like a coin held up to the light. */
 @keyframes coin-tilt {
-  0%, 100% { transform: perspective(240px) rotateY(-14deg) rotateX(4deg); }
-  50% { transform: perspective(240px) rotateY(14deg) rotateX(-4deg); }
-}
-.coin-rimlight {
-  animation: coin-rimlight 2.8s linear infinite;
-  filter: drop-shadow(0 0 1.5px #fff);
-}
-@keyframes coin-rimlight {
-  to { stroke-dashoffset: -100; }
-}
-.coin-gems {
-  animation: coin-gems 2.2s ease-in-out infinite alternate;
-}
-@keyframes coin-gems {
-  from { filter: brightness(1); }
-  to { filter: brightness(1.45) drop-shadow(0 0 1.5px #fff); }
-}
-.coin-orbit {
-  transform-box: view-box;
-  transform-origin: 24px 24px;
-  animation: coin-rays 7s linear infinite;
+  0%, 100% { transform: perspective(240px) rotateY(-10deg) rotateX(3deg); }
+  50% { transform: perspective(240px) rotateY(10deg) rotateX(-3deg); }
 }
 @keyframes coin-aura {
   0%, 100% { filter: drop-shadow(0 4px 6px rgb(124 45 18 / 0.45)) drop-shadow(0 0 4px rgb(253 224 71 / 0.35)); }
@@ -951,7 +936,7 @@ button {
 .coin-hero.coin-spin {
   animation: coin-aura 2.6s ease-in-out infinite, coin-spin 3.4s ease-in-out infinite;
 }
-[data-reduce-motion='true'] :is(.coin-holo, .coin-rays, .coin-hero, .coin-rimlight, .coin-gems, .coin-orbit) {
+[data-reduce-motion='true'] :is(.coin-holo, .coin-rays, .coin-hero) {
   animation: none !important;
 }
 
@@ -961,8 +946,8 @@ button {
   background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
+  background-position: 30% 0;
   color: transparent;
-  animation: coin-amount 4s linear infinite;
 }
 .dark .coin-amount {
   background-image: linear-gradient(100deg, #f59e0b 0%, #fcd34d 30%, #fff7d6 48%, #fcd34d 60%, #f59e0b 100%);
@@ -980,12 +965,6 @@ button {
   background:
     linear-gradient(var(--c-surface), var(--c-surface)) padding-box,
     linear-gradient(120deg, #fde68a, #f59e0b, #b45309, #fcd34d, #fde68a) border-box;
-  background-size: 100% 100%, 300% 100%;
-  animation: coin-chip-ring 6s linear infinite;
-}
-@keyframes coin-chip-ring {
-  from { background-position: 0 0, 0% 0; }
-  to { background-position: 0 0, 300% 0; }
 }
 .coin-chip[data-gain] {
   box-shadow: 0 0 0 4px rgb(251 191 36 / 0.35), 0 0 22px rgb(251 191 36 / 0.65);
@@ -1856,17 +1835,6 @@ button {
   50% { transform: translate(calc(var(--drift) * 0.6), 55vh) rotate(260deg); }
   to { transform: translate(var(--drift), 112vh) rotate(540deg); }
 }
-.scene-letter {
-  position: absolute;
-  top: -40px;
-  font-weight: 900;
-  color: color-mix(in srgb, var(--c-accent) 55%, transparent);
-  text-shadow: 0 0 10px color-mix(in srgb, var(--c-accent) 60%, transparent);
-  animation: letter-fall linear infinite;
-}
-@keyframes letter-fall {
-  to { transform: translateY(112vh) rotate(25deg); }
-}
 .scene-aurora {
   position: absolute;
   top: -6%;
@@ -1997,35 +1965,6 @@ button {
 }
 
 /* More frames. */
-.avatar-frame[data-frame='leaves'] {
-  background: repeating-conic-gradient(#15803d 0 12deg, #4ade80 12deg 20deg, #166534 20deg 30deg);
-  box-shadow: 0 0 0 1px rgb(161 98 7 / 0.6);
-}
-.avatar-frame[data-frame='pixel'] {
-  border-radius: 6px;
-  background: linear-gradient(#22c55e, #15803d);
-  box-shadow: 0 0 0 2px #052e16, 3px 3px 0 2px #052e16;
-}
-.avatar-frame[data-frame='pixel'] > .avatar-face { border-radius: 3px; }
-.avatar-frame[data-frame='orbit'] {
-  padding: 5px;
-  isolation: isolate;
-}
-.avatar-frame[data-frame='orbit']::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  border-radius: 50%;
-  border: 1.5px dashed color-mix(in srgb, var(--c-accent) 70%, transparent);
-  background:
-    radial-gradient(circle at 50% 0, #f472b6 0 3.5px, transparent 4px),
-    radial-gradient(circle at 50% 100%, #38bdf8 0 3px, transparent 3.5px),
-    radial-gradient(circle at 0 50%, #facc15 0 2.5px, transparent 3px);
-  animation: frame-spin 6s linear infinite;
-  pointer-events: none;
-}
-
 /* =========================================================================
    Profile banners (bought in the shop), behind your profile card.
    ========================================================================= */
@@ -2034,8 +1973,6 @@ button {
 }
 .profile-banner[data-banner='sunset'] { background: linear-gradient(135deg, #f97316, #ec4899 60%, #8b5cf6); }
 .profile-banner[data-banner='ocean'] { background: linear-gradient(135deg, #0ea5e9, #0f766e 55%, #1e3a8a); }
-.profile-banner[data-banner='meadow'] { background: linear-gradient(160deg, #fde047, #84cc16 40%, #15803d); }
-.profile-banner[data-banner='candy'] { background: repeating-linear-gradient(135deg, #fbcfe8 0 16px, #bae6fd 16px 32px, #fef08a 32px 48px); }
 .profile-banner[data-banner='stars'] {
   background:
     radial-gradient(circle at 15% 30%, #fff 0 1px, transparent 2px),
@@ -2048,26 +1985,12 @@ button {
 }
 @keyframes banner-twinkle { to { filter: brightness(1.25); } }
 .profile-banner[data-banner='aurora'],
-.profile-banner[data-banner='lava'],
 .profile-banner[data-banner='gold'] {
   background-size: 300% 300%;
   animation: skin-flow 8s ease-in-out infinite;
 }
 .profile-banner[data-banner='aurora'] { background-image: linear-gradient(120deg, #064e3b, #10b981, #22d3ee, #8b5cf6, #064e3b); }
-.profile-banner[data-banner='lava'] { background-image: linear-gradient(160deg, #450a0a, #dc2626, #f97316, #facc15, #7f1d1d); animation-duration: 5s; }
 .profile-banner[data-banner='gold'] { background-image: linear-gradient(115deg, #92400e, #fbbf24, #fff7d6, #f59e0b, #92400e); animation-duration: 4s; }
-.profile-banner[data-banner='galaxy'] {
-  background: conic-gradient(from 0deg at 50% 50%, #1e1b4b, #7c3aed, #ec4899, #1e1b4b, #312e81, #1e1b4b);
-  position: relative;
-  overflow: hidden;
-}
-.profile-banner[data-banner='galaxy']::before {
-  content: '';
-  position: absolute;
-  inset: -60%;
-  background: conic-gradient(from 0deg, transparent, rgb(255 255 255 / 0.18), transparent 30%, rgb(236 72 153 / 0.25), transparent 60%);
-  animation: frame-spin 12s linear infinite;
-}
 [data-reduce-motion='true'] .profile-banner,
 [data-reduce-motion='true'] .profile-banner::before { animation: none !important; }
 
@@ -2078,7 +2001,6 @@ button {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: coin-amount 5s linear infinite;
 }
 
 /* Background previews in the shop. */
@@ -2124,20 +2046,6 @@ button {
   animation: thumb-fall 5s linear infinite;
 }
 @keyframes thumb-fall { to { background-position: 20px 80px, -15px 80px, 10px 80px, -10px 80px, 0 0; } }
-.scene-thumb[data-scene='letters']::before {
-  content: 'W  O  R  D  S';
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-weight: 900;
-  font-size: 1.1rem;
-  letter-spacing: 0.2em;
-  color: color-mix(in srgb, var(--c-accent) 70%, transparent);
-  text-shadow: 0 0 8px var(--c-accent);
-  animation: thumb-letters 3s linear infinite;
-}
-@keyframes thumb-letters { from { transform: translateY(-60%); } to { transform: translateY(60%); } }
 .scene-thumb[data-scene='aurora'] {
   background: linear-gradient(110deg, #0f172a 10%, #10b981 35%, #22d3ee 50%, #8b5cf6 65%, #0f172a 90%);
   background-size: 250% 100%;
@@ -2167,7 +2075,7 @@ button {
 .profile-title[data-tier='legend'] {
   background-image: linear-gradient(100deg, #ef4444, #f59e0b, #22c55e, #0ea5e9, #a855f7, #ef4444);
   background-size: 300% 100%;
-  animation-duration: 3s;
+  animation: coin-amount 6s linear infinite;
 }
 
 /* Tile styles. */
@@ -2236,20 +2144,8 @@ button {
 /* Frames. */
 .avatar-frame[data-frame='bronze'] { background: conic-gradient(from 200deg, #7c2d12, #f0a868, #b45309, #fcd5a8, #7c2d12); }
 .avatar-frame[data-frame='silver'] { background: conic-gradient(from 200deg, #64748b, #f8fafc, #94a3b8, #ffffff, #64748b); box-shadow: 0 2px 8px -2px rgb(100 116 139 / 0.7); }
-.avatar-frame[data-frame='gilded'],
 .avatar-frame[data-frame='royal'],
 .avatar-frame[data-frame='mythic'] { isolation: isolate; }
-.avatar-frame[data-frame='gilded'] {
-  background: conic-gradient(from var(--spin, 0deg), #a16207, #fde68a, #fffbe8, #fbbf24, #a16207, #a16207, #fde68a, #a16207);
-  box-shadow: 0 0 10px -1px rgb(251 191 36 / 0.8);
-  animation: frame-gild 2.6s linear infinite;
-}
-@property --spin {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 0deg;
-}
-@keyframes frame-gild { to { --spin: 360deg; } }
 .avatar-frame[data-frame='royal']::before,
 .avatar-frame[data-frame='mythic']::before {
   content: '';
@@ -2305,11 +2201,6 @@ button {
 }
 @keyframes nebula-drift {
   to { background-position: 100% 50%, 0% 50%, 50% 100%, 0 0, 0 0, 0 0; }
-}
-.profile-banner[data-banner='phoenix'] {
-  background-image: linear-gradient(0deg, #7f1d1d, #dc2626 30%, #f97316 55%, #fde047 80%, #fff7d6);
-  background-size: 100% 250%;
-  animation: lava-flow 3s ease-in-out infinite;
 }
 .profile-banner[data-banner='prism'] {
   background-image: linear-gradient(115deg, #ef4444, #f59e0b, #facc15, #22c55e, #0ea5e9, #6366f1, #d946ef, #ef4444);
@@ -2375,33 +2266,9 @@ button {
 .home-hero-shade {
   background: linear-gradient(180deg, rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.28));
 }
-.home-hero-tiles {
-  position: absolute;
-  bottom: -10px;
-  right: -8px;
-  display: flex;
-  gap: 4px;
-  opacity: 0.16;
-  rotate: -10deg;
-  pointer-events: none;
-}
-.home-hero-tiles span {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
-  background: #fff;
-  color: #000;
-  font-weight: 900;
-  font-size: 0.95rem;
-  animation: decal-float 5.5s ease-in-out infinite;
-}
 .home-xp {
-  background: linear-gradient(90deg, #fde68a, #fff7d6, #fbbf24);
-  background-size: 200% 100%;
-  box-shadow: 0 0 10px rgb(253 230 138 / 0.8);
-  animation: coin-amount 3s linear infinite;
+  background: linear-gradient(90deg, #fbbf24, #fde68a);
+  box-shadow: 0 0 8px rgb(253 230 138 / 0.6);
 }
 .daily-card {
   background:
@@ -2451,7 +2318,6 @@ button {
     radial-gradient(120% 90% at 100% 0%, rgb(255 255 255 / 0.22), transparent 50%),
     linear-gradient(140deg, #ec4899, #a855f7 55%, #6366f1);
 }
-[data-reduce-motion='true'] :is(.home-hero-tiles span, .home-xp) { animation: none !important; }
 
 /* Safe areas: browsers expose env(); the Android app also provides
    --safe-area-inset-* for older WebViews that lack env() values. */

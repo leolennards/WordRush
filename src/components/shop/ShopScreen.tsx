@@ -36,6 +36,7 @@ import { DailyChest } from './DailyChest';
 import { ItemPreview } from './Previews';
 import { KIND_DETAIL, KIND_LABEL, SETTING_FOR } from './kinds';
 import { Reveal, type Prize } from './Reveal';
+import { ItemSheet } from './ItemSheet';
 
 type Group = 'game' | 'app' | 'profile';
 
@@ -69,6 +70,7 @@ export function ShopScreen({ onBack, onProfile }: { onBack: () => void; onProfil
   const [burst, setBurst] = useState<{ id: string; key: number } | null>(null);
   const [mystery, setMystery] = useState<Prize | null>(null);
   const [sending, setSending] = useState(false);
+  const [viewing, setViewing] = useState<ShopItem | null>(null);
   const balance = coinBalance(progress);
 
   // A confirm tap expires after a few seconds.
@@ -100,7 +102,6 @@ export function ShopScreen({ onBack, onProfile }: { onBack: () => void; onProfil
       equip(item);
       return;
     }
-    if (!confirmed(item.id)) return;
     const result = buy(item.id);
     if (!result.ok) {
       toast(
@@ -113,6 +114,7 @@ export function ShopScreen({ onBack, onProfile }: { onBack: () => void; onProfil
       return;
     }
     equip(item);
+    setViewing(null);
     setBurst((b) => ({ id: item.id, key: (b?.key ?? 0) + 1 }));
     celebrate();
     toast(`Unlocked: ${item.name}`, {
@@ -165,10 +167,8 @@ export function ShopScreen({ onBack, onProfile }: { onBack: () => void; onProfil
       deal={deal.item.id === item.id}
       owned={owns(progress, item.id)}
       equipped={equipped(item)}
-      confirming={confirming === item.id}
-      balance={balance}
       burst={burst?.id === item.id ? burst.key : null}
-      onPress={() => press(item)}
+      onPress={() => setViewing(item)}
     />
   );
 
@@ -265,17 +265,21 @@ export function ShopScreen({ onBack, onProfile }: { onBack: () => void; onProfil
                 <Clock3 className="size-3" aria-hidden /> New deal in {countdown}
               </p>
             </div>
-            <ItemPreview item={deal.item} />
-            <BuyButton
-              item={deal.item}
-              price={deal.price}
-              was={deal.item.price}
-              owned={owns(progress, deal.item.id)}
-              equipped={equipped(deal.item)}
-              confirming={confirming === deal.item.id}
-              balance={balance}
-              onPress={() => press(deal.item)}
-            />
+            <ItemPreview item={deal.item} still />
+            <button
+              type="button"
+              onClick={() => setViewing(deal.item)}
+              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-ink px-4 text-sm font-extrabold text-ink-text transition hover:opacity-90 active:scale-[0.98]"
+            >
+              {owns(progress, deal.item.id) ? (
+                'Owned'
+              ) : (
+                <>
+                  <Coin className="size-4" /> <span className="tabular">{deal.price}</span>
+                  <span className="tabular text-xs font-semibold line-through opacity-60">{deal.item.price}</span>
+                </>
+              )}
+            </button>
           </div>
         </m.section>
 
@@ -350,6 +354,21 @@ export function ShopScreen({ onBack, onProfile }: { onBack: () => void; onProfil
         </p>
       </div>
       <GiftDialog open={sending} onClose={() => setSending(false)} />
+      {viewing && (
+        <ItemSheet
+          item={viewing}
+          price={priceFor(viewing, day)}
+          owned={owns(progress, viewing.id)}
+          equipped={equipped(viewing)}
+          balance={balance}
+          onBuy={press}
+          onUse={(item) => {
+            equip(item);
+            setViewing(null);
+          }}
+          onClose={() => setViewing(null)}
+        />
+      )}
       {mystery && <Reveal kind="mystery" eyebrow="Mystery box" prize={mystery} onUse={equip} onClose={() => setMystery(null)} />}
     </main>
   );
@@ -405,8 +424,6 @@ function ItemCard({
   deal,
   owned,
   equipped,
-  confirming,
-  balance,
   burst,
   onPress,
 }: {
@@ -416,8 +433,6 @@ function ItemCard({
   deal: boolean;
   owned: boolean;
   equipped: boolean;
-  confirming: boolean;
-  balance: number;
   burst: number | null;
   onPress: () => void;
 }) {
@@ -425,49 +440,44 @@ function ItemCard({
     <m.li
       initial={{ opacity: 0, y: 12, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{
-        delay: index * 0.03,
-        duration: 0.3,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      className={`shop-card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border bg-surface p-3 text-text transition ${
-        equipped ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
-      }`}
-      data-owned={owned || undefined}
+      transition={{ delay: index * 0.03, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      className="relative"
     >
-      {item.season && !owned ? (
-        <span className="absolute top-2 right-2 rounded-full bg-danger/15 px-1.5 py-px text-[0.6rem] font-bold tracking-wide text-danger uppercase">
-          Limited
-        </span>
-      ) : (
-        item.animated && (
-          <span className="absolute top-2 right-2 rounded-full bg-present/20 px-1.5 py-px text-[0.6rem] font-bold tracking-wide uppercase">
-            Animated
+      <button
+        type="button"
+        onClick={onPress}
+        aria-label={`${item.name}, ${equipped ? 'in use' : owned ? 'owned' : `${price} coins`}`}
+        className={`shop-card relative flex h-full w-full flex-col overflow-hidden rounded-[var(--radius-card)] border bg-surface p-3 text-left text-text transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] ${
+          equipped ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
+        }`}
+      >
+        {deal && !owned && (
+          <span className="absolute top-2 left-2 z-10 rounded-full bg-danger px-1.5 py-px text-[0.6rem] font-bold tracking-wide text-white uppercase">
+            −30%
           </span>
-        )
-      )}
-      {deal && !owned && (
-        <span className="absolute top-2 left-2 rounded-full bg-danger px-1.5 py-px text-[0.6rem] font-bold tracking-wide text-white uppercase">
-          −30%
+        )}
+        <span className="mb-2.5 flex justify-center" aria-hidden>
+          <ItemPreview item={item} still />
         </span>
-      )}
-      <div className="mt-4 mb-3 flex justify-center">
-        <ItemPreview item={item} />
-      </div>
-      <p className="font-bold">{item.name}</p>
-      <p className="mb-3 text-xs leading-snug text-muted">{item.description}</p>
-      <div className="mt-auto">
-        <BuyButton
-          item={item}
-          price={price}
-          was={price !== item.price ? item.price : undefined}
-          owned={owned}
-          equipped={equipped}
-          confirming={confirming}
-          balance={balance}
-          onPress={onPress}
-        />
-      </div>
+        <span className="flex items-start justify-between gap-2">
+          <span className="font-bold leading-tight">{item.name}</span>
+          {item.animated && !owned && <Sparkles className="mt-0.5 size-3.5 shrink-0 text-present" aria-label="Animated" />}
+        </span>
+        <span className="mt-auto pt-2 text-sm font-bold">
+          {equipped ? (
+            <span className="inline-flex items-center gap-1 text-accent">
+              <Check className="size-4" aria-hidden /> In use
+            </span>
+          ) : owned ? (
+            <span className="text-muted">Owned</span>
+          ) : (
+            <span className="tabular inline-flex items-center gap-1">
+              <Coin className="size-4" /> {price.toLocaleString()}
+              {price !== item.price && <span className="text-xs font-semibold text-muted line-through">{item.price}</span>}
+            </span>
+          )}
+        </span>
+      </button>
       <AnimatePresence>{burst !== null && <CoinBurst key={burst} />}</AnimatePresence>
     </m.li>
   );
@@ -529,95 +539,6 @@ function Extra({
         )}
       </button>
     </section>
-  );
-}
-
-function BuyButton({
-  item,
-  price,
-  was,
-  owned,
-  equipped,
-  confirming,
-  balance,
-  onPress,
-}: {
-  item: ShopItem;
-  price: number;
-  was?: number;
-  owned: boolean;
-  equipped: boolean;
-  confirming: boolean;
-  balance: number;
-  onPress: () => void;
-}) {
-  if (owned) {
-    return (
-      <button
-        type="button"
-        onClick={onPress}
-        disabled={equipped}
-        aria-label={equipped ? `${item.name} is on` : `Use ${item.name}`}
-        className={`inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-bold transition active:scale-[0.98] sm:w-auto sm:min-w-28 ${
-          equipped ? 'bg-accent/15 text-accent' : 'bg-surface-2 hover:bg-surface-3'
-        }`}
-      >
-        {equipped ? (
-          <>
-            <Check className="size-4" aria-hidden /> In use
-          </>
-        ) : (
-          'Use'
-        )}
-      </button>
-    );
-  }
-  const short = balance < price;
-  return (
-    <div className="flex flex-col items-stretch gap-1 sm:items-center">
-      <button
-        type="button"
-        onClick={onPress}
-        disabled={short}
-        aria-label={
-          short
-            ? `${item.name}: ${price} coins, you need ${price - balance} more`
-            : confirming
-              ? `Confirm buying ${item.name} for ${price} coins`
-              : `Buy ${item.name} for ${price} coins`
-        }
-        className={`buy-button relative inline-flex min-h-10 w-full items-center justify-center gap-1.5 overflow-hidden rounded-xl px-3 text-sm font-bold transition active:scale-[0.97] disabled:cursor-not-allowed sm:w-auto sm:min-w-28 ${
-          confirming ? 'bg-present text-present-ink' : short ? 'bg-surface-2 text-muted' : 'bg-ink text-ink-text hover:opacity-90'
-        }`}
-        data-confirm={confirming || undefined}
-      >
-        <AnimatePresence mode="popLayout" initial={false}>
-          <m.span
-            key={confirming ? 'confirm' : 'price'}
-            initial={{ y: 12, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -12, opacity: 0 }}
-            transition={{ duration: 0.16 }}
-            className="inline-flex items-center gap-1.5"
-          >
-            {confirming ? (
-              'Tap to confirm'
-            ) : (
-              <>
-                <Coin className="size-4" />
-                <span className="tabular">{price}</span>
-                {was !== undefined && <span className="tabular text-xs font-semibold line-through opacity-60">{was}</span>}
-              </>
-            )}
-          </m.span>
-        </AnimatePresence>
-      </button>
-      {short && (
-        <span className="tabular text-center text-[0.7rem] text-subtle" aria-hidden>
-          {price - balance} more to go
-        </span>
-      )}
-    </div>
   );
 }
 

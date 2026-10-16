@@ -113,9 +113,7 @@ export const SOUND_PACKS: readonly SoundPack[] = [
   { id: 'chimes', name: 'Crystal Chimes', description: 'Sparkling bells and glassy tones.', level: 45 },
 ];
 
-export type FrameId =
-  | 'none' | 'gold' | 'neon' | 'rainbow' | 'flames' | 'leaves' | 'pixel' | 'orbit'
-  | 'bronze' | 'silver' | 'gilded' | 'royal' | 'mythic';
+export type FrameId = 'none' | 'gold' | 'neon' | 'rainbow' | 'flames' | 'bronze' | 'silver' | 'royal' | 'mythic';
 export type Frame = Cosmetic<FrameId>;
 
 /** A ring around your avatar, shown to friends. */
@@ -125,19 +123,13 @@ export const FRAMES: readonly Frame[] = [
   { id: 'neon', name: 'Neon Ring', description: 'A glowing cyan ring.', price: 700 },
   { id: 'rainbow', name: 'Rainbow Ring', description: 'A spinning ring of every colour.', price: 1200, animated: true },
   { id: 'flames', name: 'Flame Ring', description: 'Your avatar, on fire.', price: 1500, animated: true },
-  { id: 'leaves', name: 'Laurel', description: 'A champion’s laurel wreath.', price: 900 },
-  { id: 'pixel', name: 'Pixel Ring', description: 'A chunky 8-bit border.', price: 600 },
-  { id: 'orbit', name: 'Orbit', description: 'Little planets circling you.', price: 1800, animated: true },
   { id: 'bronze', name: 'Bronze Ring', description: 'Your first medal-worthy ring.', level: 5 },
   { id: 'silver', name: 'Silver Ring', description: 'Polished silver for a seasoned player.', level: 20 },
-  { id: 'gilded', name: 'Gilded', description: 'Gold with light running around it.', level: 40, animated: true },
   { id: 'royal', name: 'Royal', description: 'Purple and gold, turning slowly.', level: 50, animated: true },
   { id: 'mythic', name: 'Mythic Aura', description: 'A double ring of northern lights, glowing.', level: 90, animated: true },
 ];
 
-export type BadgeId =
-  | 'none' | 'star' | 'heart' | 'bolt' | 'crown' | 'diamond' | 'flame' | 'rocket' | 'music' | 'ghost' | 'trophy'
-  | 'sprout' | 'medal' | 'nova' | 'legend';
+export type BadgeId = 'none' | 'star' | 'heart' | 'bolt' | 'crown' | 'diamond' | 'flame' | 'sprout' | 'nova' | 'legend';
 export type Badge = Cosmetic<BadgeId>;
 
 /** A small badge on your avatar, shown to friends. */
@@ -149,17 +141,12 @@ export const BADGES: readonly Badge[] = [
   { id: 'crown', name: 'Crown', description: 'Word royalty.', price: 800 },
   { id: 'diamond', name: 'Diamond', description: 'Rare and brilliant.', price: 1000 },
   { id: 'flame', name: 'Flame', description: 'On fire!', price: 400 },
-  { id: 'music', name: 'Music Note', description: 'Plays it by ear.', price: 400 },
-  { id: 'rocket', name: 'Rocket', description: 'To the moon.', price: 600 },
-  { id: 'ghost', name: 'Ghost', description: 'Boo!', price: 600 },
-  { id: 'trophy', name: 'Trophy', description: 'A true winner.', price: 1200 },
   { id: 'sprout', name: 'Sprout', description: 'Just getting started.', level: 3 },
-  { id: 'medal', name: 'Medal', description: 'Earned, not bought.', level: 18 },
   { id: 'nova', name: 'Nova', description: 'A glowing, pulsing star.', level: 55, animated: true },
   { id: 'legend', name: 'Legend Gem', description: 'Only for level 100.', level: 100, animated: true },
 ];
 
-export type BackgroundId = 'tiles' | 'plain' | 'stars' | 'bubbles' | 'aurora' | 'letters' | 'sakura' | 'synthwave' | 'fireflies' | 'galaxy';
+export type BackgroundId = 'tiles' | 'plain' | 'stars' | 'bubbles' | 'aurora' | 'sakura' | 'synthwave' | 'fireflies' | 'galaxy';
 export type Background = Cosmetic<BackgroundId>;
 
 /** The scene behind the whole app. */
@@ -169,14 +156,13 @@ export const BACKGROUNDS: readonly Background[] = [
   { id: 'bubbles', name: 'Bubbles', description: 'Soap bubbles rising and wobbling.', price: 700, animated: true },
   { id: 'stars', name: 'Starfield', description: 'Twinkling stars and the odd shooting star.', price: 900, animated: true },
   { id: 'sakura', name: 'Cherry Blossom', description: 'Petals drifting down on the breeze.', price: 1000, animated: true },
-  { id: 'letters', name: 'Letter Rain', description: 'A gentle rain of glowing letters.', price: 1100, animated: true },
   { id: 'aurora', name: 'Aurora Sky', description: 'Ribbons of northern lights swaying.', price: 1400, animated: true },
   { id: 'synthwave', name: 'Synthwave', description: 'A neon sun over a moving grid.', price: 1800, animated: true },
   { id: 'fireflies', name: 'Fireflies', description: 'Glowing fireflies drifting in the dusk.', level: 23, animated: true },
   { id: 'galaxy', name: 'Spiral Galaxy', description: 'A slowly turning galaxy of stars.', level: 60, animated: true },
 ];
 
-export type AccentId = 'mint' | 'ocean' | 'grape' | 'rose' | 'tangerine' | 'sky' | 'lime' | 'gold' | 'ruby' | 'midnight' | 'teal';
+export type AccentId = 'mint' | 'ocean' | 'grape' | 'rose' | 'tangerine' | 'gold' | 'ruby' | 'teal';
 export type Accent = Cosmetic<AccentId> & { swatch: string };
 
 /** The app's highlight colour: buttons, links and the logo. */
@@ -186,17 +172,14 @@ export const ACCENTS: readonly Accent[] = [
   { id: 'grape', name: 'Grape', description: 'Juicy purple.', swatch: '#7c3aed' },
   { id: 'rose', name: 'Rose', description: 'Soft pink.', swatch: '#e0457b' },
   { id: 'tangerine', name: 'Tangerine', description: 'Zesty orange.', swatch: '#ea6a0c', price: 300 },
-  { id: 'sky', name: 'Sky', description: 'Bright summer sky.', swatch: '#0ea5e9', price: 300 },
-  { id: 'lime', name: 'Lime', description: 'Electric green.', swatch: '#65a30d', price: 300 },
   { id: 'ruby', name: 'Ruby', description: 'Rich red.', swatch: '#dc2626', price: 400 },
-  { id: 'midnight', name: 'Midnight', description: 'Inky blue-black.', swatch: '#334155', price: 400 },
   { id: 'gold', name: 'Gold', description: 'Shiny, like your coins.', swatch: '#d4a017', price: 600 },
   { id: 'teal', name: 'Teal', description: 'A level-7 reward.', swatch: '#0d9488', level: 7 },
 ];
 
 export type TitleId =
-  | 'none' | 'lover' | 'puzzler' | 'owl' | 'vowels' | 'wizard' | 'speedy' | 'streaker' | 'ninja' | 'unstumpable' | 'legend'
-  | 'rookie' | 'sharp' | 'scholar' | 'virtuoso' | 'grandmaster' | 'legendary';
+  | 'none' | 'lover' | 'puzzler' | 'owl' | 'wizard' | 'speedy' | 'streaker' | 'unstumpable'
+  | 'rookie' | 'virtuoso' | 'legendary';
 export type Title = Cosmetic<TitleId>;
 
 /** A title under your name, shown to friends. */
@@ -205,24 +188,16 @@ export const TITLES: readonly Title[] = [
   { id: 'lover', name: 'Word Lover', description: 'For the love of letters.' },
   { id: 'puzzler', name: 'Puzzler', description: 'Always up for a puzzle.' },
   { id: 'owl', name: 'Night Owl', description: 'Solving after dark.', price: 300 },
-  { id: 'vowels', name: 'Vowel Hunter', description: 'A, E, I, O, U… found.', price: 300 },
   { id: 'wizard', name: 'Word Wizard', description: 'Spells words, literally.', price: 500 },
   { id: 'speedy', name: 'Speed Demon', description: 'Solved before you blinked.', price: 500 },
   { id: 'streaker', name: 'Streak Master', description: 'Never misses a day.', price: 700 },
-  { id: 'ninja', name: 'Letter Ninja', description: 'Silent, swift, correct.', price: 800 },
   { id: 'unstumpable', name: 'The Unstumpable', description: 'No word too tricky.', price: 1200 },
-  { id: 'legend', name: 'Lexicon Legend', description: 'Simply legendary.', price: 2000 },
   { id: 'rookie', name: 'Rookie Speller', description: 'Everyone starts somewhere.', level: 2 },
-  { id: 'sharp', name: 'Sharp Speller', description: 'Getting good at this.', level: 15 },
-  { id: 'scholar', name: 'Seasoned Scholar', description: 'Knows a word or two.', level: 28 },
   { id: 'virtuoso', name: 'Virtuoso', description: 'A true artist of words.', level: 50 },
-  { id: 'grandmaster', name: 'Grandmaster', description: 'Few have climbed this high.', level: 65 },
   { id: 'legendary', name: 'Wordskiis Legend', description: 'Level 100. The very top.', level: 100 },
 ];
 
-export type BannerId =
-  | 'none' | 'sunset' | 'ocean' | 'meadow' | 'candy' | 'stars' | 'aurora' | 'lava' | 'galaxy' | 'gold'
-  | 'dawn' | 'nebula' | 'phoenix' | 'prism';
+export type BannerId = 'none' | 'sunset' | 'ocean' | 'stars' | 'aurora' | 'gold' | 'dawn' | 'nebula' | 'prism';
 export type Banner = Cosmetic<BannerId>;
 
 /** The banner behind your profile card, shown to friends. */
@@ -230,16 +205,11 @@ export const BANNERS: readonly Banner[] = [
   { id: 'none', name: 'Simple', description: 'A clean card.' },
   { id: 'sunset', name: 'Sunset Glow', description: 'Warm orange into pink.', price: 400 },
   { id: 'ocean', name: 'Ocean Deep', description: 'Cool blues and teal.', price: 400 },
-  { id: 'meadow', name: 'Meadow', description: 'Fresh greens and sunshine.', price: 400 },
-  { id: 'candy', name: 'Candy Stripes', description: 'Sweet pastel stripes.', price: 600 },
   { id: 'stars', name: 'Starry Night', description: 'A twinkling night sky.', price: 900, animated: true },
   { id: 'aurora', name: 'Aurora', description: 'Flowing northern lights.', price: 1200, animated: true },
-  { id: 'lava', name: 'Molten', description: 'Glowing, flowing lava.', price: 1200, animated: true },
-  { id: 'galaxy', name: 'Galaxy Swirl', description: 'A spinning spiral of stars.', price: 1500, animated: true },
   { id: 'gold', name: 'Gold Rush', description: 'Pure shimmering gold.', price: 2000, animated: true },
   { id: 'dawn', name: 'First Light', description: 'The sky at sunrise.', level: 10 },
   { id: 'nebula', name: 'Nebula', description: 'Clouds of glowing space dust.', level: 35, animated: true },
-  { id: 'phoenix', name: 'Phoenix', description: 'Rising from the flames.', level: 70, animated: true },
   { id: 'prism', name: 'Prism', description: 'Every colour at once, for legends.', level: 100, animated: true },
 ];
 

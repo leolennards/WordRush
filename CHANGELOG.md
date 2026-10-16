@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.17.0 — 2026-10-16 (polish: new Tile Pals, clearer colours, calmer screens, easier picking)
+
+- **New Tile Pals:** 15 redesigned pals: soft, glossy tiles with gentle faces and one small accessory at most
+  (12 for everyone, three as level rewards).
+- **Clearer tiles:** in themes where "right spot" and "wrong spot" looked alike, the colours now differ clearly:
+  Berry Smoothie (berry and banana), Arctic (blue and mint), Midnight Ink (ink and gold), Glacier (teal and amber),
+  Peach Fizz (peach and mint), Bubblegum (pink and sky), Solid Gold (gold and rose gold), Rainbow (rainbow and
+  pearl), Galaxy, Cosmic Dust, Vaporwave and Lava Lamp.
+- **Calmer:** the coin glows, glints and tilts gently instead of doing everything at once; the coin balance and
+  most titles are still; the Home card lost its floating tiles.
+- **Fewer, better options:** a trimmed set of titles, banners, frames, badges, backgrounds and app colours
+  (tile colours, styles, keyboards, sounds and win effects are unchanged).
+- **Easier picking:**
+  - Shop: tap any item for a closer look, and **Try it on** to see it across the whole app before buying.
+  - Settings → Tile theme: a live preview, one tab per kind, and only what you have. The rest is a tap away.
+  - Profile: one tab per part (Picture, Frame, Badge, Title, Banner) under a small preview that stays in view;
+    locked items say how to get them.
+- **Android app 1.17.0** (versionCode 19).
+
 ## 1.16.0 — 2026-10-16 (level rewards, Tile Pals, a brighter Home, a cooler coin)
 
 - **Level rewards:** levelling up now unlocks much more than tile colours: 27 rewards from level 2 to 100, including

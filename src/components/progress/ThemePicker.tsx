@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { Check, Lock } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { Check, ShoppingBag, Volume2 } from 'lucide-react';
 import {
   ACCENTS,
   BACKGROUNDS,
@@ -9,30 +9,35 @@ import {
   TILE_STYLES,
   WIN_EFFECTS,
   cosmeticUnlocked,
-  owns,
   skinUnlocked,
-  tileStyleUnlocked,
-  winFxUnlocked,
-  type Skin,
-  type TileStyle,
-  type WinFx,
+  type CosmeticKind,
+  type WinFxId,
 } from '@/engine';
+import type { Settings } from '@/lib/storage/schemas';
 import { useProgress } from '@/features/progress/ProgressContext';
 import { useSettings } from '@/features/settings/SettingsContext';
-import { Coin } from '@/components/shop/Coin';
 import { FxIcon } from '@/components/shop/FxIcon';
-import { LockTag } from '@/components/shop/LockTag';
-import { lockLabel } from '@/components/shop/kinds';
 import { previewPack } from '@/lib/audio/sound';
-import { Volume2 } from 'lucide-react';
-import type { Settings } from '@/lib/storage/schemas';
 
-type Extra = 'keys' | 'sound' | 'bg' | 'accent';
-const EXTRA_SETTING: Record<Extra, 'keySkin' | 'soundPack' | 'background' | 'accent'> = {
-  keys: 'keySkin',
-  sound: 'soundPack',
-  bg: 'background',
-  accent: 'accent',
+type Tab = 'skin' | Exclude<CosmeticKind, 'frame' | 'badge' | 'title' | 'banner'>;
+
+const TABS: { value: Tab; label: string; setting: keyof Settings }[] = [
+  { value: 'skin', label: 'Colours', setting: 'skin' },
+  { value: 'tiles', label: 'Styles', setting: 'tileStyle' },
+  { value: 'keys', label: 'Keyboard', setting: 'keySkin' },
+  { value: 'sound', label: 'Sound', setting: 'soundPack' },
+  { value: 'fx', label: 'Win effect', setting: 'winFx' },
+  { value: 'bg', label: 'Background', setting: 'background' },
+  { value: 'accent', label: 'App colour', setting: 'accent' },
+];
+
+const LISTS: Record<Exclude<Tab, 'skin'>, readonly { id: string; name: string; price?: number; level?: number }[]> = {
+  tiles: TILE_STYLES,
+  keys: KEY_SKINS,
+  sound: SOUND_PACKS,
+  fx: WIN_EFFECTS,
+  bg: BACKGROUNDS,
+  accent: ACCENTS,
 };
 
 const PREVIEW = [
@@ -43,241 +48,167 @@ const PREVIEW = [
   { l: 's', s: 'present' },
 ] as const;
 
-/** Tile themes (free, by rank, from the shop), tile styles, keyboards, sounds, win effects, frames and badges. */
+/**
+ * Your look: tile colours, styles, keyboard, sound, win effect, background and
+ * app colour. Shows only what you own or have unlocked, with a live preview.
+ */
 export function ThemePicker({ level, onShop }: { level: number; onShop?: () => void }) {
   const { settings, update } = useSettings();
   const { progress } = useProgress();
-  const free = SKINS.filter((s) => s.free);
-  const ranked = SKINS.filter((s) => !s.free && s.price === undefined);
-  const shop = SKINS.filter((s) => s.price !== undefined && (!s.season || skinUnlocked(s.id, level, progress.owned)));
+  const [tab, setTab] = useState<Tab>('skin');
+  const current = TABS.find((t) => t.value === tab)!;
 
-  const swatch = (s: Skin) => {
-    const unlocked = skinUnlocked(s.id, level, progress.owned);
-    const on = settings.skin === s.id;
-    const lockLabel = s.price !== undefined ? `${s.price} coins in the shop` : `unlocks at level ${s.minLevel}`;
-    return (
-      <button
-        key={s.id}
-        type="button"
-        role="radio"
-        aria-checked={on}
-        aria-label={unlocked ? `${s.name} tiles` : `${s.name} tiles, ${lockLabel}`}
-        disabled={!unlocked}
-        onClick={() => update({ skin: s.id })}
-        className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition active:scale-[0.97] ${
-          on ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
-        } disabled:cursor-not-allowed`}
-      >
-        <span className={`flex gap-1 ${unlocked ? '' : 'opacity-35 grayscale'}`} aria-hidden>
-          {s.swatch.map((c, i) => (
-            <span
-              key={i}
-              className={`grid size-7 place-items-center rounded-md text-xs font-black text-white ${s.animated ? 'swatch-flow' : ''}`}
-              style={{
-                background: s.animated ? `linear-gradient(135deg, ${s.swatch[0]}, ${s.swatch[1]}, ${s.swatch[0]})` : c,
-              }}
-            >
-              {'WS'[i]}
-            </span>
-          ))}
-        </span>
-        <span className={`text-xs font-semibold ${unlocked ? '' : 'text-muted'}`}>{s.name}</span>
-        {on && <OnMark />}
-        {!unlocked &&
-          (s.price !== undefined ? (
-            <span className="tabular flex items-center gap-0.5 text-[0.65rem] text-subtle">
-              <Coin className="size-3" /> {s.price}
-            </span>
-          ) : (
-            <span className="tabular flex items-center gap-0.5 text-[0.65rem] text-subtle">
-              <Lock className="size-2.5" aria-hidden /> Level {s.minLevel}
-            </span>
-          ))}
-      </button>
-    );
-  };
+  // Everything you can use in this tab, and how many more are out there.
+  const all =
+    tab === 'skin'
+      ? SKINS.filter((s) => !s.season || skinUnlocked(s.id, level, progress.owned)).map((s) => ({ id: s.id, name: s.name, price: s.price, level: s.free || s.price !== undefined ? undefined : s.minLevel }))
+      : LISTS[tab].filter((c) => !('season' in c) || cosmeticUnlocked(tab, c.id, progress.owned, level));
+  const usable = (id: string) =>
+    tab === 'skin' ? skinUnlocked(id as Settings['skin'], level, progress.owned) : cosmeticUnlocked(tab, id, progress.owned, level);
+  const mine = all.filter((c) => usable(c.id));
+  const inShop = all.filter((c) => !usable(c.id) && c.price !== undefined).length;
+  const byLevel = all.filter((c) => !usable(c.id) && c.level !== undefined);
 
-  const style = (t: TileStyle) => {
-    const unlocked = tileStyleUnlocked(t.id, progress.owned, level);
-    const on = settings.tileStyle === t.id;
-    return (
-      <button
-        key={t.id}
-        type="button"
-        role="radio"
-        aria-checked={on}
-        aria-label={unlocked ? `${t.name} tile style` : `${t.name} tile style, ${lockLabel(t)}`}
-        disabled={!unlocked}
-        onClick={() => update({ tileStyle: t.id })}
-        className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition active:scale-[0.97] ${
-          on ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
-        } disabled:cursor-not-allowed`}
-      >
-        <span className={`flex gap-1 ${unlocked ? '' : 'opacity-35 grayscale'}`} aria-hidden>
-          <span className="tile size-7 text-xs!" data-state="correct" data-style={t.id}>
-            W
+  const look = (id: string, name: string): ReactNode => {
+    switch (tab) {
+      case 'skin': {
+        const s = SKINS.find((x) => x.id === id)!;
+        return (
+          <span className="flex gap-1">
+            {s.swatch.map((c, i) => (
+              <span
+                key={i}
+                className={`grid size-7 place-items-center rounded-md text-xs font-black text-white ${s.animated ? 'swatch-flow' : ''}`}
+                style={{ background: s.animated ? `linear-gradient(135deg, ${s.swatch[0]}, ${s.swatch[1]}, ${s.swatch[0]})` : c }}
+              >
+                {'WS'[i]}
+              </span>
+            ))}
           </span>
-          <span className="tile size-7 text-xs!" data-state="present" data-style={t.id}>
-            S
-          </span>
-        </span>
-        <span className={`text-xs font-semibold ${unlocked ? '' : 'text-muted'}`}>{t.name}</span>
-        {on && <OnMark />}
-        {!unlocked && <LockTag price={t.price} level={t.level} />}
-      </button>
-    );
-  };
-
-  const effect = (f: WinFx) => {
-    const unlocked = winFxUnlocked(f.id, progress.owned, level);
-    const on = settings.winFx === f.id;
-    return (
-      <button
-        key={f.id}
-        type="button"
-        role="radio"
-        aria-checked={on}
-        aria-label={unlocked ? `${f.name} win effect` : `${f.name} win effect, ${lockLabel(f)}`}
-        disabled={!unlocked}
-        onClick={() => update({ winFx: f.id })}
-        className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition active:scale-[0.97] ${
-          on ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
-        } disabled:cursor-not-allowed`}
-      >
-        <span className={`grid size-7 place-items-center ${unlocked ? '' : 'opacity-35 grayscale'}`} aria-hidden>
-          <FxIcon id={f.id} />
-        </span>
-        <span className={`text-center text-xs leading-tight font-semibold ${unlocked ? '' : 'text-muted'}`}>{f.name}</span>
-        {on && <OnMark />}
-        {!unlocked && <LockTag price={f.price} level={f.level} />}
-      </button>
-    );
-  };
-
-  /** A keyboard, sound pack, frame or badge. */
-  const extra = (kind: Extra) => (c: { id: string; name: string; price?: number; level?: number }) => {
-    const key = EXTRA_SETTING[kind];
-    const unlocked = cosmeticUnlocked(kind, c.id, progress.owned, level);
-    const on = settings[key] === c.id;
-    let look: ReactNode;
-    if (kind === 'keys') {
-      look = (
-        <span className="flex gap-0.5">
-          {(['correct', undefined] as const).map((st, i) => (
-            <span key={i} className="key grid h-7 w-5 place-items-center text-[0.65rem]" data-state={st} data-keyskin={c.id}>
-              {'WS'[i]}
+        );
+      }
+      case 'tiles':
+        return (
+          <span className="flex gap-1">
+            <span className="tile size-7 text-xs!" data-state="correct" data-style={id}>
+              W
             </span>
-          ))}
-        </span>
-      );
-    } else if (kind === 'sound') {
-      look = <Volume2 className="size-5 text-accent" aria-hidden />;
-    } else if (kind === 'bg') {
-      look = <span className="scene-thumb block h-7 w-12 rounded-md" data-scene={c.id} />;
-    } else {
-      look = <span className="block size-6 rounded-full" style={{ background: ACCENTS.find((a) => a.id === c.id)?.swatch }} />;
+            <span className="tile size-7 text-xs!" data-state="present" data-style={id}>
+              S
+            </span>
+          </span>
+        );
+      case 'keys':
+        return (
+          <span className="flex gap-0.5">
+            {(['correct', undefined] as const).map((st, i) => (
+              <span key={i} className="key grid h-7 w-6 place-items-center text-[0.7rem]" data-state={st} data-keyskin={id}>
+                {'WS'[i]}
+              </span>
+            ))}
+          </span>
+        );
+      case 'sound':
+        return <Volume2 className="size-6 text-accent" aria-hidden />;
+      case 'fx':
+        return <FxIcon id={id as WinFxId} className="size-6" />;
+      case 'bg':
+        return <span className="scene-thumb block h-7 w-12 rounded-md" data-scene={id} />;
+      case 'accent':
+        return <span className="block size-7 rounded-full" style={{ background: ACCENTS.find((a) => a.id === id)?.swatch }} />;
+      default:
+        return name;
     }
-    return (
-      <button
-        key={c.id}
-        type="button"
-        role="radio"
-        aria-checked={on}
-        aria-label={unlocked ? c.name : `${c.name}, ${lockLabel(c)}`}
-        disabled={!unlocked}
-        onClick={() => {
-          update({ [key]: c.id } as Partial<Settings>);
-          if (kind === 'sound') previewPack(c.id as Settings['soundPack']);
-        }}
-        className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition active:scale-[0.97] ${
-          on ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
-        } disabled:cursor-not-allowed`}
-      >
-        <span className={`grid h-8 place-items-center ${unlocked ? '' : 'opacity-35 grayscale'}`} aria-hidden>
-          {look}
-        </span>
-        <span className={`text-center text-xs leading-tight font-semibold ${unlocked ? '' : 'text-muted'}`}>{c.name}</span>
-        {on && <OnMark />}
-        {!unlocked && <LockTag price={c.price} level={c.level} />}
-      </button>
-    );
   };
-
-  const ownedShop = shop.filter((s) => owns(progress, `skin:${s.id}`)).length;
 
   return (
-    <div className="space-y-4">
-      {/* Live preview in the current theme and style. */}
-      <div
-        className="flex justify-center gap-1.5 rounded-2xl bg-surface-2 py-3"
-        role="img"
-        aria-label="Preview of the current tile theme"
-      >
-        {PREVIEW.map((t, i) => (
-          <span key={i} className="tile size-10 text-lg!" data-state={t.s} aria-hidden>
-            {t.l}
-          </span>
+    <div className="space-y-3">
+      {/* Live preview in the current look. */}
+      <div className="flex flex-col items-center gap-2 rounded-2xl bg-surface-2 py-3" role="img" aria-label="Preview of your current look">
+        <span className="flex gap-1.5">
+          {PREVIEW.map((t, i) => (
+            <span key={i} className="tile size-10 text-lg!" data-state={t.s}>
+              {t.l}
+            </span>
+          ))}
+        </span>
+        <span className="flex gap-1">
+          {['Q', 'W', 'E', 'R', 'T'].map((k, i) => (
+            <span key={k} className="key grid h-8 w-7 place-items-center text-xs" data-state={i === 1 ? 'correct' : i === 3 ? 'present' : undefined}>
+              {k}
+            </span>
+          ))}
+        </span>
+      </div>
+
+      <div role="tablist" aria-label="What to change" className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+        {TABS.map((t) => (
+          <button
+            key={t.value}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.value}
+            onClick={() => setTab(t.value)}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold whitespace-nowrap transition ${
+              tab === t.value ? 'bg-ink text-ink-text' : 'bg-surface-2 text-muted hover:text-text'
+            }`}
+          >
+            {t.label}
+          </button>
         ))}
       </div>
-      <Group title="Free" label="Free tile themes">
-        {free.map(swatch)}
-      </Group>
-      <Group title="Unlocked by rank" label="Rank tile themes">
-        {ranked.map(swatch)}
-      </Group>
-      <Group title={`From the shop · ${ownedShop}/${shop.length}`} label="Shop tile themes">
-        {shop.map(swatch)}
-      </Group>
-      <Group title="Tile style" label="Tile styles">
-        {TILE_STYLES.map(style)}
-      </Group>
-      <Group title="Keyboard" label="Keyboards">
-        {KEY_SKINS.map(extra('keys'))}
-      </Group>
-      <Group title="Sound pack" label="Sound packs">
-        {SOUND_PACKS.map(extra('sound'))}
-      </Group>
-      <Group title="Win effect" label="Win effects">
-        {WIN_EFFECTS.filter((f) => !f.season || winFxUnlocked(f.id, progress.owned, level)).map(effect)}
-      </Group>
-      <Group title="Background" label="Backgrounds">
-        {BACKGROUNDS.map(extra('bg'))}
-      </Group>
-      <Group title="App colour" label="App colours">
-        {ACCENTS.map(extra('accent'))}
-      </Group>
-      <p className="text-xs text-muted">Your picture, frame, badge, title and banner are on your profile: tap your picture at the top.</p>
-      {onShop && (
-        <button
-          type="button"
-          onClick={onShop}
-          className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1.5 text-sm font-semibold transition hover:bg-surface-3 active:scale-95"
-        >
-          <Coin className="size-4" /> Visit the shop
-        </button>
-      )}
-      {settings.highContrast && (
-        <p className="text-xs text-muted">The colour-accessible palette is on, so tiles use orange and blue.</p>
-      )}
-    </div>
-  );
-}
 
-function Group({ title, label, children }: { title: string; label: string; children: ReactNode }) {
-  return (
-    <div>
-      <p className="mb-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">{title}</p>
-      <div role="radiogroup" aria-label={label} className="grid grid-cols-4 gap-2">
-        {children}
+      <div role="radiogroup" aria-label={current.label} className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+        {mine.map((c) => {
+          const on = settings[current.setting] === c.id;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              aria-label={c.name}
+              onClick={() => {
+                update({ [current.setting]: c.id } as Partial<Settings>);
+                if (tab === 'sound') previewPack(c.id as Settings['soundPack']);
+              }}
+              className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition active:scale-[0.97] ${
+                on ? 'border-accent bg-accent/8 ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
+              }`}
+            >
+              <span className="grid h-8 place-items-center" aria-hidden>
+                {look(c.id, c.name)}
+              </span>
+              <span className="text-center text-xs leading-tight font-semibold">{c.name}</span>
+              {on && (
+                <span className="absolute top-1 right-1 grid size-4 place-items-center rounded-full bg-accent text-accent-ink">
+                  <Check className="size-3" aria-hidden />
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
-    </div>
-  );
-}
 
-function OnMark() {
-  return (
-    <span className="absolute top-1 right-1 grid size-4 place-items-center rounded-full bg-accent text-accent-ink">
-      <Check className="size-3" aria-hidden />
-    </span>
+      {(inShop > 0 || byLevel.length > 0) && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-surface-2 px-3 py-2 text-xs text-muted">
+          <span>
+            {inShop > 0 && `${inShop} more in the shop`}
+            {inShop > 0 && byLevel.length > 0 && ' · '}
+            {byLevel.length > 0 && `next unlock at level ${Math.min(...byLevel.map((c) => c.level!))}`}
+          </span>
+          {onShop && inShop > 0 && (
+            <button
+              type="button"
+              onClick={onShop}
+              className="inline-flex items-center gap-1 rounded-full bg-surface px-2.5 py-1 font-semibold text-text transition hover:bg-surface-3"
+            >
+              <ShoppingBag className="size-3.5" aria-hidden /> Shop
+            </button>
+          )}
+        </div>
+      )}
+      {settings.highContrast && <p className="text-xs text-muted">The colour-accessible palette is on, so tiles use orange and blue.</p>}
+    </div>
   );
 }

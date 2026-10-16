@@ -146,15 +146,14 @@ const rnd = (i: number, k: number) => {
   return x - Math.floor(x);
 };
 const many = (n: number) => Array.from({ length: n }, (_, i) => i);
-const LETTER_RAIN = 'WORDSKIISABCEFGHLMNPTUY';
 
 /**
  * Decorative background: a soft dot grid and the scene you picked in the shop
  * (floating letter tiles by default). Purely visual and inert.
  */
 export const Backdrop = memo(function Backdrop() {
-  const { settings } = useSettings();
-  const scene: BackgroundId = settings.background;
+  const { shown } = useSettings();
+  const scene: BackgroundId = shown.background;
   return (
     <div className="backdrop" data-scene={scene === 'tiles' || scene === 'plain' ? undefined : scene} aria-hidden>
       <div className="backdrop-dots" />
@@ -208,21 +207,6 @@ export const Backdrop = memo(function Backdrop() {
               ['--drift' as string]: `${(rnd(i, 5) - 0.3) * 160}px`,
             }}
           />
-        ))}
-      {scene === 'letters' &&
-        many(26).map((i) => (
-          <span
-            key={i}
-            className="scene-letter"
-            style={{
-              left: `${rnd(i, 1) * 100}%`,
-              fontSize: 14 + rnd(i, 2) * 22,
-              animationDuration: `${12 + rnd(i, 3) * 14}s`,
-              animationDelay: `${-rnd(i, 4) * 26}s`,
-            }}
-          >
-            {LETTER_RAIN[i % LETTER_RAIN.length]}
-          </span>
         ))}
       {scene === 'aurora' && (
         <>

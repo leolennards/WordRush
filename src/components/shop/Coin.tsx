@@ -13,11 +13,11 @@ const W = 'M12.6 15.6h4.6l2.6 10.4 2.9-10.4h3.4l2.9 10.4 2.6-10.4h4.6l-5.2 16.6h
  * and an amber gem in the corners (the game's "correct" and "present"), and
  * an engraved W.
  *
- * - `shine`: a glint sweeps across it, light runs around its rim and the gems twinkle.
- * - `sparkle`: twinkling stars around it.
+ * - `shine`: now and then a glint of light sweeps across it.
+ * - `sparkle`: a couple of twinkling stars.
  * - `spin`: it flips over every few seconds, like a tile.
- * - `hero`: the big version: all of the above, plus turning rays of light, a
- *   glowing aura, sparkles orbiting it and a gentle 3D tilt.
+ * - `hero`: the big version: a soft glow, slowly turning rays of light, the
+ *   glint, sparkles and a gentle 3D tilt.
  */
 export function Coin({
   className = 'size-5',
@@ -129,7 +129,7 @@ export function Coin({
       </g>
 
       {/* Gems: the game's green and amber. */}
-      <g className={shine || hero ? 'coin-gems' : undefined}>
+      <g>
         <rect
           x="9.6"
           y="9.6"
@@ -164,24 +164,6 @@ export function Coin({
       {/* Glassy gloss over the top half. */}
       <path d="M8 14.5 Q8 6.5 16 6.5 H32 Q40 6.5 40 14.5 V19 Q24 23 8 19 Z" fill={u('gloss')} opacity="0.55" />
 
-      {/* Light running around the rim. */}
-      {(shine || hero) && (
-        <rect
-          className="coin-rimlight"
-          x="3.3"
-          y="3.3"
-          width="41.4"
-          height="41.4"
-          rx="11.3"
-          pathLength={100}
-          fill="none"
-          stroke="#fff"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeDasharray="14 86"
-        />
-      )}
-
       {/* A glint of light sweeping across. */}
       {(shine || hero) && (
         <g clipPath={u('body')}>
@@ -191,22 +173,11 @@ export function Coin({
         </g>
       )}
 
-      {hero && (
-        <g className="coin-orbit" fill="#fff7c2">
-          {[0, 120, 240].map((a) => (
-            <g key={a} transform={`rotate(${a} 24 24) translate(24 -6)`}>
-              <path d={SPARKLE} transform="scale(2.4)" />
-            </g>
-          ))}
-        </g>
-      )}
-
       {(sparkle || hero) && (
         <g fill="#fff">
           {[
             { at: 'translate(44 4) scale(5.5)', delay: '0s' },
             { at: 'translate(3 40) scale(3.6)', delay: '0.9s' },
-            { at: 'translate(46 38) scale(2.8)', delay: '1.6s' },
           ].map((s) => (
             <g key={s.at} transform={s.at}>
               <path className="coin-sparkle" d={SPARKLE} style={{ animationDelay: s.delay }} />

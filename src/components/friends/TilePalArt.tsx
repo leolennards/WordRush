@@ -1,106 +1,63 @@
 import { useId, type ReactNode } from 'react';
-import type { PalExtra, PalFace, PalShape, TilePal } from '@/engine';
+import type { PalExtra, PalFace, TilePal } from '@/engine';
 
-const INK = '#1f2433';
+const INK = '#2a2440';
 
-/** The pal's body: a letter tile, a round pebble, a hexagon or a cloud, with a shine on top. */
-function Body({ shape, fill }: { shape: PalShape; fill: string }) {
-  const shade = 'rgb(0 0 0 / 0.18)';
-  switch (shape) {
-    case 'round':
-      return (
-        <>
-          <circle cx="32" cy="39" r="20" fill={shade} />
-          <circle cx="32" cy="37" r="20" fill={fill} />
-          <ellipse cx="25" cy="26" rx="8" ry="4.5" fill="#fff" opacity="0.35" transform="rotate(-25 25 26)" />
-        </>
-      );
-    case 'hex': {
-      const pts = (cy: number) =>
-        Array.from({ length: 6 }, (_, i) => {
-          const a = (Math.PI / 3) * i - Math.PI / 2;
-          return `${32 + Math.cos(a) * 22},${cy + Math.sin(a) * 22}`;
-        }).join(' ');
-      return (
-        <>
-          <polygon points={pts(39.5)} fill={shade} strokeLinejoin="round" stroke={shade} strokeWidth="4" />
-          <polygon points={pts(37)} fill={fill} strokeLinejoin="round" stroke={fill} strokeWidth="4" />
-          <path d="M19 27 L30 20" stroke="#fff" strokeOpacity="0.4" strokeWidth="4" strokeLinecap="round" />
-        </>
-      );
-    }
-    case 'cloud': {
-      const cloud = (dy: number) => (
-        <>
-          <circle cx="21" cy={40 + dy} r="12" />
-          <circle cx="33" cy={31 + dy} r="15" />
-          <circle cx="44" cy={40 + dy} r="12" />
-          <rect x="15" y={38 + dy} width="35" height="14" rx="7" />
-        </>
-      );
-      return (
-        <>
-          <g fill={shade}>{cloud(2.5)}</g>
-          <g fill={fill}>{cloud(0)}</g>
-          <ellipse cx="28" cy="24" rx="7" ry="3.5" fill="#fff" opacity="0.4" transform="rotate(-15 28 24)" />
-        </>
-      );
-    }
-    default:
-      return (
-        <>
-          <rect x="12" y="19" width="40" height="40" rx="11" fill={shade} />
-          <rect x="12" y="16" width="40" height="40" rx="11" fill={fill} />
-          <rect x="16" y="19" width="32" height="10" rx="5" fill="#fff" opacity="0.28" />
-        </>
-      );
-  }
+/** Mixes a hex colour towards white (t > 0) or black (t < 0). */
+function shade(hex: string, t: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  const target = t > 0 ? 255 : 0;
+  const k = Math.abs(t);
+  const ch = (v: number) => Math.round(v + (target - v) * k);
+  const r = ch((n >> 16) & 255);
+  const g = ch((n >> 8) & 255);
+  const b = ch(n & 255);
+  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
 }
 
-const eye = (x: number) => <circle cx={x} cy="36" r="2.9" fill={INK} />;
-const twinkle = (x: number) => <circle cx={x + 1} cy="35" r="0.9" fill="#fff" />;
-const cheeks = (
-  <g fill="#ff6b8b" opacity="0.45">
-    <ellipse cx="21" cy="42" rx="3.4" ry="2.2" />
-    <ellipse cx="43" cy="42" rx="3.4" ry="2.2" />
+/** Soft oval eyes with a catchlight. */
+const eyes = (
+  <g>
+    <ellipse cx="25.5" cy="36" rx="2.4" ry="3.1" fill={INK} />
+    <ellipse cx="38.5" cy="36" rx="2.4" ry="3.1" fill={INK} />
+    <circle cx="26.4" cy="34.8" r="0.95" fill="#fff" />
+    <circle cx="39.4" cy="34.8" r="0.95" fill="#fff" />
   </g>
 );
-const smile = <path d="M26.5 43 Q32 48.5 37.5 43" stroke={INK} strokeWidth="2.4" strokeLinecap="round" fill="none" />;
-const star = (x: number, y: number, r: number, fill: string) => (
+const line = { stroke: INK, strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, fill: 'none' };
+const smile = <path d="M28.5 42.2 Q32 45.2 35.5 42.2" {...line} />;
+const sparkle = (x: number, y: number, r: number, fill = '#fff') => (
   <path
-    d={`M${x} ${y - r} L${x + r * 0.3} ${y - r * 0.3} L${x + r} ${y} L${x + r * 0.3} ${y + r * 0.3} L${x} ${y + r} L${x - r * 0.3} ${y + r * 0.3} L${x - r} ${y} L${x - r * 0.3} ${y - r * 0.3} Z`}
+    d={`M${x} ${y - r} Q${x + r * 0.18} ${y - r * 0.18} ${x + r} ${y} Q${x + r * 0.18} ${y + r * 0.18} ${x} ${y + r} Q${x - r * 0.18} ${y + r * 0.18} ${x - r} ${y} Q${x - r * 0.18} ${y - r * 0.18} ${x} ${y - r}Z`}
     fill={fill}
   />
 );
 const heart = (x: number) => (
   <path
-    d={`M${x} 39 C${x - 5} 35.5 ${x - 4.5} 31.5 ${x - 1.8} 32.3 C${x - 0.8} 32.6 ${x} 33.5 ${x} 34.2 C${x} 33.5 ${x + 0.8} 32.6 ${x + 1.8} 32.3 C${x + 4.5} 31.5 ${x + 5} 35.5 ${x} 39 Z`}
-    fill="#ef4444"
+    d={`M${x} 38.6 C${x - 4} 35.8 ${x - 3.6} 32.6 ${x - 1.5} 33.2 C${x - 0.6} 33.5 ${x} 34.2 ${x} 34.8 C${x} 34.2 ${x + 0.6} 33.5 ${x + 1.5} 33.2 C${x + 3.6} 32.6 ${x + 4} 35.8 ${x} 38.6Z`}
+    fill="#e11d48"
   />
 );
 
 function Face({ face }: { face: PalFace }) {
-  const stroke = { stroke: INK, strokeWidth: 2.4, strokeLinecap: 'round' as const, fill: 'none' };
   let content: ReactNode;
   switch (face) {
-    case 'grin':
+    case 'joy':
       content = (
         <>
-          {eye(25)}
-          {eye(39)}
-          {twinkle(25)}
-          {twinkle(39)}
-          <path d="M25 42 H39 Q39 50 32 50 Q25 50 25 42 Z" fill={INK} />
-          <path d="M28 47.5 Q32 45.5 36 47.5 Q34 50 32 50 Q30 50 28 47.5Z" fill="#ff7a93" />
+          <path d="M23 36.6 Q25.5 33.6 28 36.6" {...line} />
+          <path d="M36 36.6 Q38.5 33.6 41 36.6" {...line} />
+          <path d="M28 41.2 H36 Q36 46.2 32 46.2 Q28 46.2 28 41.2Z" fill={INK} />
+          <path d="M29.6 44.6 Q32 43.3 34.4 44.6 Q33.4 46.2 32 46.2 Q30.6 46.2 29.6 44.6Z" fill="#ff8fa3" />
         </>
       );
       break;
     case 'wink':
       content = (
         <>
-          {eye(25)}
-          {twinkle(25)}
-          <path d="M36 36.5 Q39 33 42 36.5" {...stroke} />
+          <ellipse cx="25.5" cy="36" rx="2.4" ry="3.1" fill={INK} />
+          <circle cx="26.4" cy="34.8" r="0.95" fill="#fff" />
+          <path d="M36 36.4 Q38.5 34 41 36.4" {...line} />
           {smile}
         </>
       );
@@ -108,67 +65,60 @@ function Face({ face }: { face: PalFace }) {
     case 'cool':
       content = (
         <>
-          <rect x="18.5" y="31" width="12" height="8" rx="3" fill={INK} />
-          <rect x="33.5" y="31" width="12" height="8" rx="3" fill={INK} />
-          <path d="M30 33.5 H34" stroke={INK} strokeWidth="2" />
-          <path d="M20.5 33 L24 33" stroke="#fff" strokeOpacity="0.6" strokeWidth="1.4" strokeLinecap="round" />
-          <path d="M35.5 33 L39 33" stroke="#fff" strokeOpacity="0.6" strokeWidth="1.4" strokeLinecap="round" />
-          <path d="M27 45 Q33 48 37.5 43.5" {...stroke} />
+          <path d="M19.5 33 H44.5" stroke={INK} strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M20 33 H30.5 V35.5 Q30.5 39.5 25.2 39.5 Q20 39.5 20 35.5Z" fill={INK} />
+          <path d="M33.5 33 H44 V35.5 Q44 39.5 38.8 39.5 Q33.5 39.5 33.5 35.5Z" fill={INK} />
+          <path d="M22 34.6 L25 34.6" stroke="#9fb4ff" strokeWidth="1.2" strokeLinecap="round" />
+          <path d="M35.5 34.6 L38.5 34.6" stroke="#9fb4ff" strokeWidth="1.2" strokeLinecap="round" />
+          <path d="M29 43.2 Q32.5 45.2 35.6 42.4" {...line} />
         </>
       );
       break;
     case 'wow':
       content = (
         <>
-          <circle cx="25" cy="35.5" r="4" fill="#fff" />
-          <circle cx="39" cy="35.5" r="4" fill="#fff" />
-          <circle cx="25.5" cy="36" r="2.4" fill={INK} />
-          <circle cx="39.5" cy="36" r="2.4" fill={INK} />
-          <ellipse cx="32" cy="46" rx="3.2" ry="3.8" fill={INK} />
+          <ellipse cx="25.5" cy="35.6" rx="2.7" ry="3.5" fill={INK} />
+          <ellipse cx="38.5" cy="35.6" rx="2.7" ry="3.5" fill={INK} />
+          <circle cx="26.5" cy="34.3" r="1.1" fill="#fff" />
+          <circle cx="39.5" cy="34.3" r="1.1" fill="#fff" />
+          <ellipse cx="32" cy="43.8" rx="2" ry="2.5" fill={INK} />
         </>
       );
       break;
     case 'sleepy':
       content = (
         <>
-          <path d="M22 37 Q25 39.5 28 37" {...stroke} />
-          <path d="M36 37 Q39 39.5 42 37" {...stroke} />
-          <ellipse cx="32" cy="45.5" rx="2.2" ry="1.6" fill={INK} />
-          <text x="44" y="27" fontSize="8" fontWeight="900" fill={INK} opacity="0.7">
-            z
-          </text>
-          <text x="49" y="21" fontSize="6" fontWeight="900" fill={INK} opacity="0.5">
-            z
-          </text>
+          <path d="M23 36 Q25.5 38.4 28 36" {...line} />
+          <path d="M36 36 Q38.5 38.4 41 36" {...line} />
+          <ellipse cx="32" cy="43" rx="1.6" ry="1.2" fill={INK} />
         </>
       );
       break;
     case 'cheeky':
       content = (
         <>
-          {eye(25)}
-          {eye(39)}
-          {twinkle(25)}
-          {twinkle(39)}
+          {eyes}
           {smile}
-          <path d="M31 46.3 Q33.5 52 36.5 46" fill="#ff7a93" stroke={INK} strokeWidth="1.2" />
+          <path d="M31.2 43.6 Q33 47.6 34.8 43.4" fill="#ff8fa3" />
         </>
       );
       break;
     case 'starry':
       content = (
         <>
-          {star(25, 36, 4.6, '#fff7c2')}
-          {star(39, 36, 4.6, '#fff7c2')}
-          <path d="M25 42 H39 Q39 49 32 49 Q25 49 25 42 Z" fill={INK} />
+          {sparkle(25.5, 36, 3.6, INK)}
+          {sparkle(38.5, 36, 3.6, INK)}
+          {sparkle(26.4, 34.8, 0.9)}
+          {sparkle(39.4, 34.8, 0.9)}
+          <path d="M28.5 41.4 H35.5 Q35.5 45.6 32 45.6 Q28.5 45.6 28.5 41.4Z" fill={INK} />
         </>
       );
       break;
     case 'love':
       content = (
         <>
-          {heart(25)}
-          {heart(39)}
+          {heart(25.5)}
+          {heart(38.5)}
           {smile}
         </>
       );
@@ -176,110 +126,90 @@ function Face({ face }: { face: PalFace }) {
     case 'calm':
       content = (
         <>
-          <path d="M22 37 Q25 33.5 28 37" {...stroke} />
-          <path d="M36 37 Q39 33.5 42 37" {...stroke} />
-          <path d="M28 44 Q32 47 36 44" {...stroke} />
-        </>
-      );
-      break;
-    case 'determined':
-      content = (
-        <>
-          <path d="M21 30.5 L28 32.5" {...stroke} />
-          <path d="M43 30.5 L36 32.5" {...stroke} />
-          {eye(25)}
-          {eye(39)}
-          <path d="M28 45.5 H36" {...stroke} />
-        </>
-      );
-      break;
-    case 'laugh':
-      content = (
-        <>
-          <path d="M22 34 L27 36.5 L22 39" {...stroke} />
-          <path d="M42 34 L37 36.5 L42 39" {...stroke} />
-          <path d="M24.5 42 H39.5 Q39.5 51 32 51 Q24.5 51 24.5 42 Z" fill={INK} />
-          <path d="M28 48 Q32 45.5 36 48 Q34 51 32 51 Q30 51 28 48Z" fill="#ff7a93" />
+          <path d="M23 36.6 Q25.5 33.6 28 36.6" {...line} />
+          <path d="M36 36.6 Q38.5 33.6 41 36.6" {...line} />
+          <path d="M29.5 42.2 Q32 44.2 34.5 42.2" {...line} />
         </>
       );
       break;
     default:
       content = (
         <>
-          {eye(25)}
-          {eye(39)}
-          {twinkle(25)}
-          {twinkle(39)}
+          {eyes}
           {smile}
         </>
       );
   }
   return (
     <g>
-      {face !== 'cool' && cheeks}
+      {face !== 'cool' && (
+        <g opacity="0.55">
+          <ellipse cx="21.5" cy="41.6" rx="3.2" ry="2" fill="#ff7d9a" />
+          <ellipse cx="42.5" cy="41.6" rx="3.2" ry="2" fill="#ff7d9a" />
+        </g>
+      )}
       {content}
     </g>
   );
 }
 
-function Extra({ extra }: { extra: PalExtra }) {
+function Extra({ extra, id }: { extra: PalExtra; id: string }) {
   switch (extra) {
     case 'sprout':
       return (
         <g>
-          <path d="M32 17 Q31 11 32 7" stroke="#15803d" strokeWidth="2.2" strokeLinecap="round" fill="none" />
-          <path d="M32 9 Q25 4 22 9 Q27 12 32 9Z" fill="#4ade80" />
-          <path d="M32 8 Q38 2 42 7 Q37 11 32 8Z" fill="#22c55e" />
+          <path d="M32 15.5 Q31.4 11.5 32 8.5" stroke="#15803d" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+          <path d="M32 10.5 Q26.5 6 23.5 9.8 Q27.5 13 32 10.5Z" fill="#4ade80" />
+          <path d="M32 9.5 Q37.5 4.5 41 8.6 Q36.8 12.4 32 9.5Z" fill="#22c55e" />
         </g>
       );
     case 'crown':
       return (
         <g>
-          <path d="M20 17 L22 6 L27.5 12 L32 4 L36.5 12 L42 6 L44 17 Z" fill="#facc15" stroke="#b45309" strokeWidth="1.3" strokeLinejoin="round" />
-          <circle cx="32" cy="12.5" r="1.8" fill="#ef4444" />
-          <circle cx="25" cy="14" r="1.3" fill="#38bdf8" />
-          <circle cx="39" cy="14" r="1.3" fill="#38bdf8" />
+          <path
+            d="M22 16.5 L23.4 8 L28 12.4 L32 6 L36 12.4 L40.6 8 L42 16.5 Z"
+            fill={`url(#${id}-gold)`}
+            stroke="#b45309"
+            strokeWidth="0.9"
+            strokeLinejoin="round"
+          />
+          <circle cx="32" cy="12.8" r="1.5" fill="#f43f5e" />
         </g>
       );
     case 'bow':
       return (
-        <g transform="rotate(18 44 15)">
-          <path d="M44 15 L36 10 Q34 15 36 20 Z" fill="#f472b6" stroke="#be185d" strokeWidth="1" />
-          <path d="M44 15 L52 10 Q54 15 52 20 Z" fill="#f472b6" stroke="#be185d" strokeWidth="1" />
-          <circle cx="44" cy="15" r="2.4" fill="#ec4899" />
+        <g transform="rotate(16 43 15)">
+          <path d="M43 15 L36.5 11 Q35 15 36.5 19 Z" fill="#fb7185" />
+          <path d="M43 15 L49.5 11 Q51 15 49.5 19 Z" fill="#fb7185" />
+          <circle cx="43" cy="15" r="2" fill="#e11d48" />
         </g>
       );
     case 'cap':
       return (
         <g>
-          <path d="M14 22 Q14 9 32 9 Q50 9 50 22 Z" fill="#ef4444" />
-          <path d="M14 22 H56 Q57 25 52 25 H14 Z" fill="#b91c1c" />
-          <circle cx="32" cy="9.5" r="1.8" fill="#b91c1c" />
-        </g>
-      );
-    case 'antenna':
-      return (
-        <g>
-          <path d="M32 17 V8" stroke={INK} strokeWidth="2" strokeLinecap="round" />
-          <circle cx="32" cy="7" r="3.2" fill="#facc15" stroke={INK} strokeWidth="1.2" />
+          <path d="M15.5 21 Q15.5 9.5 32 9.5 Q48.5 9.5 48.5 21 Z" fill="#1e3a8a" />
+          <path d="M15.5 21 H54 Q55 23.6 50.5 23.6 H15.5 Z" fill="#172554" />
+          <circle cx="32" cy="10" r="1.6" fill="#facc15" />
         </g>
       );
     case 'halo':
-      return <ellipse cx="32" cy="9" rx="11" ry="3.4" fill="none" stroke="#fde047" strokeWidth="2.6" />;
+      return <ellipse cx="32" cy="9" rx="10" ry="3" fill="none" stroke={`url(#${id}-gold)`} strokeWidth="2.4" />;
     case 'headphones':
       return (
         <g>
-          <path d="M13 36 Q13 12 32 12 Q51 12 51 36" stroke={INK} strokeWidth="3" fill="none" />
-          <rect x="8" y="31" width="8" height="13" rx="3.5" fill="#f43f5e" stroke={INK} strokeWidth="1.2" />
-          <rect x="48" y="31" width="8" height="13" rx="3.5" fill="#f43f5e" stroke={INK} strokeWidth="1.2" />
+          <path d="M14.5 33 Q14.5 11.5 32 11.5 Q49.5 11.5 49.5 33" stroke="#334155" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+          <rect x="10" y="29" width="7.5" height="12" rx="3.4" fill="#f43f5e" />
+          <rect x="46.5" y="29" width="7.5" height="12" rx="3.4" fill="#f43f5e" />
         </g>
       );
+    case 'moon':
+      return <path d="M44 8.5 A6 6 0 1 0 50 16 A4.6 4.6 0 1 1 44 8.5Z" fill={`url(#${id}-gold)`} />;
     case 'sparkles':
       return (
         <g>
-          {star(12, 16, 4, '#fde047')}
-          {star(52, 12, 3, '#fff')}
-          {star(55, 30, 2.4, '#f9a8d4')}
+          {sparkle(13, 15, 3.8, '#fde68a')}
+          {sparkle(51, 12, 3, '#fff')}
+          {sparkle(53, 27, 2.2, '#f9a8d4')}
         </g>
       );
     default:
@@ -287,23 +217,36 @@ function Extra({ extra }: { extra: PalExtra }) {
   }
 }
 
-/** A Tile Pal: a little letter-tile character in the game's colours. */
+/** A Tile Pal: a soft, glossy letter tile with a face. */
 export function TilePalArt({ pal, className = 'size-full' }: { pal: TilePal; className?: string }) {
   const id = useId().replace(/:/g, '');
-  const fill = Array.isArray(pal.color) ? `url(#${id}-g)` : pal.color;
+  const [a, b] = Array.isArray(pal.color) ? pal.color : [pal.color, pal.color];
   return (
     <svg viewBox="0 0 64 64" className={className} aria-hidden>
-      {Array.isArray(pal.color) && (
-        <defs>
-          <linearGradient id={`${id}-g`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor={pal.color[0]} />
-            <stop offset="1" stopColor={pal.color[1]} />
-          </linearGradient>
-        </defs>
-      )}
-      <Body shape={pal.shape} fill={fill} />
+      <defs>
+        <radialGradient id={`${id}-body`} cx="0.3" cy="0.22" r="0.95">
+          <stop offset="0" stopColor={shade(a, 0.38)} />
+          <stop offset="0.45" stopColor={a} />
+          <stop offset="1" stopColor={shade(b, -0.12)} />
+        </radialGradient>
+        <linearGradient id={`${id}-gloss`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff" stopOpacity="0.7" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id={`${id}-gold`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fff3b0" />
+          <stop offset="0.5" stopColor="#fbbf24" />
+          <stop offset="1" stopColor="#d97706" />
+        </linearGradient>
+      </defs>
+      {/* A soft shadow, the tile's edge, then its face. */}
+      <ellipse cx="32" cy="58.5" rx="17" ry="2.6" fill="#000" opacity="0.12" />
+      <rect x="12" y="18.5" width="40" height="37.5" rx="13" fill={shade(b, -0.32)} />
+      <rect x="12" y="15" width="40" height="38" rx="13" fill={`url(#${id}-body)`} />
+      <rect x="12.6" y="15.6" width="38.8" height="36.8" rx="12.4" fill="none" stroke="#fff" strokeOpacity="0.35" strokeWidth="1.1" />
+      <path d="M17 26 Q17 18.6 25 18.6 H39 Q47 18.6 47 26 Q32 30 17 26Z" fill={`url(#${id}-gloss)`} opacity="0.8" />
       <Face face={pal.face} />
-      <Extra extra={pal.extra} />
+      <Extra extra={pal.extra} id={id} />
     </svg>
   );
 }

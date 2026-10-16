@@ -68,6 +68,14 @@ async function photoFromFile(file: File): Promise<string> {
 }
 
 type PictureMode = 'initial' | 'pal' | 'photo';
+type EditTab = 'picture' | 'frame' | 'badge' | 'title' | 'banner';
+const EDIT_TABS: { value: EditTab; label: string }[] = [
+  { value: 'picture', label: 'Picture' },
+  { value: 'frame', label: 'Frame' },
+  { value: 'badge', label: 'Badge' },
+  { value: 'title', label: 'Title' },
+  { value: 'banner', label: 'Banner' },
+];
 
 /** Your profile: picture, colour, frame, badge, title and banner, as friends see them. */
 export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: () => void }) {
@@ -82,6 +90,8 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
   const [busy, setBusy] = useState(false);
   const mode: PictureMode = settings.avatar === 'photo' ? 'photo' : settings.avatar === 'initial' ? 'initial' : 'pal';
   const [tab, setTab] = useState<PictureMode>(mode);
+  const [edit, setEdit] = useState<EditTab>('picture');
+  const [info, setInfo] = useState<{ text: string; shop: boolean } | null>(null);
 
   const name = f.me?.profile.name ?? 'You';
   const { level } = levelFor(progress.xp);
@@ -172,13 +182,64 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
           </div>
         </m.section>
 
-        <Section title={`Level rewards · you're level ${level}`}>
-          <p className="mb-2 text-sm text-muted">Every few levels unlocks something new. The higher you climb, the cooler it gets.</p>
-          <LevelRoad level={level} />
-        </Section>
+        {/* Customise: one part at a time, with a small preview that stays in view. */}
+        <section className="mt-6" aria-label="Customise your profile">
+          <div className="sticky top-0 z-20 -mx-4 bg-bg/90 px-4 pt-2 pb-3 backdrop-blur">
+            <div className="relative flex items-center gap-3 overflow-hidden rounded-2xl border border-border p-2.5 pr-4">
+              <span className="profile-banner absolute inset-0 opacity-35" data-banner={settings.banner} aria-hidden />
+              <span className="relative">
+                <Avatar uid={f.me?.uid ?? 'me'} name={name} size="md" look={look} />
+              </span>
+              <span className="relative min-w-0">
+                <span className="block truncate font-extrabold">{name}</span>
+                {title ? (
+                  <span className="profile-title block truncate text-xs font-bold" data-tier={titleTier(title)}>
+                    {title.name}
+                  </span>
+                ) : (
+                  <span className="block text-xs text-muted">No title</span>
+                )}
+              </span>
+            </div>
+            <div role="tablist" aria-label="Part to change" className="no-scrollbar mt-3 flex gap-1.5 overflow-x-auto">
+              {EDIT_TABS.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={edit === t.value}
+                  onClick={() => {
+                    setEdit(t.value);
+                    setInfo(null);
+                  }}
+                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
+                    edit === t.value ? 'bg-ink text-ink-text' : 'bg-surface-2 text-muted hover:text-text'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-        {/* Picture */}
-        <Section title="Picture">
+          {info && (
+            <div role="status" className="mb-3 flex items-center gap-3 rounded-xl bg-present/15 px-3 py-2.5 text-sm">
+              <Lock className="size-4 shrink-0 text-present" aria-hidden />
+              <span className="min-w-0 flex-1">{info.text}</span>
+              {info.shop && (
+                <button
+                  type="button"
+                  onClick={onShop}
+                  className="shrink-0 rounded-full bg-surface px-3 py-1 text-xs font-bold transition hover:bg-surface-3"
+                >
+                  Shop
+                </button>
+              )}
+            </div>
+          )}
+
+          {edit === 'picture' && (
+            <>
           <Segmented<PictureMode>
             label="Picture type"
             size="sm"
@@ -227,9 +288,8 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
                     role="radio"
                     aria-checked={on}
                     aria-label={open ? p.name : `${p.name}, unlocks at level ${p.level}`}
-                    disabled={!open}
-                    onClick={() => update({ avatar: p.id })}
-                    className={`group relative flex flex-col items-center gap-1 rounded-xl p-2 transition active:scale-95 disabled:cursor-not-allowed ${
+                    onClick={() => (open ? update({ avatar: p.id }) : setInfo({ text: `${p.name} unlocks at level ${p.level}.`, shop: false }))}
+                    className={`group relative flex flex-col items-center gap-1 rounded-xl p-2 transition active:scale-95 ${
                       on ? 'bg-accent/15 ring-2 ring-accent' : 'bg-surface-2 hover:bg-surface-3'
                     }`}
                   >
@@ -282,10 +342,7 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
               </p>
             </div>
           )}
-        </Section>
-
-        {/* Colour behind the picture */}
-        <Section title="Colour">
+              <p className="mt-5 mb-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">Colour</p>
           <div role="radiogroup" aria-label="Picture colour" className="flex flex-wrap gap-2">
             {TINTS.map((t) => {
               const on = settings.tint === t.id;
@@ -311,55 +368,69 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
               );
             })}
           </div>
-        </Section>
-
-        <Picks
-          title="Frame"
-          kind="frame"
-          setting="frame"
-          items={FRAMES}
-          onShop={onShop}
-          preview={(id) => <Avatar uid={f.me?.uid ?? 'me'} name={name} size="md" look={{ ...look, frame: id, badge: null }} />}
-        />
-        <Picks
-          title="Badge"
-          kind="badge"
-          setting="badge"
-          items={BADGES}
-          onShop={onShop}
-          preview={(id) =>
-            id === 'none' ? (
-              <span className="size-6 rounded-full border-2 border-dashed border-border-strong" />
-            ) : (
-              <BadgeIcon id={id} className="size-7" />
-            )
-          }
-        />
-        <Picks
-          title="Title"
-          kind="title"
-          setting="title"
-          items={TITLES}
-          onShop={onShop}
-          wide
-          preview={(id, n) => (
-            <span
-              className={`text-sm font-bold ${id === 'none' ? 'text-muted' : 'profile-title'}`}
-              data-tier={titleTier(TITLES.find((t) => t.id === id))}
-            >
-              {n}
-            </span>
+            </>
           )}
-        />
-        <Picks
-          title="Banner"
-          kind="banner"
-          setting="banner"
-          items={BANNERS}
-          onShop={onShop}
-          wide
-          preview={(id) => <span className="profile-banner block h-10 w-full rounded-lg" data-banner={id} />}
-        />
+          {edit === 'frame' && (
+            <Picks
+              title="Frame"
+              kind="frame"
+              setting="frame"
+              items={FRAMES}
+              onLocked={setInfo}
+              preview={(id) => <Avatar uid={f.me?.uid ?? 'me'} name={name} size="md" look={{ ...look, frame: id, badge: null }} />}
+            />
+          )}
+          {edit === 'badge' && (
+            <Picks
+              title="Badge"
+              kind="badge"
+              setting="badge"
+              items={BADGES}
+              onLocked={setInfo}
+              preview={(id) =>
+                id === 'none' ? (
+                  <span className="size-6 rounded-full border-2 border-dashed border-border-strong" />
+                ) : (
+                  <BadgeIcon id={id} className="size-7" />
+                )
+              }
+            />
+          )}
+          {edit === 'title' && (
+            <Picks
+              title="Title"
+              kind="title"
+              setting="title"
+              items={TITLES}
+              onLocked={setInfo}
+              wide
+              preview={(id, n) => (
+                <span
+                  className={`text-sm font-bold ${id === 'none' ? 'text-muted' : 'profile-title'}`}
+                  data-tier={titleTier(TITLES.find((t) => t.id === id))}
+                >
+                  {n}
+                </span>
+              )}
+            />
+          )}
+          {edit === 'banner' && (
+            <Picks
+              title="Banner"
+              kind="banner"
+              setting="banner"
+              items={BANNERS}
+              onLocked={setInfo}
+              wide
+              preview={(id) => <span className="profile-banner block h-10 w-full rounded-lg" data-banner={id} />}
+            />
+          )}
+        </section>
+
+        <Section title={`Level rewards · you're level ${level}`}>
+          <p className="mb-2 text-sm text-muted">Every few levels unlocks something new. The higher you climb, the cooler it gets.</p>
+          <LevelRoad level={level} />
+        </Section>
       </div>
     </main>
   );
@@ -393,7 +464,7 @@ function Picks({
   setting,
   items,
   preview,
-  onShop,
+  onLocked,
   wide = false,
 }: {
   title: string;
@@ -401,13 +472,13 @@ function Picks({
   setting: 'frame' | 'badge' | 'title' | 'banner';
   items: readonly { id: string; name: string; price?: number; level?: number }[];
   preview: (id: string, name: string) => ReactNode;
-  onShop: () => void;
+  onLocked: (info: { text: string; shop: boolean }) => void;
   wide?: boolean;
 }) {
   const { settings, update } = useSettings();
   const { progress } = useProgress();
   return (
-    <Section title={title}>
+    <>
       <div
         role="radiogroup"
         aria-label={title}
@@ -423,7 +494,15 @@ function Picks({
               role="radio"
               aria-checked={on}
               aria-label={unlocked ? it.name : `${it.name}, ${lockLabel(it)}`}
-              onClick={() => (unlocked ? update({ [setting]: it.id } as Partial<Settings>) : it.level === undefined && onShop())}
+              onClick={() =>
+                unlocked
+                  ? update({ [setting]: it.id } as Partial<Settings>)
+                  : onLocked(
+                      it.level !== undefined
+                        ? { text: `${it.name} unlocks at level ${it.level}.`, shop: false }
+                        : { text: `${it.name} is ${it.price} coins in the shop.`, shop: true },
+                    )
+              }
               className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition active:scale-[0.97] ${
                 on ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
               }`}
@@ -446,6 +525,6 @@ function Picks({
           );
         })}
       </div>
-    </Section>
+    </>
   );
 }

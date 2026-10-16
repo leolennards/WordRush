@@ -14,6 +14,10 @@ interface SettingsContextValue {
   reducedMotion: boolean;
   /** Re-reads settings from storage (after a cloud sync). */
   reload: () => void;
+  /** Settings as shown right now: the saved ones, with any shop "try it on" preview on top. */
+  shown: Settings;
+  /** Shows a look across the app without saving it (null to stop). */
+  setPreview: (preview: Partial<Settings> | null) => void;
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -23,6 +27,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(
     () => readVersioned(store, KEYS.settings, settingsSchema) ?? DEFAULT_SETTINGS,
   );
+  const [preview, setPreview] = useState<Partial<Settings> | null>(null);
+  const shown = useMemo(() => (preview ? { ...settings, ...preview } : settings), [settings, preview]);
   const prefersDark = usePrefersDark();
   const prefersReduced = usePrefersReducedMotion();
 
@@ -46,22 +52,22 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     root.classList.toggle('dark', resolvedTheme === 'dark');
     root.dataset.contrast = settings.highContrast ? 'high' : 'normal';
     root.dataset.reduceMotion = String(settings.reduceMotion);
-    root.dataset.skin = settings.skin;
-    root.dataset.tiles = settings.tileStyle;
-    root.dataset.keys = settings.keySkin;
-    root.dataset.accent = settings.accent;
+    root.dataset.skin = shown.skin;
+    root.dataset.tiles = shown.tileStyle;
+    root.dataset.keys = shown.keySkin;
+    root.dataset.accent = shown.accent;
     setSoundPack(settings.soundPack);
     const meta = document.querySelector('meta[name="theme-color"]');
     meta?.setAttribute('content', resolvedTheme === 'dark' ? '#0c0f15' : '#f6f3ec');
-  }, [resolvedTheme, settings.highContrast, settings.reduceMotion, settings.skin, settings.tileStyle, settings.keySkin, settings.soundPack, settings.accent]);
+  }, [resolvedTheme, settings.highContrast, settings.reduceMotion, shown.skin, shown.tileStyle, shown.keySkin, shown.accent, settings.soundPack]);
 
   const reload = useCallback(
     () => setSettings(readVersioned(store, KEYS.settings, settingsSchema) ?? DEFAULT_SETTINGS),
     [store],
   );
   const value = useMemo(
-    () => ({ settings, update, resolvedTheme, reducedMotion, reload }) as const,
-    [settings, update, resolvedTheme, reducedMotion, reload],
+    () => ({ settings, update, resolvedTheme, reducedMotion, reload, shown, setPreview }) as const,
+    [settings, update, resolvedTheme, reducedMotion, reload, shown],
   );
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }

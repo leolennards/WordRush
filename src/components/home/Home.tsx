@@ -211,13 +211,6 @@ export function Home(props: HomeProps) {
       >
         <span className="profile-banner absolute inset-0" data-banner={settings.banner === 'none' ? 'home' : settings.banner} aria-hidden />
         <span className="home-hero-shade absolute inset-0" aria-hidden />
-        <span className="home-hero-tiles" aria-hidden>
-          {'WORDS'.split('').map((l, i) => (
-            <span key={i} style={{ animationDelay: `${i * -1.1}s` }}>
-              {l}
-            </span>
-          ))}
-        </span>
         <div className="relative p-5 sm:p-6">
           <div className="flex items-center gap-3.5">
             <button

@@ -28,14 +28,26 @@ const KEYS = [
 ] as const;
 
 /** A live preview of any shop item, in your current colours where it isn't colours itself. */
-export function ItemPreview({ item }: { item: ShopItem }) {
+export function ItemPreview({ item, still = false }: { item: ShopItem; still?: boolean }) {
   const { settings, resolvedTheme } = useSettings();
   const dark = resolvedTheme === 'dark';
   switch (item.kind) {
     case 'fx':
-      return <FxPreview item={item} />;
+      return still ? (
+        <span className={stillTile}>
+          <FxIcon id={item.ref as WinFxId} className="size-7" />
+        </span>
+      ) : (
+        <FxPreview item={item} />
+      );
     case 'sound':
-      return <SoundPreview item={item} />;
+      return still ? (
+        <span className={stillTile}>
+          <Volume2 className="size-7 text-accent" aria-hidden />
+        </span>
+      ) : (
+        <SoundPreview item={item} />
+      );
     case 'frame':
     case 'badge':
       return <LookPreview item={item} />;
@@ -134,6 +146,8 @@ export function ItemPreview({ item }: { item: ShopItem }) {
     }
   }
 }
+
+const stillTile = 'grid aspect-[5/2] w-full max-w-[12.5rem] place-items-center rounded-xl bg-surface-2';
 
 const previewButton =
   'group grid aspect-[5/1] w-full max-w-[12.5rem] place-items-center rounded-xl bg-surface-2 transition hover:bg-surface-3 active:scale-[0.97]';

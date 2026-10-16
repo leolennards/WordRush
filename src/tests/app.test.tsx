@@ -621,8 +621,10 @@ describe('ranks, themes and word ladder', () => {
     await user.click(screen.getByRole('button', { name: 'Ranks and tile themes' }));
     const dialog = await screen.findByRole('dialog', { name: 'Ranks and themes' });
     expect(within(dialog).getByText('Wordskiis Legend')).toBeInTheDocument();
-    expect(within(dialog).getByRole('radio', { name: 'Classic tiles' })).toHaveAttribute('aria-checked', 'true');
-    expect(within(dialog).getByRole('radio', { name: /Prism tiles, unlocks at level 100/ })).toBeDisabled();
+    expect(within(dialog).getByRole('radio', { name: 'Classic' })).toHaveAttribute('aria-checked', 'true');
+    // Only what you can use is listed; the rest is waiting in the shop or at higher levels.
+    expect(within(dialog).queryByRole('radio', { name: 'Prism' })).not.toBeInTheDocument();
+    expect(within(dialog).getByText(/more in the shop · next unlock at level 5/)).toBeInTheDocument();
   });
 });
 
@@ -703,12 +705,13 @@ describe('free themes and records', () => {
     await user.click(screen.getAllByRole('button', { name: 'Settings' })[0]!);
     const dialog = await screen.findByRole('dialog', { name: 'Settings' });
     await user.click(within(dialog).getByRole('button', { name: /Change/ }));
-    expect(within(dialog).getByRole('img', { name: 'Preview of the current tile theme' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('img', { name: 'Preview of your current look' })).toBeInTheDocument();
     for (const name of ['Mint', 'Candy', 'Lavender']) {
-      expect(within(dialog).getByRole('radio', { name: `${name} tiles` })).toBeEnabled();
+      expect(within(dialog).getByRole('radio', { name })).toBeEnabled();
     }
-    expect(within(dialog).getByRole('radio', { name: /Ocean tiles, unlocks at level 5/ })).toBeDisabled();
-    await user.click(within(dialog).getByRole('radio', { name: 'Candy tiles' }));
+    // Ocean comes with level 5, so it isn't listed yet.
+    expect(within(dialog).queryByRole('radio', { name: 'Ocean' })).not.toBeInTheDocument();
+    await user.click(within(dialog).getByRole('radio', { name: 'Candy' }));
     expect(document.documentElement.dataset.skin).toBe('candy');
     expect(JSON.parse(store.get(KEYS.settings)!).data.skin).toBe('candy');
   });

@@ -138,16 +138,18 @@ test('earns coins and spends them in the shop on a new tile style', async ({ pag
   await expect(page).toHaveURL(/#shop$/);
   await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
 
-  // Buying takes two taps: one to pick, one to confirm.
+  // Tap an item for a closer look, then buy it from there.
   await page.getByRole('radio', { name: 'Styles' }).click();
+  await page.getByRole('button', { name: /^Soft, \d+ coins$/ }).click();
   await page.getByRole('button', { name: /^Buy Soft for \d+ coins$/ }).click();
-  await page.getByRole('button', { name: /^Confirm buying Soft/ }).click();
-  await expect(page.getByRole('button', { name: 'Soft is on' })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('data-tiles', 'rounded');
+  await expect(page.getByRole('button', { name: 'Soft, in use' })).toBeVisible();
   await expect(page.getByRole('button', { name: /coins — open the shop$/ })).not.toHaveAccessibleName('1150 coins — open the shop');
 
-  // Too expensive for what's left: the button says so and stays disabled.
+  // Too expensive for what's left: the buy button says so and stays disabled.
+  await page.getByRole('button', { name: /^Neon, \d+ coins$/ }).click();
   await expect(page.getByRole('button', { name: /^Neon: \d+ coins, you need \d+ more$/ })).toBeDisabled();
+  await page.keyboard.press('Escape');
 
   // The free daily chest opens once a day.
   await page.getByRole('button', { name: 'Open', exact: true }).click();
@@ -156,9 +158,9 @@ test('earns coins and spends them in the shop on a new tile style', async ({ pag
 
   // Win effects: buy one and it's on.
   await page.getByRole('radio', { name: 'Win effects' }).click();
+  await page.getByRole('button', { name: /^Love Hearts, \d+ coins$/ }).click();
   await page.getByRole('button', { name: /^Buy Love Hearts for \d+ coins$/ }).click();
-  await page.getByRole('button', { name: /^Confirm buying Love Hearts/ }).click();
-  await expect(page.getByRole('button', { name: 'Love Hearts is on' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Love Hearts, in use' })).toBeVisible();
 
   // It's in Settings too, and survives a reload.
   await page.reload();

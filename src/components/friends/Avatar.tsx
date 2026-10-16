@@ -1,4 +1,4 @@
-import { Crown, Flame, Gem, Ghost, Heart, Hexagon, Medal, Music, Rocket, Sparkles, Sprout, Star, Trophy, Zap } from 'lucide-react';
+import { Crown, Flame, Gem, Heart, Hexagon, Sparkles, Sprout, Star, Zap } from 'lucide-react';
 import { TINTS, isPhotoData, tilePal, type BadgeId } from '@/engine';
 import { TilePalArt } from './TilePalArt';
 import { useFriends } from '@/features/friends/FriendsContext';
@@ -30,18 +30,8 @@ export function BadgeIcon({ id, className = 'size-3' }: { id: BadgeId | string; 
       return <Gem className={`${className} fill-sky-300 text-sky-600`} aria-hidden />;
     case 'flame':
       return <Flame className={`${className} fill-orange-400 text-red-500`} aria-hidden />;
-    case 'music':
-      return <Music className={`${className} text-fuchsia-500`} strokeWidth={3} aria-hidden />;
-    case 'rocket':
-      return <Rocket className={`${className} fill-sky-200 text-indigo-600`} aria-hidden />;
-    case 'ghost':
-      return <Ghost className={`${className} fill-white text-slate-600`} aria-hidden />;
-    case 'trophy':
-      return <Trophy className={`${className} fill-amber-300 text-amber-600`} aria-hidden />;
     case 'sprout':
       return <Sprout className={`${className} text-green-600`} strokeWidth={2.6} aria-hidden />;
-    case 'medal':
-      return <Medal className={`${className} fill-amber-200 text-amber-600`} aria-hidden />;
     case 'nova':
       return <Sparkles className={`badge-nova ${className} fill-yellow-200 text-amber-500`} aria-hidden />;
     case 'legend':
@@ -51,8 +41,8 @@ export function BadgeIcon({ id, className = 'size-3' }: { id: BadgeId | string; 
   }
 }
 
-const FRAMES = new Set(['gold', 'neon', 'rainbow', 'flames', 'leaves', 'pixel', 'orbit', 'bronze', 'silver', 'gilded', 'royal', 'mythic']);
-const BADGES = new Set(['star', 'heart', 'bolt', 'crown', 'diamond', 'flame', 'music', 'rocket', 'ghost', 'trophy', 'sprout', 'medal', 'nova', 'legend']);
+const FRAMES = new Set(['gold', 'neon', 'rainbow', 'flames', 'bronze', 'silver', 'royal', 'mythic']);
+const BADGES = new Set(['star', 'heart', 'bolt', 'crown', 'diamond', 'flame', 'sprout', 'nova', 'legend']);
 
 /** The background behind a picture: the chosen colour, or one picked from the player's id. */
 function tintFor(uid: string, tint: string | null | undefined): string {

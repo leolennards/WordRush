@@ -351,8 +351,8 @@ describe('profiles', () => {
   });
 
   it('keeps a valid profile in settings and drops anything else', () => {
-    const ok = settingsSchema.validate({ avatar: 'p3', tint: 'sky', title: 'wizard', banner: 'aurora', background: 'stars', accent: 'grape' });
-    expect(ok).toMatchObject({ avatar: 'p3', tint: 'sky', title: 'wizard', banner: 'aurora', background: 'stars', accent: 'grape' });
+    const ok = settingsSchema.validate({ avatar: 't3', tint: 'sky', title: 'wizard', banner: 'aurora', background: 'stars', accent: 'grape' });
+    expect(ok).toMatchObject({ avatar: 't3', tint: 'sky', title: 'wizard', banner: 'aurora', background: 'stars', accent: 'grape' });
     const bad = settingsSchema.validate({ avatar: '<img>', photo: 'javascript:alert(1)', tint: 'nope', background: 'lava' });
     expect(bad).toMatchObject({ avatar: 'initial', photo: '', tint: 'auto', background: 'tiles' });
   });
@@ -364,7 +364,7 @@ describe('profiles', () => {
     expect(cosmeticUnlocked('bg', 'tiles', [], 1)).toBe(true);
     expect(cosmeticUnlocked('bg', 'synthwave', [], 1)).toBe(false);
     expect(cosmeticUnlocked('accent', 'grape', [], 1)).toBe(true);
-    expect(cosmeticUnlocked('title', 'legend', ['title:legend'], 1)).toBe(true);
+    expect(cosmeticUnlocked('title', 'unstumpable', ['title:unstumpable'], 1)).toBe(true);
   });
 });
 
@@ -379,17 +379,17 @@ describe('level rewards', () => {
 
   it('spreads rewards from level 2 to 100, with something special at the top', () => {
     expect(LEVEL_REWARDS[0]!.level).toBe(2);
-    expect(rewardsBetween(99, 100).length).toBeGreaterThanOrEqual(4);
+    expect(rewardsBetween(99, 100).length).toBeGreaterThanOrEqual(3);
     expect(rewardsBetween(1, 100).length).toBe(LEVEL_REWARDS.length);
     expect(nextRewards(23)?.level).toBe(25);
     expect(nextRewards(100)).toBeNull();
   });
 
   it('has Tile Pals for everyone, and some for high levels', () => {
-    expect(TILE_PALS.length).toBeGreaterThanOrEqual(24);
-    expect(palUnlocked('p1', 1)).toBe(true);
-    expect(palUnlocked('p29', 99)).toBe(false);
-    expect(palUnlocked('p29', 100)).toBe(true);
+    expect(TILE_PALS.length).toBeGreaterThanOrEqual(12);
+    expect(palUnlocked('t1', 1)).toBe(true);
+    expect(palUnlocked('t15', 99)).toBe(false);
+    expect(palUnlocked('t15', 100)).toBe(true);
     expect(new Set(TILE_PALS.map((p) => p.id)).size).toBe(TILE_PALS.length);
   });
 });
