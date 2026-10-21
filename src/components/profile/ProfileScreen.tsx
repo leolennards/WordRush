@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { m } from 'motion/react';
 import { ArrowLeft, Camera, Check, CircleCheck, Flame, ImageOff, Lock, ShoppingBag, Smile, Trophy, Type } from 'lucide-react';
 import {
@@ -92,6 +92,16 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
   const [tab, setTab] = useState<PictureMode>(mode);
   const [edit, setEdit] = useState<EditTab>('picture');
   const [info, setInfo] = useState<{ text: string; shop: boolean } | null>(null);
+  // The small preview only appears once the big card has scrolled away, so it's never shown twice.
+  const card = useRef<HTMLElement>(null);
+  const [cardInView, setCardInView] = useState(true);
+  useEffect(() => {
+    const node = card.current;
+    if (!node || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(([e]) => setCardInView(e!.isIntersecting), { threshold: 0.15 });
+    io.observe(node);
+    return () => io.disconnect();
+  }, []);
 
   const name = f.me?.profile.name ?? 'You';
   const { level } = levelFor(progress.xp);
@@ -141,6 +151,7 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
 
         {/* The card friends see. */}
         <m.section
+          ref={card}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="mt-4 overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface shadow-md"
@@ -185,7 +196,10 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
         {/* Customise: one part at a time, with a small preview that stays in view. */}
         <section className="mt-6" aria-label="Customise your profile">
           <div className="sticky top-0 z-20 -mx-4 bg-bg/90 px-4 pt-2 pb-3 backdrop-blur">
-            <div className="relative flex items-center gap-3 overflow-hidden rounded-2xl border border-border p-2.5 pr-4">
+            <div
+              className={`relative flex items-center gap-3 overflow-hidden rounded-2xl border border-border p-2.5 pr-4 ${cardInView ? 'hidden' : ''}`}
+              aria-hidden={cardInView || undefined}
+            >
               <span className="profile-banner absolute inset-0 opacity-35" data-banner={settings.banner} aria-hidden />
               <span className="relative">
                 <Avatar uid={f.me?.uid ?? 'me'} name={name} size="md" look={look} />
@@ -201,7 +215,7 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
                 )}
               </span>
             </div>
-            <div role="tablist" aria-label="Part to change" className="no-scrollbar mt-3 flex gap-1.5 overflow-x-auto">
+            <div role="tablist" aria-label="Part to change" className={`no-scrollbar flex ${cardInView ? '' : 'mt-3'} gap-1.5 overflow-x-auto`}>
               {EDIT_TABS.map((t) => (
                 <button
                   key={t.value}

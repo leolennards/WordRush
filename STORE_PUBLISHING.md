@@ -85,11 +85,15 @@ game). Friends data is shared live regardless.
    ```
 5. Store listing: use the 512×512 icon (`public/icon-512.png`), phone screenshots, and the privacy policy
    URL **https://wordskiis.vercel.app/privacy.html**.
-6. *Data safety* answers (matches the privacy policy): collects **name** (display name) and **email**
-   (only if the player signs in with Google) and **app interactions** (game results), for **app
-   functionality**; data is encrypted in transit; users can **delete their data in-app**
-   (Friends → Delete my profile); no data is shared with third parties for ads; no ads.
-7. Content rating questionnaire → everyone; target audience 13+ is simplest (no ads, no chat).
+6. *Data safety* answers (matches the privacy policy), all optional and for **app functionality**:
+   **name** (display name), **email** (Google sign-in only), **user IDs** (account ID, friend code),
+   **photos** (only a photo picked as profile picture), **app interactions** and **other user-generated
+   content** (results, Word Swap moves), and **device or other IDs** for **fraud prevention** (App Check /
+   reCAPTCHA). Encrypted in transit; nothing shared with third parties; no ads. Users can delete their
+   data in-app (Friends → Delete my profile) and the **delete account URL** is
+   **https://wordskiis.vercel.app/delete-account.html**.
+7. Content rating questionnaire → Everyone (players share names, pictures and results with friends; no
+   chat; no real-money purchases or loot boxes); target audience 13+ is simplest.
 
 ## Publishing to the Apple App Store ($99/year)
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, m } from 'motion/react';
-import { ArrowLeft, Check, Clock3, Package, Send, Snowflake, Sparkles, Tag } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, Clock3, Package, Send, Snowflake, Sparkles, Tag } from 'lucide-react';
 import { GAME } from '@/config/game';
 import {
   COIN_REWARDS,
@@ -216,11 +216,17 @@ export function ShopScreen({ onBack, onProfile }: { onBack: () => void; onProfil
               <Send className="size-3.5" aria-hidden /> Send coins
             </button>
           </div>
-          <p className="relative mt-3 text-[0.8rem] leading-snug text-white/85">
-            Every game pays out coins with its XP, plus {COIN_REWARDS.achievement} per achievement, {COIN_REWARDS.level} per level
-            and {COIN_REWARDS.rank} for a new rank. Bonuses: {COIN_REWARDS.firstGuess} for a first-guess solve,{' '}
-            {COIN_REWARDS.allQuests} for finishing all three quests and {COIN_REWARDS.streakWeek} for every week of Daily streak.
-          </p>
+          <details className="group relative mt-3 text-[0.8rem] leading-snug text-white/85">
+            <summary className="inline-flex cursor-pointer list-none items-center gap-1 font-semibold text-white/90 [&::-webkit-details-marker]:hidden">
+              How to earn coins
+              <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" aria-hidden />
+            </summary>
+            <p className="mt-1.5">
+              Every game pays out coins with its XP, plus {COIN_REWARDS.achievement} per achievement, {COIN_REWARDS.level} per level
+              and {COIN_REWARDS.rank} for a new rank. Bonuses: {COIN_REWARDS.firstGuess} for a first-guess solve,{' '}
+              {COIN_REWARDS.allQuests} for finishing all three quests and {COIN_REWARDS.streakWeek} for every week of Daily streak.
+            </p>
+          </details>
         </m.section>
 
         <DailyChest />
@@ -289,11 +295,7 @@ export function ShopScreen({ onBack, onProfile }: { onBack: () => void; onProfil
             tone="mystery"
             icon={<Package className="size-7" aria-hidden />}
             title="Mystery box"
-            text={
-              boxLeft
-                ? `A random item you don’t own yet (${boxLeft} left). It could be worth up to 3,000 coins!`
-                : 'You own everything a box can hold.'
-            }
+            text={boxLeft ? 'A random item you don’t own yet.' : 'You own everything a box can hold.'}
             price={MYSTERY_PRICE}
             action={confirming === 'mystery' ? 'Tap to confirm' : 'Open a box'}
             confirming={confirming === 'mystery'}
@@ -304,7 +306,7 @@ export function ShopScreen({ onBack, onProfile }: { onBack: () => void; onProfil
             tone="freeze"
             icon={<Snowflake className="size-7" aria-hidden />}
             title="Streak freeze"
-            text={`Covers a missed Daily Challenge so your streak carries on. You have ${held} of ${MAX_FREEZES}.`}
+            text={`Saves your streak if you miss a day. You have ${held} of ${MAX_FREEZES}.`}
             price={FREEZE_PRICE}
             action={held >= MAX_FREEZES ? 'Fully stocked' : confirming === 'freeze' ? 'Tap to confirm' : 'Buy a freeze'}
             confirming={confirming === 'freeze'}
@@ -349,8 +351,7 @@ export function ShopScreen({ onBack, onProfile }: { onBack: () => void; onProfil
         </AnimatePresence>
 
         <p className="mt-6 text-center text-xs text-subtle">
-          Rank themes unlock as you level up. Switch between everything you own in Settings → Tile theme. Send gifts from a
-          friend’s card on the Friends page.
+          Switch between everything you own in Settings → Tile theme.
         </p>
       </div>
       <GiftDialog open={sending} onClose={() => setSending(false)} />
@@ -508,33 +509,32 @@ function Extra({
   const what = title.toLowerCase();
   return (
     <section
-      className="extra-card flex flex-col gap-3 rounded-[var(--radius-card)] p-4 text-white shadow-md"
+      className="extra-card flex items-center gap-3 rounded-[var(--radius-card)] p-3.5 text-white shadow-md"
       data-tone={tone}
       aria-label={title}
     >
-      <div className="flex items-start gap-3">
-        <span
-          className={`grid size-12 shrink-0 place-items-center rounded-2xl bg-white/20 ${tone === 'mystery' && !disabled ? 'mystery-wobble' : ''}`}
-        >
-          {icon}
-        </span>
-        <div className="min-w-0">
-          <p className="font-extrabold">{title}</p>
-          <p className="text-[0.8rem] leading-snug text-white/85">{text}</p>
-        </div>
+      <span
+        className={`grid size-11 shrink-0 place-items-center rounded-2xl bg-white/20 ${tone === 'mystery' && !disabled ? 'mystery-wobble' : ''}`}
+      >
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-extrabold">{title}</p>
+        <p className="text-[0.78rem] leading-snug text-white/85">{text}</p>
       </div>
       <button
         type="button"
         onClick={onPress}
         disabled={disabled}
-        aria-label={confirming ? `Confirm buying a ${what} for ${price} coins` : `Buy a ${what} for ${price} coins`}
-        className="buy-button mt-auto inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-3 text-sm font-extrabold text-slate-900 transition hover:bg-white/90 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
+        aria-label={confirming ? `Confirm buying a ${what} for ${price} coins` : `${action} for ${price} coins`}
+        className="buy-button inline-flex min-h-10 shrink-0 items-center justify-center gap-1 rounded-xl bg-white px-3 text-sm font-extrabold text-slate-900 transition hover:bg-white/90 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
         data-confirm={confirming || undefined}
       >
-        {action}
-        {!confirming && (
-          <span className="tabular inline-flex items-center gap-1 opacity-80">
-            · <Coin className="size-4" /> {price}
+        {confirming ? (
+          'Confirm'
+        ) : (
+          <span className="tabular inline-flex items-center gap-1">
+            <Coin className="size-4" /> {price}
           </span>
         )}
       </button>

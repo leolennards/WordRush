@@ -8,6 +8,7 @@ import { trackChanges } from '@/lib/storage/tracked';
 import { KEYS, SYNCED_KEYS } from '@/lib/storage/schemas';
 import { registerServiceWorker } from '@/lib/pwa/registerServiceWorker';
 import { defineWord } from '@/lib/dictionary/define';
+import { registerBackButton } from '@/lib/native/backButton';
 
 const services = {
   // Remembers when synced game saves change, for cloud save's "newest wins".
@@ -25,3 +26,4 @@ createRoot(document.getElementById('root')!).render(
 );
 
 registerServiceWorker();
+registerBackButton();

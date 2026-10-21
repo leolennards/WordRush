@@ -2,9 +2,8 @@ import type { ReactNode } from 'react';
 import { m } from 'motion/react';
 import { ArrowDownUp, ArrowRight, Award, BarChart3, BookOpen, Bot, CalendarClock, Castle, ChevronRight, CircleHelp, Clock3, Columns2, Flame, Footprints, Gift, Grid2x2, Heart, Palette, Settings, Shuffle, Smartphone, Trophy, Users, Zap } from 'lucide-react';
 import { BRAND, GAME } from '@/config/game';
-import { ACHIEVEMENTS, SHOP_ITEMS, TITLES, chestReady, coinBalance, effectiveStreak, freezesHeld, frozenDays, levelFor, nextRewards, owns, rankFor, winPercentage, type GameState, type Progress, type Stats } from '@/engine';
+import { ACHIEVEMENTS, TITLES, chestReady, coinBalance, effectiveStreak, freezesHeld, frozenDays, levelFor, nextRewards, rankFor, winPercentage, type GameState, type Progress, type Stats } from '@/engine';
 import { Coin } from '@/components/shop/Coin';
-import { RankBadge } from '@/components/progress/RankBadge';
 import { Avatar } from '@/components/friends/Avatar';
 import { useServices } from '@/app/services';
 import { useFriends } from '@/features/friends/FriendsContext';
@@ -227,15 +226,8 @@ export function Home(props: HomeProps) {
                 {greeting}
                 {name ? `, ${name}` : ''}!
               </h2>
-              {title ? (
-                <p className="truncate text-sm font-bold text-white/90">{title.name}</p>
-              ) : (
-                <p className="truncate text-sm text-white/80">{copy.headline}</p>
-              )}
+              {title && <p className="truncate text-sm font-bold text-white/90">{title.name}</p>}
             </div>
-            <button type="button" onClick={props.onRanks} aria-label="Ranks and tile themes" className="shrink-0 transition hover:scale-105">
-              <RankBadge level={level} rank={rank} size="sm" />
-            </button>
           </div>
 
           {/* Level progress and the next reward */}
@@ -274,7 +266,12 @@ export function Home(props: HomeProps) {
               label={freezes > 0 ? `day streak · ${freezes} ❄` : 'day streak'}
               onClick={props.onStats}
             />
-            <HeroChip icon={<Coin className="size-4" shine />} value={coins.toLocaleString()} label={chest ? 'free chest!' : 'coins'} onClick={props.onShop} glow={chest} />
+            <HeroChip
+              icon={<BookOpen className="size-4 text-sky-200" aria-hidden />}
+              value={props.wordCount.toLocaleString()}
+              label={props.wordCount === 1 ? 'word found' : 'words found'}
+              onClick={props.onWordBook}
+            />
             <HeroChip
               icon={<Award className="size-4 text-yellow-200" aria-hidden />}
               value={`${unlocked}/${ACHIEVEMENTS.length}`}
@@ -372,8 +369,7 @@ export function Home(props: HomeProps) {
                 )}
               </span>
               <span className="block text-[0.8rem] leading-snug text-white/85">
-                <strong className="tabular">{coins.toLocaleString()}</strong> coins ·{' '}
-                {SHOP_ITEMS.filter((i) => owns(props.progress, i.id)).length}/{SHOP_ITEMS.length} collected
+                {chest ? 'Open it for free coins' : 'Tile colours, keyboards, sounds and more'}
               </span>
             </span>
             <ChevronRight className="relative size-5 text-white/80 transition-transform group-hover:translate-x-0.5" aria-hidden />
@@ -423,14 +419,7 @@ export function Home(props: HomeProps) {
                         <span className="mode-icon grid size-10 shrink-0 place-items-center rounded-xl text-white transition-transform group-hover:scale-110 group-hover:-rotate-6">
                           <mode.icon className="size-5" aria-hidden />
                         </span>
-                        <span className="mt-2.5 flex items-center gap-1.5 font-bold">
-                          {mode.name}
-                          {mode.isNew && (
-                            <span className="rounded-full bg-present/20 px-1.5 py-px text-[0.6rem] font-bold tracking-wide uppercase">
-                              New
-                            </span>
-                          )}
-                        </span>
+                        <span className="mt-2.5 font-bold">{mode.name}</span>
                         <span className="mt-0.5 block text-[0.78rem] leading-snug text-muted">{mode.detail}</span>
                       </button>
                     ))}
@@ -467,27 +456,25 @@ export function Home(props: HomeProps) {
             </m.button>
           )}
 
-          <m.nav {...rise(6)} aria-label="More" className="flex flex-wrap justify-center gap-1.5 pt-1 lg:justify-start">
+          <m.nav {...rise(6)} aria-label="More" className="overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface">
             {[
-              ...(props.onGetApp ? [{ label: 'Get the app', icon: Smartphone, onClick: props.onGetApp, color: '#22a467' }] : []),
-              { label: 'How to play', icon: CircleHelp, onClick: props.onHelp, color: '#0ea5e9' },
-              { label: 'Statistics', icon: BarChart3, onClick: props.onStats, color: '#8b5cf6' },
-              { label: 'Achievements', icon: Award, onClick: props.onAchievements, color: '#f59e0b' },
-              { label: 'Word Book', icon: BookOpen, onClick: props.onWordBook, color: '#14b8a6' },
-              { label: 'Ranks & rewards', icon: Palette, onClick: props.onRanks, color: '#ec4899' },
-              { label: 'Settings', icon: Settings, onClick: props.onSettings, color: '#64748b' },
-            ].map(({ label, icon: Icon, onClick, color }) => (
+              ...(props.onGetApp ? [{ label: 'Get the app', icon: Smartphone, onClick: props.onGetApp }] : []),
+              { label: 'How to play', icon: CircleHelp, onClick: props.onHelp },
+              { label: 'Statistics', icon: BarChart3, onClick: props.onStats },
+              { label: 'Achievements', icon: Award, onClick: props.onAchievements },
+              { label: 'Word Book', icon: BookOpen, onClick: props.onWordBook },
+              { label: 'Ranks & rewards', icon: Palette, onClick: props.onRanks },
+              { label: 'Settings', icon: Settings, onClick: props.onSettings },
+            ].map(({ label, icon: Icon, onClick }) => (
               <button
                 key={label}
                 type="button"
                 onClick={onClick}
-                className="more-chip inline-flex items-center gap-1.5 rounded-full py-1.5 pr-3 pl-1.5 text-sm font-semibold transition hover:-translate-y-px"
-                style={{ ['--mode' as string]: color }}
+                className="flex min-h-12 w-full items-center gap-3 border-b border-border px-4 text-left text-[0.95rem] font-semibold transition-colors last:border-b-0 hover:bg-surface-2 active:bg-surface-2"
               >
-                <span className="mode-icon grid size-6 place-items-center rounded-full text-white">
-                  <Icon className="size-3.5" aria-hidden />
-                </span>
-                {label}
+                <Icon className="size-[1.15rem] shrink-0 text-muted" aria-hidden />
+                <span className="flex-1">{label}</span>
+                <ChevronRight className="size-4 text-subtle" aria-hidden />
               </button>
             ))}
           </m.nav>
@@ -558,11 +545,8 @@ function FeatureCard({
       data-tone={tone}
     >
       <span className="feature-card-shine" aria-hidden />
-      <span className="relative flex items-start justify-between">
-        <span className="grid size-11 place-items-center rounded-2xl bg-white/15 backdrop-blur-sm transition-transform group-hover:scale-110 group-hover:-rotate-6">
-          <Icon className="size-6" aria-hidden />
-        </span>
-        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[0.6rem] font-bold tracking-wide uppercase">New</span>
+      <span className="relative grid size-11 place-items-center rounded-2xl bg-white/15 backdrop-blur-sm transition-transform group-hover:scale-110 group-hover:-rotate-6">
+        <Icon className="size-6" aria-hidden />
       </span>
       <span className="relative">
         <span className="block text-lg leading-tight font-extrabold">{title}</span>

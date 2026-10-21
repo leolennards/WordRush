@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Delete your account — Wordskiis</title>
+    <meta name="color-scheme" content="light dark" />
+    <style>
+      :root { --bg: #f6f3ec; --surface: #fff; --text: #1c1f26; --muted: #626875; --border: #e3ddd1; --accent: #1f9e63; }
+      @media (prefers-color-scheme: dark) {
+        :root { --bg: #0c0f15; --surface: #151a24; --text: #eef1f6; --muted: #9aa3b4; --border: #232a38; --accent: #47d69b; }
+      }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+      main { max-width: 42rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+      h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 0.25rem; letter-spacing: -0.02em; }
+      h2 { font-size: 1.1rem; margin: 2rem 0 0.5rem; }
+      .muted { color: var(--muted); }
+      ol, ul { padding-left: 1.2rem; }
+      li { margin: 0.25rem 0; }
+      a { color: var(--accent); }
+      .card { background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem 1.25rem; margin-top: 1.5rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p><a href="/">← Back to Wordskiis</a></p>
+      <h1>Delete your Wordskiis account</h1>
+      <p class="muted">For the Wordskiis app on Google Play and the Wordskiis website.</p>
+
+      <div class="card">
+        You only have a Wordskiis account if you opened <strong>Friends</strong> or signed in with Google. Playing on your
+        own needs no account, and that progress stays on your device.
+      </div>
+
+      <h2>In the app</h2>
+      <ol>
+        <li>Open Wordskiis and tap <strong>Friends</strong> on the Home screen.</li>
+        <li>Scroll to the bottom and tap <strong>Delete my profile</strong>.</li>
+        <li>Confirm. Your account is deleted straight away.</li>
+      </ol>
+
+      <h2>Without the app</h2>
+      <ol>
+        <li>Go to <a href="https://wordskiis.vercel.app/#friends">wordskiis.vercel.app/#friends</a> in any browser.</li>
+        <li>Tap <strong>Sign in with Google</strong> and use the same Google account as in the app.</li>
+        <li>Tap <strong>Delete my profile</strong> and confirm.</li>
+      </ol>
+      <p>
+        If you never signed in with Google, your account only exists on the device you used. Delete it in the app as above,
+        or uninstall the app: the account then can't be used again, and you can ask us to remove it by opening an issue at
+        <a href="https://github.com/leolennards/Wordskiis/issues">github.com/leolennards/Wordskiis/issues</a> with your
+        6-character friend code (don't post anything else about yourself).
+      </p>
+
+      <h2>What is deleted</h2>
+      <ul>
+        <li>Your sign-in account, display name, friend code and profile (picture, frame, badge, title and banner).</li>
+        <li>Your friends list and your cloud save (level, coins, items and game progress).</li>
+        <li>Your Daily result and streak as seen by friends.</li>
+      </ul>
+      <p>
+        Everything is deleted immediately; nothing is kept. Past challenge and race records that a friend still has
+        then show only an anonymous identifier, with no name. Progress saved on your own device stays until you clear the
+        app's data or uninstall it.
+      </p>
+
+      <p class="muted">See also the <a href="/privacy.html">privacy policy</a>.</p>
+    </main>
+  </body>
+</html>

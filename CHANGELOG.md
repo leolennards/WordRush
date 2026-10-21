@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.18.0 — 2026-10-21 (ready for Google Play, tidier phone screens)
+
+- **Home:** coins, your picture and today's puzzle each appear once instead of two or three times; the level
+  hexagon and old "New" labels are gone; the links at the bottom are a plain list instead of coloured pills.
+- **Shop:** how to earn coins folds away behind a tap; Mystery box and Streak freeze are compact rows with the
+  price on the button.
+- **Profile:** the small preview only appears once the big card has scrolled away.
+- **Android:** the Back button closes an open panel first, then goes back a screen, and on Home puts the app in
+  the background like other apps.
+- **Delete your account page** (`/delete-account.html`) for Google Play, linked from the privacy policy.
+- **Android app 1.18.0** (versionCode 20).
+
 ## 1.17.0 — 2026-10-16 (polish: new Tile Pals, clearer colours, calmer screens, easier picking)
 
 - **New Tile Pals:** 15 redesigned pals: soft, glossy tiles with gentle faces and one small accessory at most
