@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.19.0 — 2026-10-26 (simpler and calmer: fewer extras, a cleaner Home)
+
+- **Home:** a slim greeting, then the Daily Challenge, four favourite ways to play (Practice, Blitz, The
+  Tower, Bot Duel) and the other six behind one **More games** row. Quests, Friends, the Shop and a few
+  links follow as plain lists. Your picture is no longer shown twice.
+- **Fewer extras:** tile colours, tile styles, keyboards, sounds, win effects and titles stay. Tile Pals,
+  frames, badges, banners, backgrounds and app colours are gone, and **coins spent on them are given back**
+  once. Pictures are your initial or a photo.
+- **Profile:** one simple page (your card, Picture, Title, level rewards) instead of five tabs.
+- **Shop:** one row of sections, and Today's deal is a compact row.
+- **How to play:** the rules and four short tips instead of a list of every mode.
+- **Background:** a calm dot pattern, with no floating letters.
+- **Android app 1.19.0** (versionCode 21).
+
 ## 1.18.0 — 2026-10-21 (ready for Google Play, tidier phone screens)
 
 - **Home:** coins, your picture and today's puzzle each appear once instead of two or three times; the level

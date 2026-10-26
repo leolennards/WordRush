@@ -277,12 +277,9 @@ function ProfileCard() {
 
   return (
     <section aria-labelledby="my-profile" className={`${card} overflow-hidden shadow-md`}>
-      <div className="profile-banner h-16" data-banner={f.lookOf(me.uid).banner ?? 'none'} />
-      <div className="p-5 pt-0 sm:p-6 sm:pt-0">
-      <div className="-mt-7 flex items-end gap-3">
-        <span className="rounded-full bg-surface p-1">
-          <Avatar uid={me.uid} name={me.profile.name} size="lg" />
-        </span>
+      <div className="p-5 sm:p-6">
+      <div className="flex items-center gap-3">
+        <Avatar uid={me.uid} name={me.profile.name} size="lg" />
         {editing ? (
           <form onSubmit={save} className="flex flex-1 gap-2">
             <input
@@ -569,9 +566,6 @@ function FriendRow({
 
   return (
     <li className="relative overflow-hidden p-4 sm:px-5">
-      {friend.profile?.banner && (
-        <span className="profile-banner pointer-events-none absolute inset-y-0 left-0 w-1.5" data-banner={friend.profile.banner} aria-hidden />
-      )}
       <div className="flex items-center gap-3">
         <Avatar uid={friend.uid} name={name} />
         <div className="min-w-0 flex-1">

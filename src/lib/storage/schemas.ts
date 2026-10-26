@@ -4,26 +4,17 @@ import type { Stats } from '@/engine/stats';
 import { emptyProgress, type Progress } from '@/engine/progress';
 import type { QuestState } from '@/engine/quests';
 import { SKINS, type SkinId } from '@/engine/ranks';
-import { TINTS, isPhotoData, isTilePal, type AvatarTint } from '@/engine/profile';
+import { TINTS, isPhotoData, type AvatarTint } from '@/engine/profile';
 import {
-  ACCENTS,
-  BACKGROUNDS,
-  BADGES,
-  BANNERS,
   TITLES,
-  FRAMES,
   KEY_SKINS,
   SOUND_PACKS,
   TILE_STYLES,
   WIN_EFFECTS,
   isFreezeId,
   shopItem,
-  type AccentId,
-  type BackgroundId,
-  type BadgeId,
-  type BannerId,
+  RETIRED_PRICES,
   type TitleId,
-  type FrameId,
   type KeySkinId,
   type SoundPackId,
   type TileStyleId,
@@ -82,17 +73,10 @@ export interface Settings {
   keySkin: KeySkinId;
   /** Sound effects pack. */
   soundPack: SoundPackId;
-  /** Avatar frame and badge, shown to friends. */
-  frame: FrameId;
-  badge: BadgeId;
-  /** The scene behind the app, and its highlight colour. */
-  background: BackgroundId;
-  accent: AccentId;
-  /** Profile: title and banner (shop), picture (initial, an emoji or a small photo) and its colour. */
+  /** Profile: title (shop), picture (initial or a small photo) and its colour. */
   title: TitleId;
-  banner: BannerId;
-  /** 'initial', or an emoji from AVATAR_EMOJI, or 'photo' to show `photo`. */
-  avatar: string;
+  /** 'initial', or 'photo' to show `photo`. */
+  avatar: 'initial' | 'photo';
   photo: string;
   tint: AvatarTint;
   /** Whether the first-visit help has been shown. */
@@ -114,12 +98,7 @@ export const DEFAULT_SETTINGS: Settings = {
   winFx: 'confetti',
   keySkin: 'classic',
   soundPack: 'classic',
-  frame: 'none',
-  badge: 'none',
-  background: 'tiles',
-  accent: 'mint',
   title: 'none',
-  banner: 'none',
   avatar: 'initial',
   photo: '',
   tint: 'auto',
@@ -148,13 +127,8 @@ export const settingsSchema: Schema<Settings> = {
       winFx: WIN_EFFECTS.some((x) => x.id === d.winFx) ? (d.winFx as WinFxId) : 'confetti',
       keySkin: KEY_SKINS.some((x) => x.id === d.keySkin) ? (d.keySkin as KeySkinId) : 'classic',
       soundPack: SOUND_PACKS.some((x) => x.id === d.soundPack) ? (d.soundPack as SoundPackId) : 'classic',
-      frame: FRAMES.some((x) => x.id === d.frame) ? (d.frame as FrameId) : 'none',
-      badge: BADGES.some((x) => x.id === d.badge) ? (d.badge as BadgeId) : 'none',
-      background: BACKGROUNDS.some((x) => x.id === d.background) ? (d.background as BackgroundId) : 'tiles',
-      accent: ACCENTS.some((x) => x.id === d.accent) ? (d.accent as AccentId) : 'mint',
       title: TITLES.some((x) => x.id === d.title) ? (d.title as TitleId) : 'none',
-      banner: BANNERS.some((x) => x.id === d.banner) ? (d.banner as BannerId) : 'none',
-      avatar: d.avatar === 'photo' || isTilePal(d.avatar) ? (d.avatar as string) : 'initial',
+      avatar: d.avatar === 'photo' ? 'photo' : 'initial',
       photo: isPhotoData(d.photo) ? d.photo : '',
       tint: TINTS.some((x) => x.id === d.tint) ? (d.tint as AvatarTint) : 'auto',
       seenHelp: bool('seenHelp'),
@@ -326,7 +300,7 @@ export const progressSchema: Schema<Progress> = {
       applied: Array.isArray(d.applied) ? d.applied.filter((x): x is string => typeof x === 'string') : [],
       coins: nonNegInt(d.coins) ? d.coins : 0,
       spent: nonNegInt(d.spent) ? d.spent : 0,
-      owned: Array.isArray(d.owned) ? [...new Set(d.owned.filter((x): x is string => typeof x === 'string' && (shopItem(x) !== null || isFreezeId(x))))] : [],
+      owned: Array.isArray(d.owned) ? [...new Set(d.owned.filter((x): x is string => typeof x === 'string' && (shopItem(x) !== null || isFreezeId(x) || x in RETIRED_PRICES)))] : [],
     };
   },
 };

@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Check, Lock, Type, Volume2 } from 'lucide-react';
-import { ACCENTS, LEVEL_REWARDS, REWARD_KIND, SKINS, tilePal, type LevelReward, type WinFxId } from '@/engine';
-import { Avatar, BadgeIcon } from '@/components/friends/Avatar';
-import { TilePalArt } from '@/components/friends/TilePalArt';
+import { LEVEL_REWARDS, REWARD_KIND, SKINS, type LevelReward, type WinFxId } from '@/engine';
 import { FxIcon } from '@/components/shop/FxIcon';
 
 /** A small picture of a level reward. */
@@ -32,22 +30,8 @@ export function RewardPreview({ reward }: { reward: LevelReward }) {
       return <Volume2 className="size-6 text-accent" aria-hidden />;
     case 'fx':
       return <FxIcon id={reward.id as WinFxId} className="size-6" />;
-    case 'bg':
-      return <span className="scene-thumb block h-6 w-10 rounded-md" data-scene={reward.id} />;
-    case 'accent':
-      return <span className="block size-6 rounded-full" style={{ background: ACCENTS.find((a) => a.id === reward.id)?.swatch }} />;
-    case 'frame':
-      return <Avatar uid="me" name="W" size="sm" look={{ frame: reward.id, badge: null }} />;
-    case 'badge':
-      return <BadgeIcon id={reward.id} className="size-6" />;
     case 'title':
       return <Type className="size-6 text-accent" aria-hidden />;
-    case 'banner':
-      return <span className="profile-banner block h-6 w-10 rounded-md" data-banner={reward.id} />;
-    case 'pal': {
-      const p = tilePal(reward.id);
-      return p ? <TilePalArt pal={p} className="size-8" /> : null;
-    }
   }
 }
 

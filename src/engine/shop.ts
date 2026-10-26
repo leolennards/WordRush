@@ -1,7 +1,7 @@
 /**
  * Wordskiis coins and the shop. Every finished game earns coins alongside
  * XP; coins buy tile colours, tile styles, keyboards, sound packs, win
- * effects, avatar frames and badges, plus streak freezes and mystery boxes.
+ * effects and titles, plus streak freezes and mystery boxes.
  * Balance = starter coins + earned − spent, so it adds up across devices like
  * XP does (earned and spent are both per-device counters) and purchases merge
  * as a set.
@@ -113,70 +113,6 @@ export const SOUND_PACKS: readonly SoundPack[] = [
   { id: 'chimes', name: 'Crystal Chimes', description: 'Sparkling bells and glassy tones.', level: 45 },
 ];
 
-export type FrameId = 'none' | 'gold' | 'neon' | 'rainbow' | 'flames' | 'bronze' | 'silver' | 'royal' | 'mythic';
-export type Frame = Cosmetic<FrameId>;
-
-/** A ring around your avatar, shown to friends. */
-export const FRAMES: readonly Frame[] = [
-  { id: 'none', name: 'No frame', description: 'Just your avatar.' },
-  { id: 'gold', name: 'Gold Ring', description: 'A polished gold ring.', price: 500 },
-  { id: 'neon', name: 'Neon Ring', description: 'A glowing cyan ring.', price: 700 },
-  { id: 'rainbow', name: 'Rainbow Ring', description: 'A spinning ring of every colour.', price: 1200, animated: true },
-  { id: 'flames', name: 'Flame Ring', description: 'Your avatar, on fire.', price: 1500, animated: true },
-  { id: 'bronze', name: 'Bronze Ring', description: 'Your first medal-worthy ring.', level: 5 },
-  { id: 'silver', name: 'Silver Ring', description: 'Polished silver for a seasoned player.', level: 20 },
-  { id: 'royal', name: 'Royal', description: 'Purple and gold, turning slowly.', level: 50, animated: true },
-  { id: 'mythic', name: 'Mythic Aura', description: 'A double ring of northern lights, glowing.', level: 90, animated: true },
-];
-
-export type BadgeId = 'none' | 'star' | 'heart' | 'bolt' | 'crown' | 'diamond' | 'flame' | 'sprout' | 'nova' | 'legend';
-export type Badge = Cosmetic<BadgeId>;
-
-/** A small badge on your avatar, shown to friends. */
-export const BADGES: readonly Badge[] = [
-  { id: 'none', name: 'No badge', description: 'Keep it clean.' },
-  { id: 'star', name: 'Star', description: 'A shining gold star.', price: 300 },
-  { id: 'heart', name: 'Heart', description: 'Spread the love.', price: 300 },
-  { id: 'bolt', name: 'Lightning', description: 'For the speedy solvers.', price: 400 },
-  { id: 'crown', name: 'Crown', description: 'Word royalty.', price: 800 },
-  { id: 'diamond', name: 'Diamond', description: 'Rare and brilliant.', price: 1000 },
-  { id: 'flame', name: 'Flame', description: 'On fire!', price: 400 },
-  { id: 'sprout', name: 'Sprout', description: 'Just getting started.', level: 3 },
-  { id: 'nova', name: 'Nova', description: 'A glowing, pulsing star.', level: 55, animated: true },
-  { id: 'legend', name: 'Legend Gem', description: 'Only for level 100.', level: 100, animated: true },
-];
-
-export type BackgroundId = 'tiles' | 'plain' | 'stars' | 'bubbles' | 'aurora' | 'sakura' | 'synthwave' | 'fireflies' | 'galaxy';
-export type Background = Cosmetic<BackgroundId>;
-
-/** The scene behind the whole app. */
-export const BACKGROUNDS: readonly Background[] = [
-  { id: 'tiles', name: 'Floating Tiles', description: 'Letter tiles drifting around the edges.' },
-  { id: 'plain', name: 'Calm', description: 'Just the dots, nothing moving.' },
-  { id: 'bubbles', name: 'Bubbles', description: 'Soap bubbles rising and wobbling.', price: 700, animated: true },
-  { id: 'stars', name: 'Starfield', description: 'Twinkling stars and the odd shooting star.', price: 900, animated: true },
-  { id: 'sakura', name: 'Cherry Blossom', description: 'Petals drifting down on the breeze.', price: 1000, animated: true },
-  { id: 'aurora', name: 'Aurora Sky', description: 'Ribbons of northern lights swaying.', price: 1400, animated: true },
-  { id: 'synthwave', name: 'Synthwave', description: 'A neon sun over a moving grid.', price: 1800, animated: true },
-  { id: 'fireflies', name: 'Fireflies', description: 'Glowing fireflies drifting in the dusk.', level: 23, animated: true },
-  { id: 'galaxy', name: 'Spiral Galaxy', description: 'A slowly turning galaxy of stars.', level: 60, animated: true },
-];
-
-export type AccentId = 'mint' | 'ocean' | 'grape' | 'rose' | 'tangerine' | 'gold' | 'ruby' | 'teal';
-export type Accent = Cosmetic<AccentId> & { swatch: string };
-
-/** The app's highlight colour: buttons, links and the logo. */
-export const ACCENTS: readonly Accent[] = [
-  { id: 'mint', name: 'Mint', description: 'The original green.', swatch: '#22a467' },
-  { id: 'ocean', name: 'Ocean', description: 'Deep sea blue.', swatch: '#0e7fc0' },
-  { id: 'grape', name: 'Grape', description: 'Juicy purple.', swatch: '#7c3aed' },
-  { id: 'rose', name: 'Rose', description: 'Soft pink.', swatch: '#e0457b' },
-  { id: 'tangerine', name: 'Tangerine', description: 'Zesty orange.', swatch: '#ea6a0c', price: 300 },
-  { id: 'ruby', name: 'Ruby', description: 'Rich red.', swatch: '#dc2626', price: 400 },
-  { id: 'gold', name: 'Gold', description: 'Shiny, like your coins.', swatch: '#d4a017', price: 600 },
-  { id: 'teal', name: 'Teal', description: 'A level-7 reward.', swatch: '#0d9488', level: 7 },
-];
-
 export type TitleId =
   | 'none' | 'lover' | 'puzzler' | 'owl' | 'wizard' | 'speedy' | 'streaker' | 'unstumpable'
   | 'rookie' | 'virtuoso' | 'legendary';
@@ -197,23 +133,7 @@ export const TITLES: readonly Title[] = [
   { id: 'legendary', name: 'Wordskiis Legend', description: 'Level 100. The very top.', level: 100 },
 ];
 
-export type BannerId = 'none' | 'sunset' | 'ocean' | 'stars' | 'aurora' | 'gold' | 'dawn' | 'nebula' | 'prism';
-export type Banner = Cosmetic<BannerId>;
-
-/** The banner behind your profile card, shown to friends. */
-export const BANNERS: readonly Banner[] = [
-  { id: 'none', name: 'Simple', description: 'A clean card.' },
-  { id: 'sunset', name: 'Sunset Glow', description: 'Warm orange into pink.', price: 400 },
-  { id: 'ocean', name: 'Ocean Deep', description: 'Cool blues and teal.', price: 400 },
-  { id: 'stars', name: 'Starry Night', description: 'A twinkling night sky.', price: 900, animated: true },
-  { id: 'aurora', name: 'Aurora', description: 'Flowing northern lights.', price: 1200, animated: true },
-  { id: 'gold', name: 'Gold Rush', description: 'Pure shimmering gold.', price: 2000, animated: true },
-  { id: 'dawn', name: 'First Light', description: 'The sky at sunrise.', level: 10 },
-  { id: 'nebula', name: 'Nebula', description: 'Clouds of glowing space dust.', level: 35, animated: true },
-  { id: 'prism', name: 'Prism', description: 'Every colour at once, for legends.', level: 100, animated: true },
-];
-
-export type ItemKind = 'skin' | 'tiles' | 'keys' | 'sound' | 'fx' | 'bg' | 'accent' | 'frame' | 'badge' | 'title' | 'banner';
+export type ItemKind = 'skin' | 'tiles' | 'keys' | 'sound' | 'fx' | 'title';
 export type CosmeticKind = Exclude<ItemKind, 'skin'>;
 
 export interface ShopItem {
@@ -233,12 +153,7 @@ export const COSMETICS: Record<CosmeticKind, readonly Cosmetic<string>[]> = {
   keys: KEY_SKINS,
   sound: SOUND_PACKS,
   fx: WIN_EFFECTS,
-  bg: BACKGROUNDS,
-  accent: ACCENTS,
-  frame: FRAMES,
-  badge: BADGES,
   title: TITLES,
-  banner: BANNERS,
 };
 
 const fromCosmetic = (kind: CosmeticKind, c: Cosmetic<string>): ShopItem => ({
@@ -348,6 +263,32 @@ export function buyItem(p: Progress, itemId: string, day: number, date: Date): B
     price,
     progress: { ...p, spent: p.spent + price, owned: [...p.owned, itemId] },
   };
+}
+
+// ---------- Retired items ----------
+
+/**
+ * Frames, badges, backgrounds, app colours and banners left the shop in 1.19.
+ * Anyone who bought them gets the coins back once (the `applied` marker syncs,
+ * so it happens on one device only). The ids stay in `owned` so older apps
+ * merging the save don't see anything disappear.
+ */
+export const RETIRED_PRICES: Readonly<Record<string, number>> = {
+  'frame:gold': 500, 'frame:neon': 700, 'frame:rainbow': 1200, 'frame:flames': 1500,
+  'badge:star': 300, 'badge:heart': 300, 'badge:bolt': 400, 'badge:crown': 800, 'badge:diamond': 1000, 'badge:flame': 400,
+  'bg:bubbles': 700, 'bg:stars': 900, 'bg:sakura': 1000, 'bg:aurora': 1400, 'bg:synthwave': 1800,
+  'accent:tangerine': 300, 'accent:ruby': 400, 'accent:gold': 600,
+  'banner:sunset': 400, 'banner:ocean': 400, 'banner:stars': 900, 'banner:aurora': 1200, 'banner:gold': 2000,
+};
+const REFUND_ID = 'refund-retired-1.19';
+
+/** Coins owed for retired items, or null when already refunded or nothing is owed. */
+export function refundRetired(p: Progress): { progress: Progress; coins: number } | null {
+  if (p.applied.includes(REFUND_ID)) return null;
+  const coins = p.owned.reduce((sum, id) => sum + (RETIRED_PRICES[id] ?? 0), 0);
+  if (coins === 0) return null;
+  const applied = [...p.applied, REFUND_ID].slice(-APPLIED_LIMIT);
+  return { coins, progress: { ...p, coins: p.coins + coins, applied } };
 }
 
 // ---------- The daily chest ----------

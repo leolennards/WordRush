@@ -17,8 +17,6 @@ import {
   tileStyleUnlocked,
   winFxUnlocked,
   cosmeticUnlocked,
-  isTilePal,
-  palUnlocked,
   nextHintPosition,
   type GameState,
   type SoloMode,
@@ -141,30 +139,14 @@ function Wordskiis() {
     if (!winFxUnlocked(settings.winFx, progress.owned, playerLevel)) update({ winFx: 'confetti' });
     if (!cosmeticUnlocked('keys', settings.keySkin, progress.owned, playerLevel)) update({ keySkin: 'classic' });
     if (!cosmeticUnlocked('sound', settings.soundPack, progress.owned, playerLevel)) update({ soundPack: 'classic' });
-    if (!cosmeticUnlocked('frame', settings.frame, progress.owned, playerLevel)) update({ frame: 'none' });
-    if (!cosmeticUnlocked('badge', settings.badge, progress.owned, playerLevel)) update({ badge: 'none' });
-    if (!cosmeticUnlocked('bg', settings.background, progress.owned, playerLevel)) update({ background: 'tiles' });
-    if (!cosmeticUnlocked('accent', settings.accent, progress.owned, playerLevel)) update({ accent: 'mint' });
     if (!cosmeticUnlocked('title', settings.title, progress.owned, playerLevel)) update({ title: 'none' });
-    if (!cosmeticUnlocked('banner', settings.banner, progress.owned, playerLevel)) update({ banner: 'none' });
-    if (isTilePal(settings.avatar) && !palUnlocked(settings.avatar, playerLevel)) update({ avatar: 'initial' });
-  }, [
-    settings.skin,
-    settings.tileStyle,
-    settings.winFx,
-    settings.keySkin,
-    settings.soundPack,
-    settings.frame,
-    settings.badge,
-    settings.background,
-    settings.accent,
-    settings.title,
-    settings.banner,
-    settings.avatar,
-    playerLevel,
-    progress.owned,
-    update,
-  ]);
+  }, [settings.skin, settings.tileStyle, settings.winFx, settings.keySkin, settings.soundPack, settings.title, playerLevel, progress.owned, update]);
+  // Frames, badges, backgrounds, app colours and banners left the shop: give back what they cost.
+  const { refundRetired } = progressCtx;
+  useEffect(() => {
+    const coins = refundRetired();
+    if (coins) toast(`${coins.toLocaleString()} coins back for items that left the shop`, { tone: 'success' });
+  }, [progress.owned, refundRetired, toast]);
   const award = useAward();
   const words = useWords();
 
@@ -441,7 +423,7 @@ function Wordskiis() {
       <ChallengeScreen id={route.id} inputEnabled={dialog === null} onBack={goFriends} onOpenChallenge={openChallenge} />
     );
   } else if (view === 'shop') {
-    content = <ShopScreen onBack={goHome} onProfile={goProfile} />;
+    content = <ShopScreen onBack={goHome} />;
   } else if (view === 'profile') {
     content = <ProfileScreen onBack={goHome} onShop={goShop} />;
   } else if (view === 'swap' && route.id) {

@@ -3,9 +3,7 @@ import {
   SHOP_ITEMS,
   CHEST,
   LEVEL_REWARDS,
-  TILE_PALS,
   nextRewards,
-  palUnlocked,
   rewardsBetween,
   PHOTO_MAX,
   cosmeticUnlocked,
@@ -15,6 +13,8 @@ import {
   MAX_FREEZES,
   MYSTERY_PRICE,
   STARTER_COINS,
+  RETIRED_PRICES,
+  refundRetired,
   WINTER,
   applyFreezes,
   buyFreeze,
@@ -351,27 +351,38 @@ describe('profiles', () => {
   });
 
   it('keeps a valid profile in settings and drops anything else', () => {
-    const ok = settingsSchema.validate({ avatar: 't3', tint: 'sky', title: 'wizard', banner: 'aurora', background: 'stars', accent: 'grape' });
-    expect(ok).toMatchObject({ avatar: 't3', tint: 'sky', title: 'wizard', banner: 'aurora', background: 'stars', accent: 'grape' });
-    const bad = settingsSchema.validate({ avatar: '<img>', photo: 'javascript:alert(1)', tint: 'nope', background: 'lava' });
-    expect(bad).toMatchObject({ avatar: 'initial', photo: '', tint: 'auto', background: 'tiles' });
+    const ok = settingsSchema.validate({ avatar: 'photo', tint: 'sky', title: 'wizard' });
+    expect(ok).toMatchObject({ avatar: 'photo', tint: 'sky', title: 'wizard' });
+    const bad = settingsSchema.validate({ avatar: 't3', photo: 'javascript:alert(1)', tint: 'nope', banner: 'aurora' });
+    expect(bad).toMatchObject({ avatar: 'initial', photo: '', tint: 'auto' });
+    expect(bad).not.toHaveProperty('banner');
   });
 
-  it('sells profile items, backgrounds and app colours, with free defaults', () => {
-    for (const kind of ['bg', 'accent', 'title', 'banner'] as const) {
-      expect(SHOP_ITEMS.some((i) => i.kind === kind)).toBe(true);
-    }
-    expect(cosmeticUnlocked('bg', 'tiles', [], 1)).toBe(true);
-    expect(cosmeticUnlocked('bg', 'synthwave', [], 1)).toBe(false);
-    expect(cosmeticUnlocked('accent', 'grape', [], 1)).toBe(true);
+  it('sells looks and titles only, with free defaults', () => {
+    expect(new Set(SHOP_ITEMS.map((i) => i.kind))).toEqual(new Set(['skin', 'tiles', 'keys', 'sound', 'fx', 'title']));
+    expect(cosmeticUnlocked('title', 'unstumpable', [], 1)).toBe(false);
     expect(cosmeticUnlocked('title', 'unstumpable', ['title:unstumpable'], 1)).toBe(true);
+  });
+
+  it('refunds items that left the shop, once', () => {
+    const p = { ...emptyProgress(), owned: ['frame:gold', 'banner:gold', 'tiles:glass'] };
+    const first = refundRetired(p)!;
+    expect(first.coins).toBe(RETIRED_PRICES['frame:gold']! + RETIRED_PRICES['banner:gold']!);
+    expect(coinBalance(first.progress)).toBe(STARTER_COINS + first.coins);
+    expect(refundRetired(first.progress)).toBeNull();
+    expect(refundRetired({ ...emptyProgress(), owned: ['tiles:glass'] })).toBeNull();
+  });
+
+  it('keeps retired purchases in a saved game so they can be refunded', () => {
+    const saved = progressSchema.validate({ ...emptyProgress(), owned: ['frame:gold', 'nope:x'] });
+    expect(saved?.owned).toEqual(['frame:gold']);
   });
 });
 
 describe('level rewards', () => {
   it('unlocks rewards by level, never sold in the shop', () => {
-    expect(cosmeticUnlocked('frame', 'bronze', [], 4)).toBe(false);
-    expect(cosmeticUnlocked('frame', 'bronze', [], 5)).toBe(true);
+    expect(cosmeticUnlocked('tiles', 'outline', [], 11)).toBe(false);
+    expect(cosmeticUnlocked('tiles', 'outline', [], 12)).toBe(true);
     expect(cosmeticUnlocked('title', 'legendary', [], 99)).toBe(false);
     expect(cosmeticUnlocked('title', 'legendary', [], 100)).toBe(true);
     for (const r of LEVEL_REWARDS) expect(SHOP_ITEMS.some((i) => i.id === `${r.kind}:${r.id}`)).toBe(false);
@@ -385,11 +396,4 @@ describe('level rewards', () => {
     expect(nextRewards(100)).toBeNull();
   });
 
-  it('has Tile Pals for everyone, and some for high levels', () => {
-    expect(TILE_PALS.length).toBeGreaterThanOrEqual(12);
-    expect(palUnlocked('t1', 1)).toBe(true);
-    expect(palUnlocked('t15', 99)).toBe(false);
-    expect(palUnlocked('t15', 100)).toBe(true);
-    expect(new Set(TILE_PALS.map((p) => p.id)).size).toBe(TILE_PALS.length);
-  });
 });

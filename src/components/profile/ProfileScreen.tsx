@@ -1,25 +1,7 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { m } from 'motion/react';
-import { ArrowLeft, Camera, Check, CircleCheck, Flame, ImageOff, Lock, ShoppingBag, Smile, Trophy, Type } from 'lucide-react';
-import {
-  ACHIEVEMENTS,
-  TILE_PALS,
-  palUnlocked,
-  BADGES,
-  BANNERS,
-  FRAMES,
-  PHOTO_MAX,
-  SHOP_ITEMS,
-  TINTS,
-  TITLES,
-  cosmeticUnlocked,
-  effectiveStreak,
-  frozenDays,
-  levelFor,
-  owns,
-  rankFor,
-} from '@/engine';
-import type { Settings } from '@/lib/storage/schemas';
+import { ArrowLeft, Camera, Check, CircleCheck, Flame, ImageOff, Lock, Trophy, Type } from 'lucide-react';
+import { ACHIEVEMENTS, PHOTO_MAX, TINTS, TITLES, cosmeticUnlocked, effectiveStreak, frozenDays, levelFor, rankFor } from '@/engine';
 import { useTodayIndex } from '@/hooks/useToday';
 import { useServices } from '@/app/services';
 import { useFriends } from '@/features/friends/FriendsContext';
@@ -27,10 +9,8 @@ import { useProgress } from '@/features/progress/ProgressContext';
 import { useSettings } from '@/features/settings/SettingsContext';
 import { useStats } from '@/features/stats/StatsContext';
 import { useToast } from '@/components/layout/Toasts';
-import { Avatar, BadgeIcon, type Look } from '@/components/friends/Avatar';
-import { TilePalArt } from '@/components/friends/TilePalArt';
+import { Avatar, type Look } from '@/components/friends/Avatar';
 import { LevelRoad } from './LevelRoad';
-import { RankBadge } from '@/components/progress/RankBadge';
 import { LockTag } from '@/components/shop/LockTag';
 import { lockLabel, titleTier } from '@/components/shop/kinds';
 import { Segmented } from '@/components/ui';
@@ -67,17 +47,9 @@ async function photoFromFile(file: File): Promise<string> {
   }
 }
 
-type PictureMode = 'initial' | 'pal' | 'photo';
-type EditTab = 'picture' | 'frame' | 'badge' | 'title' | 'banner';
-const EDIT_TABS: { value: EditTab; label: string }[] = [
-  { value: 'picture', label: 'Picture' },
-  { value: 'frame', label: 'Frame' },
-  { value: 'badge', label: 'Badge' },
-  { value: 'title', label: 'Title' },
-  { value: 'banner', label: 'Banner' },
-];
+type PictureMode = 'initial' | 'photo';
 
-/** Your profile: picture, colour, frame, badge, title and banner, as friends see them. */
+/** Your profile: picture, its colour and your title, as friends see them, plus your level rewards. */
 export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: () => void }) {
   const { settings, update } = useSettings();
   const { progress } = useProgress();
@@ -88,27 +60,14 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
   const today = useTodayIndex(now);
   const file = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
-  const mode: PictureMode = settings.avatar === 'photo' ? 'photo' : settings.avatar === 'initial' ? 'initial' : 'pal';
-  const [tab, setTab] = useState<PictureMode>(mode);
-  const [edit, setEdit] = useState<EditTab>('picture');
+  const [tab, setTab] = useState<PictureMode>(settings.avatar);
   const [info, setInfo] = useState<{ text: string; shop: boolean } | null>(null);
-  // The small preview only appears once the big card has scrolled away, so it's never shown twice.
-  const card = useRef<HTMLElement>(null);
-  const [cardInView, setCardInView] = useState(true);
-  useEffect(() => {
-    const node = card.current;
-    if (!node || typeof IntersectionObserver === 'undefined') return;
-    const io = new IntersectionObserver(([e]) => setCardInView(e!.isIntersecting), { threshold: 0.15 });
-    io.observe(node);
-    return () => io.disconnect();
-  }, []);
 
   const name = f.me?.profile.name ?? 'You';
   const { level } = levelFor(progress.xp);
   const { rank } = rankFor(level);
   const streak = effectiveStreak(stats.daily, today, frozenDays(progress.owned));
   const achievements = ACHIEVEMENTS.filter((a) => progress.unlocked[a.id]).length;
-  const collected = SHOP_ITEMS.filter((i) => owns(progress, i.id)).length;
   const look: Look = f.lookOf('me');
   const title = TITLES.find((t) => t.id === settings.title && t.id !== 'none');
 
@@ -129,7 +88,7 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
 
   return (
     <main id="game" className="min-h-0 flex-1 overflow-y-auto">
-      <div className="mx-auto w-full max-w-[44rem] px-4 pt-3 pb-10 sm:pt-5">
+      <div className="mx-auto w-full max-w-[36rem] px-4 pt-3 pb-10 sm:pt-5">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -140,120 +99,42 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
             <ArrowLeft className="size-5" aria-hidden />
           </button>
           <h2 className="flex-1 text-[1.05rem] leading-tight font-bold tracking-tight">Your profile</h2>
-          <button
-            type="button"
-            onClick={onShop}
-            className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1.5 text-sm font-semibold transition hover:bg-surface-3 active:scale-95"
-          >
-            <ShoppingBag className="size-4" aria-hidden /> Shop
-          </button>
         </div>
 
         {/* The card friends see. */}
         <m.section
-          ref={card}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-4 overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface shadow-md"
+          className="mt-4 rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-sm"
           aria-label="Your profile card"
         >
-          <div className="profile-banner relative h-28" data-banner={settings.banner}>
-            <div className="absolute top-3 right-3">
-              <RankBadge level={level} rank={rank} size="sm" />
+          <div className="flex items-center gap-4">
+            <m.div key={`${settings.avatar}${settings.tint}`} initial={{ scale: 0.9 }} animate={{ scale: 1 }}>
+              <Avatar uid={f.me?.uid ?? 'me'} name={name} size="xl" look={look} />
+            </m.div>
+            <div className="min-w-0">
+              <p className="truncate text-xl font-extrabold">{name}</p>
+              {title && (
+                <p className="profile-title truncate text-sm font-bold" data-tier={titleTier(title)}>
+                  {title.name}
+                </p>
+              )}
+              <p className="text-sm text-muted">
+                Level {level} · {rank.name}
+              </p>
             </div>
           </div>
-          <div className="relative px-5 pb-5">
-            <div className="-mt-12 flex items-end gap-3">
-              <m.div key={`${settings.avatar}${settings.tint}${settings.frame}`} initial={{ scale: 0.85 }} animate={{ scale: 1 }}>
-                <span className="inline-block rounded-full bg-surface p-1">
-                  <Avatar uid={f.me?.uid ?? 'me'} name={name} size="xl" look={look} />
-                </span>
-              </m.div>
-            </div>
-            <p className="mt-2 text-xl font-extrabold">{name}</p>
-            {title && (
-              <p className="profile-title text-sm font-bold" data-tier={titleTier(title)}>
-                {title.name}
-              </p>
-            )}
-            <p className="text-xs text-muted">
-              Level {level} · {rank.name}
-            </p>
-            <dl className="mt-4 grid grid-cols-4 gap-2 text-center">
-              <Stat icon={<Flame className="size-4 text-present" aria-hidden />} label="Streak" value={streak} />
-              <Stat icon={<Trophy className="size-4 text-accent" aria-hidden />} label="Awards" value={achievements} />
-              <Stat icon={<ShoppingBag className="size-4 text-pink-500" aria-hidden />} label="Collected" value={collected} />
-              <Stat icon={<CircleCheck className="size-4 text-correct" aria-hidden />} label="Wins" value={progress.wins} />
-            </dl>
-            {!f.me && (
-              <p className="mt-4 rounded-xl bg-surface-2 p-3 text-xs text-muted">
-                Friends see this card once you create a Friends profile (on the Friends page), where you also pick your name.
-              </p>
-            )}
-          </div>
+          <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
+            <Stat icon={<Flame className="size-4 text-present" aria-hidden />} label="Streak" value={streak} />
+            <Stat icon={<CircleCheck className="size-4 text-correct" aria-hidden />} label="Wins" value={progress.wins} />
+            <Stat icon={<Trophy className="size-4 text-accent" aria-hidden />} label="Awards" value={achievements} />
+          </dl>
+          {!f.me && (
+            <p className="mt-4 text-xs text-muted">Friends see this card once you set up Friends, where you also pick your name.</p>
+          )}
         </m.section>
 
-        {/* Customise: one part at a time, with a small preview that stays in view. */}
-        <section className="mt-6" aria-label="Customise your profile">
-          <div className="sticky top-0 z-20 -mx-4 bg-bg/90 px-4 pt-2 pb-3 backdrop-blur">
-            <div
-              className={`relative flex items-center gap-3 overflow-hidden rounded-2xl border border-border p-2.5 pr-4 ${cardInView ? 'hidden' : ''}`}
-              aria-hidden={cardInView || undefined}
-            >
-              <span className="profile-banner absolute inset-0 opacity-35" data-banner={settings.banner} aria-hidden />
-              <span className="relative">
-                <Avatar uid={f.me?.uid ?? 'me'} name={name} size="md" look={look} />
-              </span>
-              <span className="relative min-w-0">
-                <span className="block truncate font-extrabold">{name}</span>
-                {title ? (
-                  <span className="profile-title block truncate text-xs font-bold" data-tier={titleTier(title)}>
-                    {title.name}
-                  </span>
-                ) : (
-                  <span className="block text-xs text-muted">No title</span>
-                )}
-              </span>
-            </div>
-            <div role="tablist" aria-label="Part to change" className={`no-scrollbar flex ${cardInView ? '' : 'mt-3'} gap-1.5 overflow-x-auto`}>
-              {EDIT_TABS.map((t) => (
-                <button
-                  key={t.value}
-                  type="button"
-                  role="tab"
-                  aria-selected={edit === t.value}
-                  onClick={() => {
-                    setEdit(t.value);
-                    setInfo(null);
-                  }}
-                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
-                    edit === t.value ? 'bg-ink text-ink-text' : 'bg-surface-2 text-muted hover:text-text'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {info && (
-            <div role="status" className="mb-3 flex items-center gap-3 rounded-xl bg-present/15 px-3 py-2.5 text-sm">
-              <Lock className="size-4 shrink-0 text-present" aria-hidden />
-              <span className="min-w-0 flex-1">{info.text}</span>
-              {info.shop && (
-                <button
-                  type="button"
-                  onClick={onShop}
-                  className="shrink-0 rounded-full bg-surface px-3 py-1 text-xs font-bold transition hover:bg-surface-3"
-                >
-                  Shop
-                </button>
-              )}
-            </div>
-          )}
-
-          {edit === 'picture' && (
-            <>
+        <Section title="Picture">
           <Segmented<PictureMode>
             label="Picture type"
             size="sm"
@@ -273,14 +154,6 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
                 ),
               },
               {
-                value: 'pal',
-                label: (
-                  <>
-                    <Smile className="size-3.5" aria-hidden /> Tile Pals
-                  </>
-                ),
-              },
-              {
                 value: 'photo',
                 label: (
                   <>
@@ -290,37 +163,6 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
               },
             ]}
           />
-          {tab === 'pal' && (
-            <div role="radiogroup" aria-label="Tile Pals" className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
-              {TILE_PALS.map((p) => {
-                const on = settings.avatar === p.id;
-                const open = palUnlocked(p.id, level);
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={on}
-                    aria-label={open ? p.name : `${p.name}, unlocks at level ${p.level}`}
-                    onClick={() => (open ? update({ avatar: p.id }) : setInfo({ text: `${p.name} unlocks at level ${p.level}.`, shop: false }))}
-                    className={`group relative flex flex-col items-center gap-1 rounded-xl p-2 transition active:scale-95 ${
-                      on ? 'bg-accent/15 ring-2 ring-accent' : 'bg-surface-2 hover:bg-surface-3'
-                    }`}
-                  >
-                    <span className={`block size-12 transition-transform group-hover:scale-110 group-hover:-rotate-6 ${open ? '' : 'opacity-35 grayscale'}`}>
-                      <TilePalArt pal={p} />
-                    </span>
-                    <span className={`text-[0.7rem] leading-tight font-semibold ${open ? '' : 'text-muted'}`}>{p.name}</span>
-                    {!open && (
-                      <span className="tabular flex items-center gap-0.5 text-[0.6rem] text-subtle">
-                        <Lock className="size-2.5" aria-hidden /> Level {p.level}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
           {tab === 'photo' && (
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <input
@@ -356,93 +198,55 @@ export function ProfileScreen({ onBack, onShop }: { onBack: () => void; onShop: 
               </p>
             </div>
           )}
-              <p className="mt-5 mb-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">Colour</p>
-          <div role="radiogroup" aria-label="Picture colour" className="flex flex-wrap gap-2">
-            {TINTS.map((t) => {
-              const on = settings.tint === t.id;
-              return (
+          {tab === 'initial' && (
+            <div role="radiogroup" aria-label="Picture colour" className="mt-3 grid max-w-[24rem] grid-cols-8 gap-2">
+              {TINTS.map((t) => {
+                const on = settings.tint === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    aria-label={t.name}
+                    title={t.name}
+                    onClick={() => update({ tint: t.id })}
+                    className={`grid aspect-square w-full place-items-center rounded-full border-2 transition hover:scale-110 active:scale-95 ${
+                      on ? 'border-text' : 'border-transparent'
+                    }`}
+                    style={{
+                      background: t.css || 'conic-gradient(#22a467, #0ea5e9, #7c3aed, #e0457b, #22a467)',
+                    }}
+                  >
+                    {t.id === 'auto' && <span className="text-[0.55rem] font-black text-white">AUTO</span>}
+                    {on && t.id !== 'auto' && <Check className="size-4 text-white" aria-hidden />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </Section>
+
+        <Section title="Title">
+          {info && (
+            <div role="status" className="mb-3 flex items-center gap-3 rounded-xl bg-present/15 px-3 py-2.5 text-sm">
+              <Lock className="size-4 shrink-0 text-present" aria-hidden />
+              <span className="min-w-0 flex-1">{info.text}</span>
+              {info.shop && (
                 <button
-                  key={t.id}
                   type="button"
-                  role="radio"
-                  aria-checked={on}
-                  aria-label={t.name}
-                  title={t.name}
-                  onClick={() => update({ tint: t.id })}
-                  className={`grid size-10 place-items-center rounded-full border-2 transition hover:scale-110 active:scale-95 ${
-                    on ? 'border-text' : 'border-transparent'
-                  }`}
-                  style={{
-                    background: t.css || 'conic-gradient(#22a467, #0ea5e9, #7c3aed, #e0457b, #22a467)',
-                  }}
+                  onClick={onShop}
+                  className="shrink-0 rounded-full bg-surface px-3 py-1 text-xs font-bold transition hover:bg-surface-3"
                 >
-                  {t.id === 'auto' && <span className="text-[0.6rem] font-black text-white">AUTO</span>}
-                  {on && t.id !== 'auto' && <Check className="size-4 text-white" aria-hidden />}
+                  Shop
                 </button>
-              );
-            })}
-          </div>
-            </>
-          )}
-          {edit === 'frame' && (
-            <Picks
-              title="Frame"
-              kind="frame"
-              setting="frame"
-              items={FRAMES}
-              onLocked={setInfo}
-              preview={(id) => <Avatar uid={f.me?.uid ?? 'me'} name={name} size="md" look={{ ...look, frame: id, badge: null }} />}
-            />
-          )}
-          {edit === 'badge' && (
-            <Picks
-              title="Badge"
-              kind="badge"
-              setting="badge"
-              items={BADGES}
-              onLocked={setInfo}
-              preview={(id) =>
-                id === 'none' ? (
-                  <span className="size-6 rounded-full border-2 border-dashed border-border-strong" />
-                ) : (
-                  <BadgeIcon id={id} className="size-7" />
-                )
-              }
-            />
-          )}
-          {edit === 'title' && (
-            <Picks
-              title="Title"
-              kind="title"
-              setting="title"
-              items={TITLES}
-              onLocked={setInfo}
-              wide
-              preview={(id, n) => (
-                <span
-                  className={`text-sm font-bold ${id === 'none' ? 'text-muted' : 'profile-title'}`}
-                  data-tier={titleTier(TITLES.find((t) => t.id === id))}
-                >
-                  {n}
-                </span>
               )}
-            />
+            </div>
           )}
-          {edit === 'banner' && (
-            <Picks
-              title="Banner"
-              kind="banner"
-              setting="banner"
-              items={BANNERS}
-              onLocked={setInfo}
-              wide
-              preview={(id) => <span className="profile-banner block h-10 w-full rounded-lg" data-banner={id} />}
-            />
-          )}
-        </section>
+          <TitlePicks onLocked={setInfo} />
+        </Section>
 
         <Section title={`Level rewards · you're level ${level}`}>
-          <p className="mb-2 text-sm text-muted">Every few levels unlocks something new. The higher you climb, the cooler it gets.</p>
           <LevelRoad level={level} />
         </Section>
       </div>
@@ -471,74 +275,51 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-/** Pick one of the frames, badges, titles or banners: owned ones to use, the rest with a price. */
-function Picks({
-  title,
-  kind,
-  setting,
-  items,
-  preview,
-  onLocked,
-  wide = false,
-}: {
-  title: string;
-  kind: 'frame' | 'badge' | 'title' | 'banner';
-  setting: 'frame' | 'badge' | 'title' | 'banner';
-  items: readonly { id: string; name: string; price?: number; level?: number }[];
-  preview: (id: string, name: string) => ReactNode;
-  onLocked: (info: { text: string; shop: boolean }) => void;
-  wide?: boolean;
-}) {
+/** Pick a title: unlocked ones to use, the rest with how to get them. */
+function TitlePicks({ onLocked }: { onLocked: (info: { text: string; shop: boolean }) => void }) {
   const { settings, update } = useSettings();
   const { progress } = useProgress();
+  const level = levelFor(progress.xp).level;
   return (
-    <>
-      <div
-        role="radiogroup"
-        aria-label={title}
-        className={`grid gap-2 ${wide ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-4 sm:grid-cols-6'}`}
-      >
-        {items.map((it) => {
-          const unlocked = cosmeticUnlocked(kind, it.id, progress.owned, levelFor(progress.xp).level);
-          const on = settings[setting] === it.id;
-          return (
-            <button
-              key={it.id}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              aria-label={unlocked ? it.name : `${it.name}, ${lockLabel(it)}`}
-              onClick={() =>
-                unlocked
-                  ? update({ [setting]: it.id } as Partial<Settings>)
-                  : onLocked(
-                      it.level !== undefined
-                        ? { text: `${it.name} unlocks at level ${it.level}.`, shop: false }
-                        : { text: `${it.name} is ${it.price} coins in the shop.`, shop: true },
-                    )
-              }
-              className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition active:scale-[0.97] ${
-                on ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
-              }`}
+    <div role="radiogroup" aria-label="Title" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {TITLES.map((it) => {
+        const unlocked = cosmeticUnlocked('title', it.id, progress.owned, level);
+        const on = settings.title === it.id;
+        return (
+          <button
+            key={it.id}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            aria-label={unlocked ? it.name : `${it.name}, ${lockLabel(it)}`}
+            onClick={() =>
+              unlocked
+                ? update({ title: it.id })
+                : onLocked(
+                    it.level !== undefined
+                      ? { text: `${it.name} unlocks at level ${it.level}.`, shop: false }
+                      : { text: `${it.name} is ${it.price} coins in the shop.`, shop: true },
+                  )
+            }
+            className={`relative grid min-h-12 place-items-center rounded-xl border px-2 py-2.5 transition active:scale-[0.97] ${
+              on ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:border-border-strong'
+            }`}
+          >
+            <span
+              className={`text-center text-sm leading-tight font-bold ${it.id === 'none' ? 'text-muted' : 'profile-title'} ${unlocked ? '' : 'opacity-40'}`}
+              data-tier={titleTier(it)}
             >
-              <span className={`grid min-h-11 w-full place-items-center ${unlocked ? '' : 'opacity-40 grayscale'}`} aria-hidden>
-                {preview(it.id, it.name)}
+              {it.name}
+            </span>
+            {on && (
+              <span className="absolute top-1 right-1 grid size-4 place-items-center rounded-full bg-accent text-accent-ink">
+                <Check className="size-3" aria-hidden />
               </span>
-              {!(wide && kind === 'title') && (
-                <span className={`text-center text-xs leading-tight font-semibold ${unlocked ? '' : 'text-muted'}`}>
-                  {it.name}
-                </span>
-              )}
-              {on && (
-                <span className="absolute top-1 right-1 grid size-4 place-items-center rounded-full bg-accent text-accent-ink">
-                  <Check className="size-3" aria-hidden />
-                </span>
-              )}
-              {!unlocked && <LockTag price={it.price} level={it.level} />}
-            </button>
-          );
-        })}
-      </div>
-    </>
+            )}
+            {!unlocked && <LockTag price={it.price} level={it.level} />}
+          </button>
+        );
+      })}
+    </div>
   );
 }

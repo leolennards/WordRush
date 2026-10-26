@@ -9,7 +9,7 @@ import { ItemPreview } from './Previews';
 import { KIND_LABEL, SETTING_FOR } from './kinds';
 
 /** Kinds you can try on across the whole app before buying. */
-const TRY_ON = new Set<ShopItem['kind']>(['skin', 'tiles', 'keys', 'bg', 'accent']);
+const TRY_ON = new Set<ShopItem['kind']>(['skin', 'tiles', 'keys']);
 
 const ROWS = [
   [
@@ -57,7 +57,7 @@ export function ItemSheet({
 
   const short = balance < price;
   const tryOn = () => setPreview(trying ? null : ({ [key]: item.ref } as Partial<Settings>));
-  const board = item.kind === 'skin' || item.kind === 'tiles' || item.kind === 'keys' || item.kind === 'accent' || item.kind === 'bg';
+  const board = item.kind === 'skin' || item.kind === 'tiles' || item.kind === 'keys';
 
   return (
     <Dialog
@@ -123,7 +123,7 @@ export function ItemSheet({
         </p>
 
         {/* A big preview: a little board for anything that changes the board, the item itself otherwise. */}
-        {board && item.kind !== 'bg' && item.kind !== 'accent' ? (
+        {board ? (
           <div
             className={`rounded-2xl bg-surface-2 p-4 ${resolvedTheme === 'dark' ? 'dark' : ''}`}
             data-skin={item.kind === 'skin' ? item.ref : shown.skin}

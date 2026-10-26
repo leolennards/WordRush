@@ -207,13 +207,10 @@ the next game. Hard-mode results are marked with `*` when shared.
   - Sound packs (with sound effects on): Bubble Pop, Marimba, 8-bit Arcade and Typewriter.
   - Win effects (what bursts out when you win): Love Hearts, Coin Shower, Starfall and Fireworks.
     Confetti is free.
-  - Backgrounds (animated scenes behind the app) and app colours (free: Mint, Ocean, Grape, Rose).
-  - Profile items: avatar frames, badges, titles and banners. Friends see them on your profile card and
-    friend list.
-- **Level rewards:** besides rank tile colours, rewards unlock as you level up (titles, frames, badges,
-  tile styles, banners, backgrounds, win effects, a sound pack, a keyboard, an app colour and Tile Pals),
-  from level 2 to 100. They can't be bought. Your Profile shows them all and what's next.
-- **Profile:** tap your picture at the top to edit it. Your picture can be your initial, a Tile Pal or a photo
+  - Titles, shown under your name on your profile card and friend list.
+- **Level rewards:** besides rank tile colours, rewards unlock as you level up (titles, tile styles, win
+  effects, a sound pack and a keyboard), from level 2 to 100. They can't be bought. Your Profile shows them all and what's next.
+- **Profile:** tap your picture at the top to edit it. Your picture can be your initial or a photo
   (cropped to a small square and visible only to friends), on a colour you choose. All free.
 - Limited-time items are only on sale in their season: Halloween (1 October – 7 November: Haunted tile
   colours and the Bat Swarm win effect) and Winter (1 December – 10 January: Candy Cane tile colours and
@@ -229,7 +226,9 @@ the next game. Hard-mode results are marked with `*` when shared.
   any amount from 10 to 5,000 coins (quick picks 50 to 2,500), or buy them
   any item on sale at its full price. They get a gift card to open. If they already own the item,
   they get its price in coins instead. Each gift opens once, even with several devices.
-- Reduce motion (or the system setting) stills animated tiles, keys and frames and turns win effects off.
+- Reduce motion (or the system setting) stills animated tiles and keys and turns win effects off.
+- Frames, badges, banners, backgrounds, app colours and Tile Pals left the game in 1.19.0. Coins spent on
+  them were given back once.
 - One item a day is today's deal at 30% off (the same for everyone; changes at 00:00 UTC).
 - With cloud save, coins add up across devices like XP, and purchases and freezes follow your account.
 

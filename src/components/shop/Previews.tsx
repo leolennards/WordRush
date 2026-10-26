@@ -5,9 +5,7 @@ import type { ShopItem, SkinId, WinFxId } from '@/engine';
 import type { Settings } from '@/lib/storage/schemas';
 import { useSettings } from '@/features/settings/SettingsContext';
 import { titleTier } from './kinds';
-import { useFriends } from '@/features/friends/FriendsContext';
 import { previewPack } from '@/lib/audio/sound';
-import { Avatar } from '@/components/friends/Avatar';
 import { Celebration } from '@/components/layout/Celebration';
 import { FxIcon } from './FxIcon';
 
@@ -48,37 +46,6 @@ export function ItemPreview({ item, still = false }: { item: ShopItem; still?: b
       ) : (
         <SoundPreview item={item} />
       );
-    case 'frame':
-    case 'badge':
-      return <LookPreview item={item} />;
-    case 'bg':
-      return (
-        <span
-          className="scene-thumb block aspect-[5/2] w-full max-w-[12.5rem] rounded-xl"
-          data-scene={item.ref}
-          role="img"
-          aria-label={`Preview of ${item.name}`}
-        />
-      );
-    case 'accent':
-      return (
-        <div
-          className={`flex aspect-[5/2] w-full max-w-[12.5rem] flex-col justify-center gap-2 rounded-xl bg-surface-2 px-3 ${dark ? 'dark' : ''}`}
-          data-accent={item.ref}
-          role="img"
-          aria-label={`Preview of ${item.name}`}
-        >
-          <span className="flex items-center gap-2">
-            <span className="rounded-lg bg-accent px-2.5 py-1 text-xs font-bold text-accent-ink">Play</span>
-            <span className="relative h-4 w-7 rounded-full bg-accent">
-              <span className="absolute top-0.5 right-0.5 size-3 rounded-full bg-white" />
-            </span>
-          </span>
-          <span className="h-1.5 w-full overflow-hidden rounded-full bg-border">
-            <span className="block h-full w-2/3 rounded-full bg-accent" />
-          </span>
-        </div>
-      );
     case 'title':
       return (
         <span
@@ -90,15 +57,6 @@ export function ItemPreview({ item, still = false }: { item: ShopItem; still?: b
             {item.name}
           </span>
         </span>
-      );
-    case 'banner':
-      return (
-        <span
-          className="profile-banner block aspect-[5/2] w-full max-w-[12.5rem] rounded-xl"
-          data-banner={item.ref}
-          role="img"
-          aria-label={`Preview of ${item.name}`}
-        />
       );
     case 'keys':
       return (
@@ -217,31 +175,5 @@ function SoundPreview({ item }: { item: ShopItem }) {
         Listen
       </span>
     </button>
-  );
-}
-
-/** A frame or badge on your own avatar. */
-function LookPreview({ item }: { item: ShopItem }) {
-  const { settings } = useSettings();
-  const f = useFriends();
-  const name = f.me?.profile.name ?? 'You';
-  const look =
-    item.kind === 'frame'
-      ? {
-          frame: item.ref,
-          badge: settings.badge === 'none' ? null : settings.badge,
-        }
-      : {
-          frame: settings.frame === 'none' ? null : settings.frame,
-          badge: item.ref,
-        };
-  return (
-    <div
-      className="grid aspect-[5/2] w-full max-w-[12.5rem] place-items-center"
-      role="img"
-      aria-label={`Preview of ${item.name}`}
-    >
-      <Avatar uid={f.me?.uid ?? 'me'} name={name} size="lg" look={look} />
-    </div>
   );
 }

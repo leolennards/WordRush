@@ -9,6 +9,7 @@ import {
   buyItem,
   dayIndexFor,
   openChest,
+  refundRetired,
   openMystery,
   payForGift,
   receiveGift,
@@ -48,6 +49,8 @@ interface ProgressContextValue {
   payForGift: (cost: number) => boolean;
   /** Adds a received gift (once). */
   receiveGift: (gift: Gift) => { item: ShopItem | null; coins: number } | null;
+  /** Refunds items that left the shop (once); returns the coins, or null if nothing was owed. */
+  refundRetired: () => number | null;
 }
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
@@ -143,6 +146,13 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     [load, save],
   );
 
+  const refundRetiredCb = useCallback(() => {
+    const result = refundRetired(load());
+    if (!result) return null;
+    save(result.progress);
+    return result.coins;
+  }, [load, save]);
+
   const refresh = useCallback(() => setProgress(load()), [load]);
   const value = useMemo(
     () => ({
@@ -158,8 +168,23 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       openMystery: openMysteryCb,
       payForGift: payForGiftCb,
       receiveGift: receiveGiftCb,
+      refundRetired: refundRetiredCb,
     }),
-    [progress, record, gains, celebrateRank, refresh, buy, claimChest, buyFreezeCb, spendFreezes, openMysteryCb, payForGiftCb, receiveGiftCb],
+    [
+      progress,
+      record,
+      gains,
+      celebrateRank,
+      refresh,
+      buy,
+      claimChest,
+      buyFreezeCb,
+      spendFreezes,
+      openMysteryCb,
+      payForGiftCb,
+      receiveGiftCb,
+      refundRetiredCb,
+    ],
   );
   return (
     <ProgressContext.Provider value={value}>

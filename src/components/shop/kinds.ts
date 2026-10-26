@@ -8,12 +8,7 @@ export const SETTING_FOR: Record<ItemKind, keyof Settings> = {
   keys: 'keySkin',
   sound: 'soundPack',
   fx: 'winFx',
-  bg: 'background',
-  accent: 'accent',
-  frame: 'frame',
-  badge: 'badge',
   title: 'title',
-  banner: 'banner',
 };
 
 export const KIND_LABEL: Record<ItemKind, string> = {
@@ -22,12 +17,7 @@ export const KIND_LABEL: Record<ItemKind, string> = {
   keys: 'keyboard',
   sound: 'sound pack',
   fx: 'win effect',
-  bg: 'background',
-  accent: 'app colour',
-  frame: 'avatar frame',
-  badge: 'avatar badge',
   title: 'profile title',
-  banner: 'profile banner',
 };
 
 /** What switching an item on does, for the "unlocked" card. */
@@ -37,12 +27,7 @@ export const KIND_DETAIL: Record<ItemKind, string> = {
   keys: 'Keyboard, now on',
   sound: 'Sound pack, now on',
   fx: 'Plays when you win',
-  bg: 'Background, now on',
-  accent: 'App colour, now on',
-  frame: 'Your friends will see it',
-  badge: 'Your friends will see it',
   title: 'Shown under your name',
-  banner: 'On your profile card',
 };
 
 /** Why something is locked, for screen readers: its price or the level that unlocks it. */

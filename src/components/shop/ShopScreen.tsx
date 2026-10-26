@@ -28,7 +28,6 @@ import { useCountdown } from '@/hooks/useToday';
 import { playCue } from '@/lib/audio/sound';
 import { buzz } from '@/lib/haptics';
 import { useToast } from '@/components/layout/Toasts';
-import { Segmented } from '@/components/ui';
 import { GiftDialog } from '@/components/friends/GiftDialog';
 import { Coin } from './Coin';
 import { Rolling } from './CoinChip';
@@ -38,25 +37,17 @@ import { KIND_DETAIL, KIND_LABEL, SETTING_FOR } from './kinds';
 import { Reveal, type Prize } from './Reveal';
 import { ItemSheet } from './ItemSheet';
 
-type Group = 'game' | 'app' | 'profile';
-
-const TABS: { value: ItemKind; label: string; group: Group }[] = [
-  { value: 'skin', label: 'Colours', group: 'game' },
-  { value: 'tiles', label: 'Styles', group: 'game' },
-  { value: 'keys', label: 'Keyboards', group: 'game' },
-  { value: 'sound', label: 'Sounds', group: 'game' },
-  { value: 'fx', label: 'Win effects', group: 'game' },
-  { value: 'bg', label: 'Backgrounds', group: 'app' },
-  { value: 'accent', label: 'App colours', group: 'app' },
-  { value: 'frame', label: 'Frames', group: 'profile' },
-  { value: 'badge', label: 'Badges', group: 'profile' },
-  { value: 'title', label: 'Titles', group: 'profile' },
-  { value: 'banner', label: 'Banners', group: 'profile' },
+const TABS: { value: ItemKind; label: string }[] = [
+  { value: 'skin', label: 'Colours' },
+  { value: 'tiles', label: 'Styles' },
+  { value: 'keys', label: 'Keyboards' },
+  { value: 'sound', label: 'Sounds' },
+  { value: 'fx', label: 'Win effects' },
+  { value: 'title', label: 'Titles' },
 ];
-const GROUP_OF = Object.fromEntries(TABS.map((t) => [t.value, t.group])) as Record<ItemKind, Group>;
 
 /** The shop: spend Wordskiis coins on looks, sounds, effects and extras. */
-export function ShopScreen({ onBack, onProfile }: { onBack: () => void; onProfile?: () => void }) {
+export function ShopScreen({ onBack }: { onBack: () => void }) {
   const { progress, buy, buyFreeze, openMystery } = useProgress();
   const { settings, update } = useSettings();
   const { now } = useServices();
@@ -259,30 +250,32 @@ export function ShopScreen({ onBack, onProfile }: { onBack: () => void; onProfil
           className="deal-card mt-4 rounded-[var(--radius-card)] p-[2px]"
           aria-label="Today's deal"
         >
-          <div className="flex flex-col gap-3 rounded-[calc(var(--radius-card)-2px)] bg-surface p-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3 rounded-[calc(var(--radius-card)-2px)] bg-surface p-3.5">
             <div className="min-w-0 flex-1">
-              <p className="flex items-center gap-1.5 text-xs font-bold tracking-[0.12em] text-present uppercase">
+              <p className="flex items-center gap-1.5 text-[0.7rem] font-bold tracking-[0.1em] text-present uppercase">
                 <Tag className="size-3.5" aria-hidden /> Today’s deal · 30% off
               </p>
-              <p className="mt-0.5 text-lg font-extrabold">
+              <p className="truncate font-extrabold">
                 {deal.item.name} <span className="text-sm font-semibold text-muted">{KIND_LABEL[deal.item.kind]}</span>
               </p>
               <p className="tabular flex items-center gap-1 text-xs text-muted">
                 <Clock3 className="size-3" aria-hidden /> New deal in {countdown}
               </p>
             </div>
-            <ItemPreview item={deal.item} still />
             <button
               type="button"
               onClick={() => setViewing(deal.item)}
-              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-ink px-4 text-sm font-extrabold text-ink-text transition hover:opacity-90 active:scale-[0.98]"
+              aria-label={`Today’s deal: ${deal.item.name}`}
+              className="inline-flex min-h-11 shrink-0 flex-col items-center justify-center rounded-xl bg-ink px-3.5 text-sm font-extrabold text-ink-text transition hover:opacity-90 active:scale-[0.98]"
             >
               {owns(progress, deal.item.id) ? (
                 'Owned'
               ) : (
                 <>
-                  <Coin className="size-4" /> <span className="tabular">{deal.price}</span>
-                  <span className="tabular text-xs font-semibold line-through opacity-60">{deal.item.price}</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Coin className="size-4" /> <span className="tabular">{deal.price}</span>
+                  </span>
+                  <span className="tabular text-[0.65rem] font-semibold line-through opacity-60">{deal.item.price}</span>
                 </>
               )}
             </button>
@@ -315,27 +308,8 @@ export function ShopScreen({ onBack, onProfile }: { onBack: () => void; onProfil
           />
         </div>
 
-        <div className="mt-6 flex justify-center">
-          <Segmented<Group>
-            label="Shop area"
-            value={GROUP_OF[tab]}
-            onChange={(g) => setTab(TABS.find((t) => t.group === g)!.value)}
-            options={[
-              { value: 'game', label: 'Game' },
-              { value: 'app', label: 'App' },
-              { value: 'profile', label: 'Profile' },
-            ]}
-          />
-        </div>
+        <h3 className="mt-8 text-lg font-extrabold tracking-tight">Collection</h3>
         <ShopTabs value={tab} onChange={setTab} />
-        {GROUP_OF[tab] === 'profile' && onProfile && (
-          <p className="mt-2 text-center text-xs text-muted">
-            Friends see these on your profile.{' '}
-            <button type="button" onClick={onProfile} className="font-semibold text-accent underline-offset-2 hover:underline">
-              Edit your profile and picture
-            </button>
-          </p>
-        )}
 
         <AnimatePresence mode="popLayout">
           <m.ul
@@ -394,9 +368,9 @@ function ShopTabs({ value, onChange }: { value: ItemKind; onChange: (v: ItemKind
       ref={row}
       role="radiogroup"
       aria-label="Shop section"
-      className="no-scrollbar relative -mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:flex-wrap sm:justify-center"
+      className="no-scrollbar relative -mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:flex-wrap"
     >
-      {TABS.filter((t) => t.group === GROUP_OF[value]).map((t) => {
+      {TABS.map((t) => {
         const on = t.value === value;
         return (
           <button

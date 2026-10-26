@@ -1,10 +1,33 @@
-import type { ReactNode } from 'react';
+import { useState, type ComponentType, type ReactNode } from 'react';
 import { m } from 'motion/react';
-import { ArrowDownUp, ArrowRight, Award, BarChart3, BookOpen, Bot, CalendarClock, Castle, ChevronRight, CircleHelp, Clock3, Columns2, Flame, Footprints, Gift, Grid2x2, Heart, Palette, Settings, Shuffle, Smartphone, Trophy, Users, Zap } from 'lucide-react';
+import {
+  ArrowDownUp,
+  ArrowRight,
+  Award,
+  BarChart3,
+  BookOpen,
+  Bot,
+  CalendarClock,
+  Castle,
+  ChevronRight,
+  CircleHelp,
+  Clock3,
+  Columns2,
+  Flame,
+  Footprints,
+  Grid2x2,
+  Heart,
+  LayoutGrid,
+  Shuffle,
+  Smartphone,
+  Trophy,
+  Users,
+  Zap,
+} from 'lucide-react';
 import { BRAND, GAME } from '@/config/game';
-import { ACHIEVEMENTS, TITLES, chestReady, coinBalance, effectiveStreak, freezesHeld, frozenDays, levelFor, nextRewards, rankFor, winPercentage, type GameState, type Progress, type Stats } from '@/engine';
+import { ACHIEVEMENTS, TITLES, chestReady, coinBalance, effectiveStreak, freezesHeld, frozenDays, levelFor, rankFor, winPercentage, type GameState, type Progress, type Stats } from '@/engine';
 import { Coin } from '@/components/shop/Coin';
-import { Avatar } from '@/components/friends/Avatar';
+import { Dialog } from '@/components/dialogs/Dialog';
 import { useServices } from '@/app/services';
 import { useFriends } from '@/features/friends/FriendsContext';
 import { useSettings } from '@/features/settings/SettingsContext';
@@ -66,7 +89,7 @@ function dailyCopy(game: GameState): { headline: string; detail: string; cta: st
   if (game.guesses.length === 0) {
     return {
       headline: 'Today’s word is waiting.',
-      detail: `Five letters, ${GAME.maxGuesses} guesses. Same puzzle for everyone.`,
+      detail: `Guess the five-letter word in ${GAME.maxGuesses} tries. Same puzzle for everyone.`,
       cta: 'Play',
     };
   }
@@ -83,23 +106,36 @@ const rise = (i: number) => ({
   transition: { delay: 0.04 * i, duration: 0.35, ease: [0.22, 1, 0.36, 1] as const },
 });
 
+interface Mode {
+  name: string;
+  label: string;
+  icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
+  color: string;
+  onClick: () => void;
+  detail: string;
+}
+
+/**
+ * Home, phone first: a slim greeting, today's Daily Challenge, four favourite ways to play with the
+ * rest behind "More games", then quests, Friends, the Shop and a few links.
+ */
 export function Home(props: HomeProps) {
-  const { daily, practice, dailyStats, practiceStats } = props;
+  const { daily, practice, dailyStats, practiceStats, progress } = props;
   const f = useFriends();
   const { settings } = useSettings();
   const { now } = useServices();
+  const [moreGames, setMoreGames] = useState(false);
   const copy = dailyCopy(daily);
   const dailyDone = daily.status !== 'playing';
-  const streak = effectiveStreak(dailyStats, props.todayIndex, frozenDays(props.progress.owned));
-  const freezes = freezesHeld(props.progress.owned);
+  const streak = effectiveStreak(dailyStats, props.todayIndex, frozenDays(progress.owned));
+  const freezes = freezesHeld(progress.owned);
   const practiceInProgress = practice.status === 'playing' && practice.guesses.length > 0;
-  const unlocked = ACHIEVEMENTS.filter((a) => props.progress.unlocked[a.id]).length;
-  const best = props.progress.bestBlitz;
-  const bestSurvival = props.progress.bestSurvival;
-  const modes = [
+  const unlocked = ACHIEVEMENTS.filter((a) => progress.unlocked[a.id]).length;
+  const plural = (n: number, one: string) => `${n} ${n === 1 ? one : `${one}s`}`;
+
+  const favourites: Mode[] = [
     {
       name: 'Practice',
-      group: 'quick' as const,
       label: `${practiceInProgress ? 'Continue' : 'Play'} Practice`,
       icon: Shuffle,
       color: '#0ea5e9',
@@ -107,185 +143,131 @@ export function Home(props: HomeProps) {
       detail: practiceInProgress
         ? `Word ${props.practiceNumber} in progress`
         : practiceStats.played === 0
-          ? 'Unlimited words, with hints.'
+          ? 'Unlimited words, with hints'
           : `${practiceStats.wins} of ${practiceStats.played} solved`,
-      isNew: false,
     },
     {
       name: 'Blitz',
-      group: 'quick' as const,
       label: 'Play Blitz',
       icon: Zap,
       color: '#f59e0b',
       onClick: props.onBlitz,
-      detail: best > 0 ? `Best: ${best} ${best === 1 ? 'word' : 'words'}` : 'Race the clock.',
-      isNew: false,
+      detail: progress.bestBlitz > 0 ? `Best: ${plural(progress.bestBlitz, 'word')}` : 'Beat the clock',
     },
     {
+      name: 'The Tower',
+      label: 'Play The Tower',
+      icon: Castle,
+      color: '#6d4fd8',
+      onClick: props.onTower,
+      detail: progress.bestTower > 0 ? `Best: floor ${progress.bestTower}` : 'Climb, floor by floor',
+    },
+    {
+      name: 'Bot Duel',
+      label: 'Play Bot Duel',
+      icon: Bot,
+      color: '#e0457b',
+      onClick: props.onDuel,
+      detail: progress.duelWins > 0 ? `${plural(progress.duelWins, 'bot')} beaten` : 'Race the computer',
+    },
+  ];
+  const more: Mode[] = [
+    {
       name: 'Daily Rush',
-      group: 'quick' as const,
       label: props.rushScore === null ? 'Play Daily Rush' : 'Daily Rush result',
       icon: CalendarClock,
       color: '#8b5cf6',
       onClick: props.onRush,
-      detail:
-        props.rushScore === null
-          ? 'Same words for all. One try.'
-          : `Today: ${props.rushScore} ${props.rushScore === 1 ? 'word' : 'words'}`,
-      isNew: false,
-    },
-    {
-      name: 'Duo',
-      group: 'puzzle' as const,
-      label: 'Play Duo',
-      icon: Columns2,
-      color: '#22a467',
-      onClick: props.onDuo,
-      detail: props.progress.duoWins > 0 ? `${props.progress.duoWins} won` : 'Two words at once.',
-      isNew: false,
-    },
-    {
-      name: 'Quad',
-      group: 'puzzle' as const,
-      label: 'Play Quad',
-      icon: Grid2x2,
-      color: '#f97316',
-      onClick: props.onQuad,
-      detail: props.progress.quadWins > 0 ? `${props.progress.quadWins} won` : 'Four words, nine guesses.',
-      isNew: false,
+      detail: props.rushScore === null ? 'The same words for everyone, one try a day' : `Today: ${plural(props.rushScore, 'word')}`,
     },
     {
       name: 'Survival',
-      group: 'quick' as const,
       label: 'Play Survival',
       icon: Heart,
       color: '#ef4444',
       onClick: props.onSurvival,
-      detail: bestSurvival > 0 ? `Best: ${bestSurvival} ${bestSurvival === 1 ? 'word' : 'words'}` : 'Three lives. How far?',
-      isNew: false,
+      detail: progress.bestSurvival > 0 ? `Best: ${plural(progress.bestSurvival, 'word')}` : 'Three lives. How far can you get?',
+    },
+    {
+      name: 'Duo',
+      label: 'Play Duo',
+      icon: Columns2,
+      color: '#22a467',
+      onClick: props.onDuo,
+      detail: progress.duoWins > 0 ? `${progress.duoWins} won` : 'Solve two words at once',
+    },
+    {
+      name: 'Quad',
+      label: 'Play Quad',
+      icon: Grid2x2,
+      color: '#f97316',
+      onClick: props.onQuad,
+      detail: progress.quadWins > 0 ? `${progress.quadWins} won` : 'Four words, nine guesses',
     },
     {
       name: 'Word Ladder',
-      group: 'puzzle' as const,
       label: 'Play Word Ladder',
       icon: Footprints,
       color: '#14b8a6',
       onClick: props.onLadder,
-      detail: 'One letter at a time.',
-      isNew: false,
+      detail: 'Change one letter at a time to reach the goal',
     },
     {
       name: 'Reverse',
-      group: 'puzzle' as const,
       label: 'Play Reverse',
       icon: ArrowDownUp,
       color: '#6366f1',
       onClick: props.onReverse,
-      detail: props.progress.bestReverse > 0 ? `Best: ${props.progress.bestReverse}/5` : 'Make the colour pattern.',
-      isNew: true,
+      detail: progress.bestReverse > 0 ? `Best: ${progress.bestReverse}/5` : 'Find words that make the colour pattern',
     },
   ];
-  const groups = [
-    { id: 'quick', title: 'Quick play' },
-    { id: 'puzzle', title: 'Puzzles' },
-  ] as const;
 
   const name = f.me?.profile.name;
   const hour = now().getHours();
   const greeting = hour < 5 ? 'Up late' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const { level, into, span } = levelFor(props.progress.xp);
+  const { level, into, span } = levelFor(progress.xp);
   const { rank } = rankFor(level);
-  const upcoming = nextRewards(level);
-  const coins = coinBalance(props.progress);
-  const chest = chestReady(props.progress, props.todayIndex);
+  const coins = coinBalance(progress);
+  const chest = chestReady(progress, props.todayIndex);
   const title = TITLES.find((t) => t.id === settings.title && t.id !== 'none');
 
   return (
-    <div className="mx-auto w-full max-w-[30rem] px-4 pt-4 pb-8 sm:pt-8 lg:max-w-[60rem]">
-      {/* You: picture, level, streak and coins, on your banner */}
-      <m.section
-        {...rise(0)}
-        aria-label="Your progress"
-        className="home-hero relative mb-4 overflow-hidden rounded-[var(--radius-card)] text-white shadow-lg sm:mb-6"
-      >
-        <span className="profile-banner absolute inset-0" data-banner={settings.banner === 'none' ? 'home' : settings.banner} aria-hidden />
-        <span className="home-hero-shade absolute inset-0" aria-hidden />
-        <div className="relative p-5 sm:p-6">
-          <div className="flex items-center gap-3.5">
-            <button
-              type="button"
-              onClick={props.onProfile}
-              aria-label="Your profile"
-              className="shrink-0 rounded-full bg-white/25 p-1 backdrop-blur transition hover:scale-105 active:scale-95"
-            >
-              <Avatar uid={f.me?.uid ?? 'me'} name={name ?? 'You'} size="lg" look={f.lookOf('me')} />
-            </button>
-            <div className="min-w-0 flex-1">
-              <p className="text-[0.72rem] font-bold tracking-[0.12em] text-white/75 uppercase">{props.dateLabel}</p>
-              <h2 className="truncate text-[1.45rem] leading-tight font-extrabold tracking-tight sm:text-[1.7rem]">
-                {greeting}
-                {name ? `, ${name}` : ''}!
-              </h2>
-              {title && <p className="truncate text-sm font-bold text-white/90">{title.name}</p>}
-            </div>
-          </div>
-
-          {/* Level progress and the next reward */}
-          <button type="button" onClick={props.onProfile} className="mt-4 block w-full text-left" aria-label="Level rewards">
-            <span className="flex items-baseline justify-between text-xs font-semibold text-white/85">
-              <span>
-                Level {level} · {rank.name}
-              </span>
-              <span className="tabular">
-                {into.toLocaleString()}/{span.toLocaleString()} XP
-              </span>
+    <div className="mx-auto w-full max-w-[30rem] px-4 pt-3 pb-8 sm:pt-8 lg:max-w-[60rem]">
+      {/* You, in one slim row: picture, greeting, level and streak. */}
+      <m.section {...rise(0)} aria-label="Your progress" className="mb-4 flex items-center gap-3 px-1">
+        <button type="button" onClick={props.onRanks} aria-label="Level and ranks" className="min-w-0 flex-1 text-left">
+          <span className="block truncate text-[1.15rem] leading-tight font-extrabold">
+            {greeting}
+            {name ? `, ${name}` : ''}
+          </span>
+          <span className="mt-1 flex items-center gap-2">
+            <span className="shrink-0 text-xs font-semibold text-muted">
+              {title ? title.name : `Level ${level} · ${rank.name}`}
             </span>
-            <span className="mt-1.5 block h-2.5 overflow-hidden rounded-full bg-white/25">
+            <span className="h-1.5 w-20 overflow-hidden rounded-full bg-border" aria-hidden>
               <m.span
                 className="home-xp block h-full rounded-full"
                 initial={{ width: 0 }}
-                animate={{ width: `${Math.max(3, Math.round((into / span) * 100))}%` }}
-                transition={{ duration: 1, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                animate={{ width: `${Math.max(4, Math.round((into / span) * 100))}%` }}
+                transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
               />
             </span>
-            {upcoming && (
-              <span className="mt-2 flex items-center gap-1.5 text-xs text-white/90">
-                <Gift className="size-3.5 shrink-0" aria-hidden />
-                <span className="truncate">
-                  Level {upcoming.level} unlocks <strong>{upcoming.rewards.map((r) => r.name).join(' + ')}</strong>
-                </span>
-              </span>
-            )}
-          </button>
-
-          {/* Quick stats */}
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            <HeroChip
-              icon={<Flame className="size-4 text-orange-300" aria-hidden />}
-              value={streak}
-              label={freezes > 0 ? `day streak · ${freezes} ❄` : 'day streak'}
-              onClick={props.onStats}
-            />
-            <HeroChip
-              icon={<BookOpen className="size-4 text-sky-200" aria-hidden />}
-              value={props.wordCount.toLocaleString()}
-              label={props.wordCount === 1 ? 'word found' : 'words found'}
-              onClick={props.onWordBook}
-            />
-            <HeroChip
-              icon={<Award className="size-4 text-yellow-200" aria-hidden />}
-              value={`${unlocked}/${ACHIEVEMENTS.length}`}
-              label="badges"
-              ariaLabel={`Achievements — ${unlocked} of ${ACHIEVEMENTS.length} unlocked`}
-              onClick={props.onAchievements}
-            />
-          </div>
-        </div>
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={props.onStats}
+          aria-label={`${plural(streak, 'day')} streak${freezes > 0 ? `, ${freezes} streak ${freezes === 1 ? 'freeze' : 'freezes'}` : ''}`}
+          className="tabular flex shrink-0 items-center gap-1 rounded-full bg-surface px-3 py-1.5 text-sm font-extrabold shadow-sm ring-1 ring-border transition active:scale-95"
+        >
+          <Flame className="size-4 text-orange-500" aria-hidden />
+          {streak}
+        </button>
       </m.section>
 
       <div className="grid gap-4 lg:grid-cols-[1.15fr_1fr] lg:gap-6">
         <div className="flex flex-col gap-4">
-          {/* Daily challenge — the hero */}
+          {/* Daily challenge: the main event */}
           <m.section
             {...rise(1)}
             aria-labelledby="home-daily"
@@ -332,226 +314,166 @@ export function Home(props: HomeProps) {
 
             <p className="tabular relative mt-3 flex items-center justify-center gap-1.5 text-xs text-white/85">
               <Clock3 className="size-3.5" aria-hidden />
-              Next puzzle in <span className="font-bold text-white">{props.countdown}</span>
-              {dailyStats.played > 0 && (
-                <>
-                  {' '}
-                  · {winPercentage(dailyStats)}% won · best streak {dailyStats.maxStreak}
-                </>
-              )}
+              {dailyDone ? 'Next puzzle in' : 'New puzzle in'} <span className="font-bold text-white">{props.countdown}</span>
+              {dailyStats.played > 0 && <> · {winPercentage(dailyStats)}% won</>}
             </p>
           </m.section>
-
-          <m.div {...rise(2)}>
-            <QuestsCard progress={props.progress} todayIndex={props.todayIndex} countdown={props.countdown} />
-          </m.div>
-
-          {/* Shop */}
-          <m.button
-            {...rise(3)}
-            type="button"
-            onClick={props.onShop}
-            aria-label={`Shop — ${coins} coins${chest ? ', free daily chest ready' : ''}`}
-            className="feature-card group relative flex items-center gap-4 overflow-hidden rounded-[var(--radius-card)] p-4 text-left text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.99]"
-            data-tone="shop"
-          >
-            <span className="feature-card-shine" aria-hidden />
-            <span className="relative transition-transform group-hover:scale-110 group-hover:-rotate-12">
-              <Coin className="size-12" hero />
-            </span>
-            <span className="relative min-w-0 flex-1">
-              <span className="flex items-center gap-2 text-lg leading-tight font-extrabold">
-                Shop
-                {chest && (
-                  <span className="chest-badge rounded-full bg-white px-2 py-0.5 text-[0.6rem] font-extrabold tracking-wide text-amber-700 uppercase">
-                    Free chest
-                  </span>
-                )}
-              </span>
-              <span className="block text-[0.8rem] leading-snug text-white/85">
-                {chest ? 'Open it for free coins' : 'Tile colours, keyboards, sounds and more'}
-              </span>
-            </span>
-            <ChevronRight className="relative size-5 text-white/80 transition-transform group-hover:translate-x-0.5" aria-hidden />
-          </m.button>
         </div>
 
         <div className="flex flex-col gap-4">
-          {/* Ways to play */}
-          <m.section {...rise(4)} aria-labelledby="home-modes" className="space-y-4">
-            <h3 id="home-modes" className="sr-only">
-              Ways to play
+          {/* Ways to play: four favourites, the rest one tap away. */}
+          <m.section {...rise(2)} aria-labelledby="home-modes">
+            <h3 id="home-modes" className="mb-2 px-1 text-sm font-bold">
+              More ways to play
             </h3>
-            {/* The two headline modes */}
             <div className="grid grid-cols-2 gap-3">
-              <FeatureCard
-                title="The Tower"
-                detail={props.progress.bestTower > 0 ? `Best: floor ${props.progress.bestTower}` : 'Climb. Survive the twists.'}
-                icon={Castle}
-                tone="tower"
-                label="Play The Tower"
-                onClick={props.onTower}
-              />
-              <FeatureCard
-                title="Bot Duel"
-                detail={props.progress.duelWins > 0 ? `${props.progress.duelWins} bots beaten` : 'Race an AI to the word.'}
-                icon={Bot}
-                tone="duel"
-                label="Play Bot Duel"
-                onClick={props.onDuel}
-              />
+              {favourites.map((mode) => (
+                <button
+                  key={mode.name}
+                  type="button"
+                  onClick={mode.onClick}
+                  aria-label={mode.label}
+                  className="mode-card group flex min-h-[6.25rem] flex-col items-start rounded-[var(--radius-card)] p-3.5 text-left transition active:scale-[0.98]"
+                  style={{ ['--mode' as string]: mode.color }}
+                >
+                  <span className="mode-icon grid size-9 shrink-0 place-items-center rounded-xl text-white">
+                    <mode.icon className="size-[1.1rem]" aria-hidden />
+                  </span>
+                  <span className="mt-2 font-bold">{mode.name}</span>
+                  <span className="mt-0.5 block text-[0.78rem] leading-snug text-muted">{mode.detail}</span>
+                </button>
+              ))}
             </div>
-            {groups.map((g) => (
-              <div key={g.id}>
-                <h4 className="mb-2 px-1 text-xs font-bold tracking-[0.08em] text-muted uppercase">{g.title}</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  {modes
-                    .filter((mode) => mode.group === g.id)
-                    .map((mode) => (
-                      <button
-                        key={mode.name}
-                        type="button"
-                        onClick={mode.onClick}
-                        aria-label={mode.label}
-                        className="mode-card group flex min-h-[6.75rem] flex-col items-start rounded-[var(--radius-card)] p-3.5 text-left transition hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
-                        style={{ ['--mode' as string]: mode.color }}
-                      >
-                        <span className="mode-icon grid size-10 shrink-0 place-items-center rounded-xl text-white transition-transform group-hover:scale-110 group-hover:-rotate-6">
-                          <mode.icon className="size-5" aria-hidden />
-                        </span>
-                        <span className="mt-2.5 font-bold">{mode.name}</span>
-                        <span className="mt-0.5 block text-[0.78rem] leading-snug text-muted">{mode.detail}</span>
-                      </button>
-                    ))}
-                </div>
-              </div>
-            ))}
+            <button
+              type="button"
+              onClick={() => setMoreGames(true)}
+              className="mt-3 flex min-h-12 w-full items-center gap-3 rounded-[var(--radius-card)] border border-border bg-surface px-4 text-left font-semibold transition-colors hover:bg-surface-2 active:bg-surface-2"
+            >
+              <LayoutGrid className="size-[1.15rem] shrink-0 text-muted" aria-hidden />
+              <span className="flex-1">More games</span>
+              <span className="text-sm text-muted">{more.length}</span>
+              <ChevronRight className="size-4 text-subtle" aria-hidden />
+            </button>
           </m.section>
 
-          {props.friendsAvailable && (
-            <m.button
-              {...rise(5)}
-              type="button"
-              onClick={props.onFriends}
-              aria-label={props.friendsPending > 0 ? `Friends — ${props.friendsPending} waiting for you` : 'Play with friends'}
-              className="feature-card group relative flex w-full items-center gap-4 overflow-hidden rounded-[var(--radius-card)] p-5 text-left text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
-              data-tone="friends"
-            >
-              <span className="feature-card-shine" aria-hidden />
-              <span className="relative grid size-11 shrink-0 place-items-center rounded-2xl bg-white/20">
-                <Users className="size-5" aria-hidden />
-                {props.friendsPending > 0 && (
-                  <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-white px-1 text-[0.7rem] font-extrabold text-fuchsia-700">
-                    {props.friendsPending}
+          <m.div {...rise(4)}>
+            <QuestsCard progress={progress} todayIndex={props.todayIndex} countdown={props.countdown} />
+          </m.div>
+
+          {/* Friends and the Shop */}
+          <m.nav {...rise(5)} aria-label="Friends and shop" className="overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface">
+            {props.friendsAvailable && (
+              <Row
+                icon={<Users className="size-[1.15rem] text-fuchsia-600 dark:text-fuchsia-400" aria-hidden />}
+                label="Play with friends"
+                ariaLabel={props.friendsPending > 0 ? `Friends — ${props.friendsPending} waiting for you` : 'Play with friends'}
+                trailing={
+                  props.friendsPending > 0 ? (
+                    <span className="grid h-5 min-w-5 place-items-center rounded-full bg-fuchsia-600 px-1.5 text-[0.7rem] font-extrabold text-white">
+                      {props.friendsPending}
+                    </span>
+                  ) : null
+                }
+                onClick={props.onFriends}
+              />
+            )}
+            <Row
+              icon={<Coin className="size-5" />}
+              label="Shop"
+              ariaLabel={`Shop — ${coins} coins${chest ? ', free daily chest ready' : ''}`}
+              trailing={
+                chest ? (
+                  <span className="chest-badge rounded-full bg-amber-100 px-2 py-0.5 text-[0.7rem] font-bold text-amber-800 dark:bg-amber-400/20 dark:text-amber-300">
+                    Free chest
                   </span>
-                )}
-              </span>
-              <span className="relative min-w-0 flex-1">
-                <span className="block text-lg font-extrabold">Play with friends</span>
-                <span className="block text-sm text-white/85">
-                  {props.friendsPending > 0 ? `${props.friendsPending} waiting for you` : 'Word Swap, challenges, races and gifts.'}
-                </span>
-              </span>
-              <ChevronRight className="relative size-5 text-white/80 transition-transform group-hover:translate-x-0.5" aria-hidden />
-            </m.button>
-          )}
+                ) : (
+                  <span className="tabular text-sm text-muted">{coins.toLocaleString()}</span>
+                )
+              }
+              onClick={props.onShop}
+            />
+          </m.nav>
 
           <m.nav {...rise(6)} aria-label="More" className="overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface">
-            {[
-              ...(props.onGetApp ? [{ label: 'Get the app', icon: Smartphone, onClick: props.onGetApp }] : []),
-              { label: 'How to play', icon: CircleHelp, onClick: props.onHelp },
-              { label: 'Statistics', icon: BarChart3, onClick: props.onStats },
-              { label: 'Achievements', icon: Award, onClick: props.onAchievements },
-              { label: 'Word Book', icon: BookOpen, onClick: props.onWordBook },
-              { label: 'Ranks & rewards', icon: Palette, onClick: props.onRanks },
-              { label: 'Settings', icon: Settings, onClick: props.onSettings },
-            ].map(({ label, icon: Icon, onClick }) => (
-              <button
-                key={label}
-                type="button"
-                onClick={onClick}
-                className="flex min-h-12 w-full items-center gap-3 border-b border-border px-4 text-left text-[0.95rem] font-semibold transition-colors last:border-b-0 hover:bg-surface-2 active:bg-surface-2"
-              >
-                <Icon className="size-[1.15rem] shrink-0 text-muted" aria-hidden />
-                <span className="flex-1">{label}</span>
-                <ChevronRight className="size-4 text-subtle" aria-hidden />
-              </button>
-            ))}
+            <Row icon={<CircleHelp className="size-[1.15rem] text-muted" aria-hidden />} label="How to play" onClick={props.onHelp} />
+            <Row icon={<BarChart3 className="size-[1.15rem] text-muted" aria-hidden />} label="Statistics" onClick={props.onStats} />
+            <Row
+              icon={<Award className="size-[1.15rem] text-muted" aria-hidden />}
+              label="Achievements"
+              ariaLabel={`Achievements — ${unlocked} of ${ACHIEVEMENTS.length} unlocked`}
+              trailing={<span className="tabular text-sm text-muted">{unlocked}/{ACHIEVEMENTS.length}</span>}
+              onClick={props.onAchievements}
+            />
+            <Row
+              icon={<BookOpen className="size-[1.15rem] text-muted" aria-hidden />}
+              label="Word Book"
+              ariaLabel="Word Book"
+              trailing={<span className="tabular text-sm text-muted">{props.wordCount}</span>}
+              onClick={props.onWordBook}
+            />
+            {props.onGetApp && <Row icon={<Smartphone className="size-[1.15rem] text-muted" aria-hidden />} label="Get the app" onClick={props.onGetApp} />}
           </m.nav>
         </div>
       </div>
 
-      <p className="mt-10 text-center text-xs text-subtle">
-        {BRAND.tagline} New puzzle every day at 00:00 UTC.
-      </p>
+      <p className="mt-8 text-center text-xs text-subtle">{BRAND.tagline}</p>
+
+      <Dialog open={moreGames} onClose={() => setMoreGames(false)} title="More games">
+        <ul className="-mx-1 space-y-1">
+          {more.map((mode) => (
+            <li key={mode.name}>
+              <button
+                type="button"
+                aria-label={mode.label}
+                onClick={() => {
+                  setMoreGames(false);
+                  mode.onClick();
+                }}
+                className="flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition-colors hover:bg-surface-2 active:bg-surface-2"
+                style={{ ['--mode' as string]: mode.color }}
+              >
+                <span className="mode-icon grid size-10 shrink-0 place-items-center rounded-xl text-white">
+                  <mode.icon className="size-5" aria-hidden />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-bold">{mode.name}</span>
+                  <span className="block text-[0.8rem] leading-snug text-muted">{mode.detail}</span>
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-subtle" aria-hidden />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Dialog>
     </div>
   );
 }
 
-/** A small stat on the hero card. */
-function HeroChip({
+/** One row in a Home list. */
+function Row({
   icon,
-  value,
   label,
   ariaLabel,
+  trailing,
   onClick,
-  glow = false,
 }: {
   icon: ReactNode;
-  value: ReactNode;
   label: string;
   ariaLabel?: string;
+  trailing?: ReactNode;
   onClick: () => void;
-  glow?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={ariaLabel}
-      className={`flex flex-col items-center rounded-2xl bg-white/15 px-2 py-2 backdrop-blur transition hover:bg-white/25 active:scale-95 ${glow ? 'chest-badge' : ''}`}
+      className="flex min-h-12 w-full items-center gap-3 border-b border-border px-4 text-left text-[0.95rem] font-semibold transition-colors last:border-b-0 hover:bg-surface-2 active:bg-surface-2"
     >
-      <span className="tabular flex items-center gap-1 text-lg leading-tight font-extrabold">
-        {icon}
-        {value}
-      </span>
-      <span className="text-[0.68rem] font-semibold text-white/80">{label}</span>
-    </button>
-  );
-}
-
-/** A large, animated card for a headline mode. */
-function FeatureCard({
-  title,
-  detail,
-  icon: Icon,
-  tone,
-  label,
-  onClick,
-}: {
-  title: string;
-  detail: string;
-  icon: typeof Bot;
-  tone: 'tower' | 'duel';
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className="feature-card group relative flex min-h-[9rem] flex-col justify-between overflow-hidden rounded-[var(--radius-card)] p-4 text-left text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.99]"
-      data-tone={tone}
-    >
-      <span className="feature-card-shine" aria-hidden />
-      <span className="relative grid size-11 place-items-center rounded-2xl bg-white/15 backdrop-blur-sm transition-transform group-hover:scale-110 group-hover:-rotate-6">
-        <Icon className="size-6" aria-hidden />
-      </span>
-      <span className="relative">
-        <span className="block text-lg leading-tight font-extrabold">{title}</span>
-        <span className="block text-[0.78rem] leading-snug text-white/80">{detail}</span>
-      </span>
+      <span className="grid w-5 shrink-0 place-items-center">{icon}</span>
+      <span className="flex-1">{label}</span>
+      {trailing}
+      <ChevronRight className="size-4 text-subtle" aria-hidden />
     </button>
   );
 }

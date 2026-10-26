@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ArrowDownUp, Award, BookOpen, Bot, Castle, Repeat2, Footprints, CalendarClock, CalendarDays, Columns2, Heart, ScrollText, Share2, Shuffle, SlidersHorizontal, Zap, ShoppingBag } from 'lucide-react';
+import { CalendarDays, LayoutGrid, Shuffle, ShoppingBag, type LucideIcon } from 'lucide-react';
 import type { LetterState } from '@/engine';
 import { BRAND, GAME } from '@/config/game';
 import { Dialog } from './Dialog';
@@ -25,14 +25,25 @@ function Example({ word, states, caption }: { word: string; states: (LetterState
   );
 }
 
+function Tip({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: ReactNode }) {
+  return (
+    <li className="flex gap-3">
+      <Icon className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+      <span>
+        <strong>{title}</strong> — {children}
+      </span>
+    </li>
+  );
+}
+
 export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Dialog open={open} onClose={onClose} title="How to play">
       <div className="space-y-5 text-[0.95rem] leading-relaxed">
         <p>
-          Guess the hidden word in <strong>{GAME.maxGuesses} tries</strong>. Each guess must be a real{' '}
-          {GAME.wordLength}-letter word — type it and tap <kbd className="rounded bg-surface-2 px-1.5 py-0.5 text-sm font-semibold">Submit</kbd> (it lights up once it’s a real word).
-          Words not in the list don’t use up a try.
+          Guess the hidden word in <strong>{GAME.maxGuesses} tries</strong>. Type any real {GAME.wordLength}-letter word and
+          tap <kbd className="rounded bg-surface-2 px-1.5 py-0.5 text-sm font-semibold">Submit</kbd>. After each guess,
+          the tiles change colour to show how close you were.
         </p>
 
         <div className="space-y-4 rounded-2xl bg-surface-2 p-4">
@@ -54,128 +65,27 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
         </div>
 
         <p className="text-sm text-muted">
-          <strong className="text-text">Repeated letters:</strong> each letter is highlighted only as many times as it
-          appears in the answer. If you guess two Es and the answer has one, only one E lights up.
+          <strong className="text-text">Double letters:</strong> a letter only lights up as many times as it’s in the
+          answer.
         </p>
 
-        <ul className="space-y-3 text-sm">
-          <li className="flex gap-3">
-            <CalendarDays className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Daily Challenge</strong> — one puzzle a day, the same for everyone. A new one arrives at midnight
-              UTC. It counts toward your streak.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <Shuffle className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Practice</strong> — unlimited words with separate statistics. It never affects your daily streak.
-              Stuck? Tap the hint button for up to two letters per word.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <Zap className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Blitz</strong> — solve as many words as you can before the clock runs out. Solves add time, misses
-              cost time.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <Columns2 className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Duo and Quad</strong> — two words with 7 shared guesses, or four with 9. Each key is split
-              into one colour per word, in board order.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <Repeat2 className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Word Swap</strong> (Friends) — pick one of three words for a friend and watch them guess it live, then swap roles.
-              Solving scores 7 minus your guesses; stumping your friend scores 3. Nudge them when it’s their turn.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <Castle className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>The Tower</strong> — climb floor by floor; every word has a twist (Fog, Blind keys, Fibber, Hard
-              mode). Clear a floor to pick a perk; miss one and lose a heart.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <Bot className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Bot Duel</strong> — race Pip, Byte or Oracle to the same word, live. First to solve wins.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <ArrowDownUp className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Reverse</strong> — you see the answer; find a word that makes the colour pattern shown.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <Footprints className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Word Ladder</strong> — turn the start word into the target by changing one letter at a time.
-              Every step must be a real word. Reach it in par for three stars.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <CalendarClock className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Daily Rush</strong> — a Blitz run on the same words for everyone, once a day. Compare scores
-              with friends.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <SlidersHorizontal className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Mods</strong> — in Practice, try Fog (only your latest guess stays visible), Blind keys (no
-              keyboard colours) or Fibber (every row tells one lie) for bonus XP.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <Heart className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Survival</strong> — word after word with 3 lives. A miss costs a life; solving in 3 guesses or
-              fewer wins one back.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <ScrollText className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Daily quests</strong> — three new goals every day for bonus XP.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <BookOpen className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Word Book</strong> — every word you play is collected with its meaning and pronunciation.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <Award className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Level up</strong> — every game earns XP. Climb through ten ranks, from Rookie to Wordskiis
-              Legend at level 100, each with its own emblem and new tile themes to unlock.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <ShoppingBag className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Coins and the shop</strong> — every game earns coins (with bonuses for first-guess solves, all
-              quests and weekly streaks), and the daily chest gives free ones. Spend them on tile colours and styles,
-              keyboards, sounds, win effects, avatar frames and badges, mystery boxes and streak freezes, or send a
-              friend a gift.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <Share2 className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <span>
-              <strong>Share</strong> your result as a spoiler-free grid of coloured squares when you finish.
-            </span>
-          </li>
-        </ul>
+        <div>
+          <h3 className="mb-2 text-sm font-bold">Good to know</h3>
+          <ul className="space-y-3 text-sm">
+            <Tip icon={CalendarDays} title="Daily Challenge">
+              One puzzle a day, the same for everyone. Solve it to keep your streak going.
+            </Tip>
+            <Tip icon={Shuffle} title="Practice">
+              As many words as you like, with hints when you’re stuck. It never touches your streak.
+            </Tip>
+            <Tip icon={LayoutGrid} title="Other games">
+              Blitz, The Tower, Bot Duel and more are on Home, each with a one-line description.
+            </Tip>
+            <Tip icon={ShoppingBag} title="Coins">
+              Every game earns coins. Spend them in the Shop on new tile colours, keyboards, sounds and more.
+            </Tip>
+          </ul>
+        </div>
 
         <p className="border-t border-border pt-4 text-center text-sm text-muted">{BRAND.tagline}</p>
       </div>

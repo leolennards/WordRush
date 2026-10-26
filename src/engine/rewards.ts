@@ -1,15 +1,14 @@
 /**
  * Level rewards: every few levels unlocks something, and the higher you go
- * the more special it gets (animated frames, banners and tile styles, and a
- * set of Wordskiis Legend rewards at level 100).
+ * the more special it gets (animated tile styles, keyboards and win effects,
+ * and a set of Wordskiis Legend rewards at level 100).
  */
 import { COSMETICS, type CosmeticKind } from './shop';
 import { SKINS } from './ranks';
-import { TILE_PALS } from './profile';
 
 export interface LevelReward {
   level: number;
-  kind: CosmeticKind | 'skin' | 'pal';
+  kind: CosmeticKind | 'skin';
   id: string;
   name: string;
   animated?: boolean;
@@ -25,7 +24,6 @@ export const LEVEL_REWARDS: readonly LevelReward[] = [
   ...SKINS.filter((s) => !s.free && s.price === undefined).map(
     (s): LevelReward => ({ level: s.minLevel, kind: 'skin', id: s.id, name: s.name, ...(s.animated ? { animated: true } : {}) }),
   ),
-  ...TILE_PALS.filter((p) => p.level !== undefined).map((p): LevelReward => ({ level: p.level!, kind: 'pal', id: p.id, name: p.name })),
 ].sort((a, b) => a.level - b.level);
 
 /** Rewards for reaching levels after `from`, up to and including `to`. */
@@ -44,11 +42,5 @@ export const REWARD_KIND: Record<LevelReward['kind'], string> = {
   keys: 'Keyboard',
   sound: 'Sound pack',
   fx: 'Win effect',
-  bg: 'Background',
-  accent: 'App colour',
-  frame: 'Frame',
-  badge: 'Badge',
   title: 'Title',
-  banner: 'Banner',
-  pal: 'Tile Pal',
 };

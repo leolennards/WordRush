@@ -55,11 +55,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     root.dataset.skin = shown.skin;
     root.dataset.tiles = shown.tileStyle;
     root.dataset.keys = shown.keySkin;
-    root.dataset.accent = shown.accent;
     setSoundPack(settings.soundPack);
     const meta = document.querySelector('meta[name="theme-color"]');
     meta?.setAttribute('content', resolvedTheme === 'dark' ? '#0c0f15' : '#f6f3ec');
-  }, [resolvedTheme, settings.highContrast, settings.reduceMotion, shown.skin, shown.tileStyle, shown.keySkin, shown.accent, settings.soundPack]);
+  }, [resolvedTheme, settings.highContrast, settings.reduceMotion, shown.skin, shown.tileStyle, shown.keySkin, settings.soundPack]);
 
   const reload = useCallback(
     () => setSettings(readVersioned(store, KEYS.settings, settingsSchema) ?? DEFAULT_SETTINGS),

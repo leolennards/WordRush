@@ -467,46 +467,8 @@ button {
     radial-gradient(40% 35% at 8% 12%, var(--c-glow-1), transparent 70%),
     radial-gradient(38% 32% at 94% 88%, var(--c-glow-2), transparent 70%);
 }
-.backdrop-tile {
-  position: absolute;
-  display: grid;
-  place-items: center;
-  translate: -50% -50%;
-  rotate: var(--r);
-  border-radius: 22%;
-  border: 2px solid var(--c-decal-line);
-  background: var(--c-decal-fill);
-  color: var(--c-decal-ink);
-  font-weight: 800;
-  line-height: 1;
-  animation: decal-float 14s ease-in-out infinite;
-}
-.backdrop-tile[data-kind='outline'] {
-  background: transparent;
-}
-.backdrop-tile[data-kind='correct'],
-.backdrop-tile[data-kind='present'] {
-  border-color: transparent;
-  color: color-mix(in srgb, var(--decal-c) 45%, transparent);
-  background: color-mix(in srgb, var(--decal-c) calc(var(--decal-tint) * 100%), transparent);
-}
-.backdrop-tile[data-kind='correct'] {
-  --decal-c: var(--c-correct);
-}
-.backdrop-tile[data-kind='present'] {
-  --decal-c: var(--c-present);
-}
-@keyframes decal-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
+
 /* Static when motion is reduced (the global rule would make it flicker). */
-@media (prefers-reduced-motion: reduce) {
-  .backdrop-tile { animation: none !important; }
-}
-[data-reduce-motion='true'] .backdrop-tile {
-  animation: none !important;
-}
 
 /* =========================================================================
    Reward cards (achievements, level-ups, quests)
@@ -1620,7 +1582,6 @@ button {
   transition-duration: 1ms !important;
 }
 
-
 /* Keyboard skins (bought in the shop). On <html> as data-keys; a preview key
    can carry its own data-keyskin, which then wins over the page's skin. */
 :is([data-keys='candy'] .key:not([data-keyskin]), .key[data-keyskin='candy']) {
@@ -1666,68 +1627,6 @@ button {
 }
 [data-reduce-motion='true'] .key { animation: none !important; }
 
-/* Avatar frames and badges (bought in the shop, shown to friends). */
-.avatar-frame {
-  position: relative;
-  display: inline-grid;
-  place-items: center;
-  border-radius: 999px;
-  padding: 3px;
-  flex-shrink: 0;
-}
-.avatar-frame:not([data-frame]) {
-  padding: 0;
-}
-.avatar-frame[data-frame='gold'] {
-  background: conic-gradient(from 200deg, #a16207, #fde68a, #d4a017, #fef3c7, #a16207);
-  box-shadow: 0 0 0 1px rgb(161 98 7 / 0.4), 0 2px 8px -2px rgb(161 98 7 / 0.6);
-}
-.avatar-frame[data-frame='neon'] {
-  background: #22d3ee;
-  box-shadow: 0 0 10px 1px #22d3ee, 0 0 22px -4px #a5f3fc;
-}
-.avatar-frame[data-frame='rainbow'],
-.avatar-frame[data-frame='flames'] {
-  isolation: isolate;
-}
-.avatar-frame[data-frame='rainbow']::before,
-.avatar-frame[data-frame='flames']::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  animation: frame-spin 3s linear infinite;
-}
-.avatar-frame[data-frame='rainbow']::before {
-  background: conic-gradient(#ef4444, #f59e0b, #22c55e, #06b6d4, #6366f1, #d946ef, #ef4444);
-}
-.avatar-frame[data-frame='flames']::before {
-  inset: -3px;
-  background: conic-gradient(#facc15, #f97316, #dc2626, #f97316, #facc15, #fb923c, #dc2626, #facc15);
-  filter: blur(1.5px);
-  animation: frame-spin 2.2s linear infinite, frame-flicker 0.6s ease-in-out infinite alternate;
-}
-@keyframes frame-spin { to { transform: rotate(360deg); } }
-@keyframes frame-flicker {
-  from { opacity: 0.8; transform: scale(1); }
-  to { opacity: 1; transform: scale(1.06) rotate(25deg); }
-}
-.avatar-badge {
-  position: absolute;
-  right: -3px;
-  bottom: -3px;
-  display: grid;
-  place-items: center;
-  width: 46%;
-  min-width: 15px;
-  aspect-ratio: 1;
-  border-radius: 999px;
-  background: var(--c-surface);
-  box-shadow: 0 0 0 2px var(--c-surface), 0 1px 4px rgb(0 0 0 / 0.3);
-}
-[data-reduce-motion='true'] .avatar-frame::before { animation: none !important; }
-
 /* Daily streak freeze chip. */
 .freeze-chip {
   background: linear-gradient(135deg, #e0f2fe, #bae6fd);
@@ -1736,162 +1635,6 @@ button {
 .dark .freeze-chip {
   background: linear-gradient(135deg, #0c4a6e, #075985);
   color: #e0f2fe;
-}
-
-/* =========================================================================
-   App colours (bought in the shop or free): the highlight colour.
-   ========================================================================= */
-[data-accent='ocean'] { --c-accent: #0e7fc0; --c-accent-ink: #fff; }
-.dark[data-accent='ocean'] { --c-accent: #38bdf8; --c-accent-ink: #04202e; }
-[data-accent='grape'] { --c-accent: #7c3aed; --c-accent-ink: #fff; }
-.dark[data-accent='grape'] { --c-accent: #a78bfa; --c-accent-ink: #1e0b45; }
-[data-accent='rose'] { --c-accent: #d63a72; --c-accent-ink: #fff; }
-.dark[data-accent='rose'] { --c-accent: #f472b6; --c-accent-ink: #3b0720; }
-[data-accent='tangerine'] { --c-accent: #e2620a; --c-accent-ink: #fff; }
-.dark[data-accent='tangerine'] { --c-accent: #fb923c; --c-accent-ink: #2a1000; }
-[data-accent='sky'] { --c-accent: #0284c7; --c-accent-ink: #fff; }
-.dark[data-accent='sky'] { --c-accent: #7dd3fc; --c-accent-ink: #052033; }
-[data-accent='lime'] { --c-accent: #4d7c0f; --c-accent-ink: #fff; }
-.dark[data-accent='lime'] { --c-accent: #a3e635; --c-accent-ink: #1a2e05; }
-[data-accent='ruby'] { --c-accent: #c81e1e; --c-accent-ink: #fff; }
-.dark[data-accent='ruby'] { --c-accent: #f87171; --c-accent-ink: #2a0505; }
-[data-accent='midnight'] { --c-accent: #334155; --c-accent-ink: #fff; }
-.dark[data-accent='midnight'] { --c-accent: #cbd5e1; --c-accent-ink: #0f172a; }
-[data-accent='gold'] { --c-accent: #b7791f; --c-accent-ink: #fff; }
-.dark[data-accent='gold'] { --c-accent: #fbbf24; --c-accent-ink: #2a1a00; }
-
-/* =========================================================================
-   Background scenes (bought in the shop). Softer in the middle so the board
-   and cards stay easy to read.
-   ========================================================================= */
-.backdrop[data-scene] {
-  -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, rgb(0 0 0 / 0.45) 30%, #000 85%);
-  mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, rgb(0 0 0 / 0.45) 30%, #000 85%);
-}
-@media (max-width: 640px) {
-  .backdrop[data-scene] {
-    -webkit-mask-image: linear-gradient(#000, rgb(0 0 0 / 0.4) 22%, rgb(0 0 0 / 0.4) 78%, #000);
-    mask-image: linear-gradient(#000, rgb(0 0 0 / 0.4) 22%, rgb(0 0 0 / 0.4) 78%, #000);
-  }
-}
-.scene-bubble {
-  position: absolute;
-  bottom: -80px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, rgb(255 255 255 / 0.9) 0 8%, transparent 14%),
-    radial-gradient(circle, transparent 58%, color-mix(in srgb, var(--c-accent) 35%, transparent) 72%, rgb(255 255 255 / 0.5) 78%, transparent 80%);
-  animation: bubble-rise linear infinite, bubble-wobble ease-in-out infinite alternate;
-}
-@keyframes bubble-rise {
-  to { translate: 0 -115vh; }
-}
-@keyframes bubble-wobble {
-  from { transform: translateX(-12px) scale(1, 0.94); }
-  to { transform: translateX(12px) scale(0.94, 1); }
-}
-.scene-star {
-  position: absolute;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 6px 1px rgb(255 255 255 / 0.8);
-  animation: star-twinkle ease-in-out infinite;
-}
-:root:not(.dark) .scene-star {
-  background: #6366f1;
-  box-shadow: 0 0 6px 1px rgb(99 102 241 / 0.6);
-}
-@keyframes star-twinkle {
-  0%, 100% { opacity: 0.25; transform: scale(0.7); }
-  50% { opacity: 1; transform: scale(1.2); }
-}
-.scene-shooting {
-  position: absolute;
-  top: 12%;
-  left: 20%;
-  width: 140px;
-  height: 2px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, transparent, #fff);
-  rotate: 25deg;
-  opacity: 0;
-  animation: shooting 9s ease-in infinite;
-}
-:root:not(.dark) .scene-shooting { background: linear-gradient(90deg, transparent, #6366f1); }
-@keyframes shooting {
-  0%, 88% { opacity: 0; transform: translateX(-200px); }
-  90% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(500px); }
-}
-.scene-petal {
-  position: absolute;
-  top: -30px;
-  border-radius: 100% 0 100% 0;
-  background: linear-gradient(135deg, #fbcfe8, #f472b6);
-  opacity: 0.85;
-  animation: petal-fall linear infinite;
-}
-@keyframes petal-fall {
-  from { transform: translate(0, 0) rotate(0deg); }
-  50% { transform: translate(calc(var(--drift) * 0.6), 55vh) rotate(260deg); }
-  to { transform: translate(var(--drift), 112vh) rotate(540deg); }
-}
-.scene-aurora {
-  position: absolute;
-  top: -6%;
-  left: -30%;
-  width: 160%;
-  height: 34%;
-  border-radius: 50%;
-  background: linear-gradient(90deg, transparent, #34d399, #22d3ee, #a78bfa, transparent);
-  filter: blur(40px) hue-rotate(var(--hue, 0deg));
-  opacity: 0.45;
-  animation: aurora-sway 18s ease-in-out infinite alternate;
-}
-.dark .scene-aurora { opacity: 0.6; }
-@keyframes aurora-sway {
-  from { transform: translateX(-12%) skewY(-6deg) scaleY(0.8); }
-  to { transform: translateX(12%) skewY(6deg) scaleY(1.2); }
-}
-.scene-sun {
-  position: absolute;
-  left: 50%;
-  bottom: 14%;
-  width: 240px;
-  height: 240px;
-  translate: -50% 0;
-  border-radius: 50%;
-  background: repeating-linear-gradient(transparent 0 14px, var(--c-bg) 14px 18px) 0 60% / 100% 100% no-repeat,
-    linear-gradient(#fde047, #fb923c 45%, #ec4899);
-  -webkit-mask-image: linear-gradient(#000 45%, transparent 100%);
-  mask-image: linear-gradient(#000 45%, transparent 100%);
-  opacity: 0.38;
-  animation: sun-pulse 6s ease-in-out infinite alternate;
-}
-@keyframes sun-pulse {
-  to { opacity: 0.55; transform: translateY(-6px); }
-}
-.scene-grid {
-  position: absolute;
-  left: -50%;
-  right: -50%;
-  bottom: -10%;
-  height: 40%;
-  background:
-    linear-gradient(transparent 0 calc(100% - 2px), #e879f9 calc(100% - 2px)) 0 0 / 100% 40px,
-    linear-gradient(90deg, transparent 0 calc(100% - 2px), #e879f9 calc(100% - 2px)) 0 0 / 60px 100%;
-  transform: perspective(300px) rotateX(62deg);
-  transform-origin: top;
-  opacity: 0.5;
-  animation: grid-move 2.4s linear infinite;
-  -webkit-mask-image: linear-gradient(transparent, #000 40%);
-  mask-image: linear-gradient(transparent, #000 40%);
-}
-@keyframes grid-move {
-  to { background-position: 0 40px, 0 0; }
-}
-[data-reduce-motion='true'] .backdrop [class^='scene-'] { animation: none !important; }
-@media (prefers-reduced-motion: reduce) {
-  .backdrop [class^='scene-'] { animation: none !important; }
 }
 
 /* =========================================================================
@@ -1964,36 +1707,6 @@ button {
   100% { --spot-x: 10%; filter: hue-rotate(40deg); }
 }
 
-/* More frames. */
-/* =========================================================================
-   Profile banners (bought in the shop), behind your profile card.
-   ========================================================================= */
-.profile-banner {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--c-accent) 30%, var(--c-surface-2)), var(--c-surface-2));
-}
-.profile-banner[data-banner='sunset'] { background: linear-gradient(135deg, #f97316, #ec4899 60%, #8b5cf6); }
-.profile-banner[data-banner='ocean'] { background: linear-gradient(135deg, #0ea5e9, #0f766e 55%, #1e3a8a); }
-.profile-banner[data-banner='stars'] {
-  background:
-    radial-gradient(circle at 15% 30%, #fff 0 1px, transparent 2px),
-    radial-gradient(circle at 70% 20%, #fff 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 45% 70%, #fff 0 1px, transparent 2px),
-    radial-gradient(circle at 85% 65%, #fff 0 1px, transparent 2px),
-    radial-gradient(circle at 30% 85%, #fde68a 0 1.5px, transparent 2.5px),
-    linear-gradient(160deg, #0f172a, #312e81 60%, #4c1d95);
-  animation: banner-twinkle 3s ease-in-out infinite alternate;
-}
-@keyframes banner-twinkle { to { filter: brightness(1.25); } }
-.profile-banner[data-banner='aurora'],
-.profile-banner[data-banner='gold'] {
-  background-size: 300% 300%;
-  animation: skin-flow 8s ease-in-out infinite;
-}
-.profile-banner[data-banner='aurora'] { background-image: linear-gradient(120deg, #064e3b, #10b981, #22d3ee, #8b5cf6, #064e3b); }
-.profile-banner[data-banner='gold'] { background-image: linear-gradient(115deg, #92400e, #fbbf24, #fff7d6, #f59e0b, #92400e); animation-duration: 4s; }
-[data-reduce-motion='true'] .profile-banner,
-[data-reduce-motion='true'] .profile-banner::before { animation: none !important; }
-
 /* A title under a name: accent-coloured with a soft shine. */
 .profile-title {
   background: linear-gradient(100deg, var(--c-accent), color-mix(in srgb, var(--c-accent) 55%, #f59e0b), var(--c-accent));
@@ -2002,71 +1715,11 @@ button {
   background-clip: text;
   color: transparent;
 }
-
-/* Background previews in the shop. */
-.scene-thumb {
-  position: relative;
-  overflow: hidden;
-  background: var(--c-surface-2);
-}
-.scene-thumb[data-scene='tiles'] {
-  background:
-    linear-gradient(var(--c-correct), var(--c-correct)) 12% 30% / 14% 34% no-repeat,
-    linear-gradient(var(--c-present), var(--c-present)) 80% 64% / 12% 30% no-repeat,
-    radial-gradient(var(--c-decal-dot) 1.2px, transparent 1.6px) 0 0 / 12px 12px,
-    var(--c-surface-2);
-}
-.scene-thumb[data-scene='plain'] { background: radial-gradient(var(--c-decal-dot) 1.2px, transparent 1.6px) 0 0 / 12px 12px, var(--c-surface-2); }
-.scene-thumb[data-scene='bubbles'] {
-  background:
-    radial-gradient(circle at 20% 70%, transparent 10px, rgb(56 189 248 / 0.6) 11px, transparent 13px),
-    radial-gradient(circle at 60% 35%, transparent 6px, rgb(56 189 248 / 0.6) 7px, transparent 9px),
-    radial-gradient(circle at 85% 75%, transparent 13px, rgb(167 139 250 / 0.6) 14px, transparent 16px),
-    linear-gradient(#e0f2fe, #bae6fd);
-  animation: thumb-rise 4s linear infinite;
-}
-@keyframes thumb-rise { to { background-position: 0 -40px, 0 -60px, 0 -30px, 0 0; } }
-.scene-thumb[data-scene='stars'] {
-  background:
-    radial-gradient(circle at 15% 25%, #fff 0 1px, transparent 2px),
-    radial-gradient(circle at 40% 60%, #fff 0 1.4px, transparent 2.4px),
-    radial-gradient(circle at 70% 30%, #fde68a 0 1.2px, transparent 2px),
-    radial-gradient(circle at 85% 70%, #fff 0 1px, transparent 2px),
-    radial-gradient(circle at 55% 15%, #fff 0 1px, transparent 2px),
-    linear-gradient(160deg, #0f172a, #1e1b4b);
-  animation: banner-twinkle 1.6s ease-in-out infinite alternate;
-}
-.scene-thumb[data-scene='sakura'] {
-  background:
-    radial-gradient(ellipse 5px 3px at 20% 30%, #f472b6 90%, transparent),
-    radial-gradient(ellipse 4px 3px at 55% 65%, #f9a8d4 90%, transparent),
-    radial-gradient(ellipse 5px 3px at 80% 25%, #ec4899 90%, transparent),
-    radial-gradient(ellipse 4px 2px at 35% 80%, #fbcfe8 90%, transparent),
-    linear-gradient(#fff1f2, #fce7f3);
-  animation: thumb-fall 5s linear infinite;
-}
-@keyframes thumb-fall { to { background-position: 20px 80px, -15px 80px, 10px 80px, -10px 80px, 0 0; } }
-.scene-thumb[data-scene='aurora'] {
-  background: linear-gradient(110deg, #0f172a 10%, #10b981 35%, #22d3ee 50%, #8b5cf6 65%, #0f172a 90%);
-  background-size: 250% 100%;
-  animation: skin-flow 5s ease-in-out infinite;
-}
-.scene-thumb[data-scene='synthwave'] {
-  background:
-    radial-gradient(circle at 50% 75%, #fde047 0 18%, #fb923c 26%, transparent 27%),
-    linear-gradient(transparent 0 calc(100% - 1px), #e879f9 0) 0 0 / 100% 10px,
-    linear-gradient(90deg, transparent 0 calc(100% - 1px), #e879f9 0) 0 0 / 16px 100%,
-    linear-gradient(#1e1b4b, #4c1d95);
-  animation: thumb-grid 1.6s linear infinite;
-}
-@keyframes thumb-grid { to { background-position: 0 0, 0 10px, 0 0, 0 0; } }
-[data-reduce-motion='true'] :is(.scene-thumb, .scene-thumb::before, .profile-title) { animation: none !important; }
+[data-reduce-motion='true'] .profile-title { animation: none !important; }
 
 /* =========================================================================
    Level rewards.
    ========================================================================= */
-[data-accent='teal'] { --c-accent: #0f8a7e; --c-accent-ink: #fff; }
-.dark[data-accent='teal'] { --c-accent: #2dd4bf; --c-accent-ink: #042f2b; }
 
 /* Titles from high levels look the part. */
 .profile-title[data-tier='epic'] {
@@ -2141,131 +1794,9 @@ button {
   animation: skin-flow 5s ease-in-out infinite;
 }
 
-/* Frames. */
-.avatar-frame[data-frame='bronze'] { background: conic-gradient(from 200deg, #7c2d12, #f0a868, #b45309, #fcd5a8, #7c2d12); }
-.avatar-frame[data-frame='silver'] { background: conic-gradient(from 200deg, #64748b, #f8fafc, #94a3b8, #ffffff, #64748b); box-shadow: 0 2px 8px -2px rgb(100 116 139 / 0.7); }
-.avatar-frame[data-frame='royal'],
-.avatar-frame[data-frame='mythic'] { isolation: isolate; }
-.avatar-frame[data-frame='royal']::before,
-.avatar-frame[data-frame='mythic']::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  animation: frame-spin 5s linear infinite;
-}
-.avatar-frame[data-frame='royal']::before {
-  background: conic-gradient(#6d28d9, #fbbf24, #a855f7, #fde68a, #6d28d9);
-}
-.avatar-frame[data-frame='royal'] { box-shadow: 0 0 12px -2px rgb(168 85 247 / 0.8); }
-.avatar-frame[data-frame='mythic'] {
-  padding: 5px;
-  animation: mythic-glow 2.4s ease-in-out infinite alternate;
-}
-.avatar-frame[data-frame='mythic']::before {
-  background:
-    radial-gradient(closest-side, transparent 78%, rgb(255 255 255 / 0.7) 80%, transparent 84%),
-    conic-gradient(#22d3ee, #34d399, #a78bfa, #f472b6, #22d3ee);
-  animation-duration: 3s;
-}
-@keyframes mythic-glow {
-  from { box-shadow: 0 0 10px 0 rgb(34 211 238 / 0.6); }
-  to { box-shadow: 0 0 22px 4px rgb(244 114 182 / 0.75); }
-}
-
-/* Badges that glow. */
-.badge-nova { animation: badge-pulse 1.6s ease-in-out infinite; }
-@keyframes badge-pulse {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 #facc15); }
-  50% { transform: scale(1.15) rotate(15deg); filter: drop-shadow(0 0 4px #facc15); }
-}
-.badge-legend { animation: badge-legend 3s linear infinite; }
-@keyframes badge-legend {
-  from { filter: hue-rotate(0deg) drop-shadow(0 0 3px #e879f9); }
-  to { filter: hue-rotate(360deg) drop-shadow(0 0 3px #e879f9); }
-}
-
-/* Banners. */
-.profile-banner[data-banner='dawn'] { background: linear-gradient(180deg, #312e81, #c026d3 40%, #fb923c 75%, #fde68a); }
-.profile-banner[data-banner='nebula'] {
-  background:
-    radial-gradient(40% 60% at 25% 40%, rgb(236 72 153 / 0.7), transparent 70%),
-    radial-gradient(45% 70% at 70% 60%, rgb(56 189 248 / 0.6), transparent 70%),
-    radial-gradient(30% 50% at 55% 20%, rgb(167 139 250 / 0.7), transparent 70%),
-    radial-gradient(circle at 15% 80%, #fff 0 1px, transparent 2px),
-    radial-gradient(circle at 85% 25%, #fff 0 1px, transparent 2px),
-    #0f0a2e;
-  background-size: 200% 200%, 200% 200%, 200% 200%, auto, auto, auto;
-  animation: nebula-drift 12s ease-in-out infinite alternate;
-}
-@keyframes nebula-drift {
-  to { background-position: 100% 50%, 0% 50%, 50% 100%, 0 0, 0 0, 0 0; }
-}
-.profile-banner[data-banner='prism'] {
-  background-image: linear-gradient(115deg, #ef4444, #f59e0b, #facc15, #22c55e, #0ea5e9, #6366f1, #d946ef, #ef4444);
-  background-size: 300% 300%;
-  animation: skin-flow 4s linear infinite;
-}
-
-/* Backgrounds. */
-.scene-firefly {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #fef08a;
-  box-shadow: 0 0 10px 3px rgb(250 204 21 / 0.75);
-  animation: firefly-drift ease-in-out infinite alternate, firefly-glow ease-in-out infinite alternate;
-}
-:root:not(.dark) .scene-firefly { background: #eab308; box-shadow: 0 0 8px 2px rgb(234 179 8 / 0.6); }
-@keyframes firefly-drift { to { transform: translate(var(--fx), var(--fy)); } }
-@keyframes firefly-glow {
-  from { opacity: 0.15; }
-  to { opacity: 1; }
-}
-.scene-galaxy {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 150vmax;
-  height: 150vmax;
-  translate: -50% -50%;
-  border-radius: 50%;
-  background: conic-gradient(from 0deg, transparent, rgb(139 92 246 / 0.35), transparent 22%, rgb(236 72 153 / 0.3), transparent 45%, rgb(56 189 248 / 0.3), transparent 70%, rgb(139 92 246 / 0.35), transparent);
-  -webkit-mask-image: radial-gradient(circle, #000 5%, rgb(0 0 0 / 0.6) 30%, transparent 62%);
-  mask-image: radial-gradient(circle, #000 5%, rgb(0 0 0 / 0.6) 30%, transparent 62%);
-  filter: blur(18px);
-  animation: frame-spin 60s linear infinite;
-}
-.scene-thumb[data-scene='fireflies'] {
-  background:
-    radial-gradient(circle at 20% 40%, #fef08a 0 1.5px, rgb(250 204 21 / 0.4) 3px, transparent 6px),
-    radial-gradient(circle at 60% 70%, #fef08a 0 1.5px, rgb(250 204 21 / 0.4) 3px, transparent 6px),
-    radial-gradient(circle at 80% 30%, #fef08a 0 1.5px, rgb(250 204 21 / 0.4) 3px, transparent 6px),
-    linear-gradient(#1e1b4b, #14532d);
-  animation: banner-twinkle 1.4s ease-in-out infinite alternate;
-}
-.scene-thumb[data-scene='galaxy'] {
-  background: conic-gradient(from 0deg at 50% 50%, #1e1b4b, #7c3aed, #1e1b4b, #db2777, #1e1b4b, #0ea5e9, #1e1b4b);
-}
-[data-reduce-motion='true'] :is(.badge-nova, .badge-legend, .avatar-frame, .scene-firefly, .scene-galaxy, .key, .tile)::before,
-[data-reduce-motion='true'] :is(.badge-nova, .badge-legend, .avatar-frame, .scene-firefly, .scene-galaxy) {
-  animation: none !important;
-}
-
 /* =========================================================================
-   Home: a colourful hero, the Daily card, and mode cards in their own colours.
+   Home: the Daily card and mode cards in their own colours.
    ========================================================================= */
-.profile-banner[data-banner='home'] {
-  background:
-    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--c-present) 70%, transparent), transparent 55%),
-    radial-gradient(90% 80% at 0% 100%, color-mix(in srgb, #ec4899 55%, transparent), transparent 60%),
-    linear-gradient(135deg, var(--c-accent), color-mix(in srgb, var(--c-accent) 50%, #6d28d9));
-}
-.home-hero-shade {
-  background: linear-gradient(180deg, rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.28));
-}
 .home-xp {
   background: linear-gradient(90deg, #fbbf24, #fde68a);
   box-shadow: 0 0 8px rgb(253 230 138 / 0.6);
@@ -2305,13 +1836,6 @@ button {
 .mode-icon {
   background: linear-gradient(140deg, color-mix(in srgb, var(--mode) 75%, #fff), var(--mode) 45%, color-mix(in srgb, var(--mode) 75%, #000));
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 4px 10px -4px var(--mode);
-}
-.more-chip {
-  background: color-mix(in srgb, var(--mode) 10%, var(--c-surface));
-  border: 1px solid color-mix(in srgb, var(--mode) 20%, var(--c-border));
-}
-.more-chip:hover {
-  background: color-mix(in srgb, var(--mode) 18%, var(--c-surface));
 }
 .feature-card[data-tone='friends'] {
   background:

@@ -618,7 +618,7 @@ describe('ranks, themes and word ladder', () => {
   it('lists ranks and only lets you use themes you have unlocked', async () => {
     window.history.replaceState(null, '', '/');
     const { user } = setup();
-    await user.click(screen.getByRole('button', { name: 'Ranks & rewards' }));
+    await user.click(screen.getByRole('button', { name: 'Level and ranks' }));
     const dialog = await screen.findByRole('dialog', { name: 'Ranks and themes' });
     expect(within(dialog).getByText('Wordskiis Legend')).toBeInTheDocument();
     expect(within(dialog).getByRole('radio', { name: 'Classic' })).toHaveAttribute('aria-checked', 'true');

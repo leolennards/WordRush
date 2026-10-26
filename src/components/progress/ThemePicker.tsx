@@ -1,8 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Check, ShoppingBag, Volume2 } from 'lucide-react';
 import {
-  ACCENTS,
-  BACKGROUNDS,
   KEY_SKINS,
   SKINS,
   SOUND_PACKS,
@@ -19,7 +17,7 @@ import { useSettings } from '@/features/settings/SettingsContext';
 import { FxIcon } from '@/components/shop/FxIcon';
 import { previewPack } from '@/lib/audio/sound';
 
-type Tab = 'skin' | Exclude<CosmeticKind, 'frame' | 'badge' | 'title' | 'banner'>;
+type Tab = 'skin' | Exclude<CosmeticKind, 'title'>;
 
 const TABS: { value: Tab; label: string; setting: keyof Settings }[] = [
   { value: 'skin', label: 'Colours', setting: 'skin' },
@@ -27,8 +25,6 @@ const TABS: { value: Tab; label: string; setting: keyof Settings }[] = [
   { value: 'keys', label: 'Keyboard', setting: 'keySkin' },
   { value: 'sound', label: 'Sound', setting: 'soundPack' },
   { value: 'fx', label: 'Win effect', setting: 'winFx' },
-  { value: 'bg', label: 'Background', setting: 'background' },
-  { value: 'accent', label: 'App colour', setting: 'accent' },
 ];
 
 const LISTS: Record<Exclude<Tab, 'skin'>, readonly { id: string; name: string; price?: number; level?: number }[]> = {
@@ -36,8 +32,6 @@ const LISTS: Record<Exclude<Tab, 'skin'>, readonly { id: string; name: string; p
   keys: KEY_SKINS,
   sound: SOUND_PACKS,
   fx: WIN_EFFECTS,
-  bg: BACKGROUNDS,
-  accent: ACCENTS,
 };
 
 const PREVIEW = [
@@ -49,8 +43,7 @@ const PREVIEW = [
 ] as const;
 
 /**
- * Your look: tile colours, styles, keyboard, sound, win effect, background and
- * app colour. Shows only what you own or have unlocked, with a live preview.
+ * Your look: tile colours, styles, keyboard, sound and win effect. Shows only what you own or have unlocked, with a live preview.
  */
 export function ThemePicker({ level, onShop }: { level: number; onShop?: () => void }) {
   const { settings, update } = useSettings();
@@ -112,10 +105,6 @@ export function ThemePicker({ level, onShop }: { level: number; onShop?: () => v
         return <Volume2 className="size-6 text-accent" aria-hidden />;
       case 'fx':
         return <FxIcon id={id as WinFxId} className="size-6" />;
-      case 'bg':
-        return <span className="scene-thumb block h-7 w-12 rounded-md" data-scene={id} />;
-      case 'accent':
-        return <span className="block size-7 rounded-full" style={{ background: ACCENTS.find((a) => a.id === id)?.swatch }} />;
       default:
         return name;
     }

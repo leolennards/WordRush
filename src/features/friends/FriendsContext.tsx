@@ -50,7 +50,7 @@ interface FriendsContextValue {
   /** Permanently delete my profile, code, friendships and account. */
   deleteProfile: () => Promise<void>;
   nameOf: (uid: string) => string;
-  /** A player's picture, frame, badge, title and banner (mine from my settings). */
+  /** A player's picture and title (mine from my settings). */
   lookOf: (uid: string) => PlayerLook;
   /** Gifts from friends waiting to be opened. */
   gifts: ReceivedGift[];
@@ -185,19 +185,20 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
     return () => unsubs.forEach((u) => u());
   }, [ready, uid, fail]);
 
-  // Show my picture, frame, badge, title and banner to friends (only what changed).
+  // Show my picture and title to friends (only what changed). Frames, badges and banners left the
+  // game, so they're cleared for friends still on older versions.
   const none = (v: string, empty: string) => (v === empty ? null : v);
   const myLook = useMemo<PlayerLook>(
     () => ({
-      frame: none(settings.frame, 'none'),
-      badge: none(settings.badge, 'none'),
+      frame: null,
+      badge: null,
       avatar: none(settings.avatar, 'initial'),
       photo: settings.avatar === 'photo' && settings.photo ? settings.photo : null,
       tint: none(settings.tint, 'auto'),
       title: none(settings.title, 'none'),
-      banner: none(settings.banner, 'none'),
+      banner: null,
     }),
-    [settings.frame, settings.badge, settings.avatar, settings.photo, settings.tint, settings.title, settings.banner],
+    [settings.avatar, settings.photo, settings.tint, settings.title],
   );
   useEffect(() => {
     if (!ready || !api.current || !uid || !profile) return;
